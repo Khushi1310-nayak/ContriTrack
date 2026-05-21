@@ -23,7 +23,7 @@ export default withSentryConfig(nextConfig, {
       removeDebugLogging: true,
     },
     automaticVercelMonitors: true,
-    reactComponentAnnotation: true,
+    reactComponentAnnotation: { enabled: true },
   },
 });
 
