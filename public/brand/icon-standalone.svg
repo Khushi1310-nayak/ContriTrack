@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" width="280" height="280" fill="none">
+  <!-- Symbol: C + T intersection -->
+  <path d="M140 0 C60 0, 0 60, 0 140 C0 220, 60 280, 140 280 L140 232 C85 232, 48 195, 48 140 C48 85, 85 48, 140 48 Z" fill="white"/>
+  <rect x="120" y="116" width="160" height="48" rx="24" fill="#F2C1A3"/>
+  <circle cx="206" cy="24" r="24" fill="white"/>
+</svg>

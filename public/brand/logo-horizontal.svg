@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 64" width="320" height="64" fill="none">
+  <!-- Symbol: C + T intersection -->
+  <g transform="translate(0, 14) scale(0.12)">
+    <path d="M140 0 C60 0, 0 60, 0 140 C0 220, 60 280, 140 280 L140 232 C85 232, 48 195, 48 140 C48 85, 85 48, 140 48 Z" fill="white"/>
+    <rect x="120" y="116" width="160" height="48" rx="24" fill="#F2C1A3"/>
+    <circle cx="206" cy="24" r="24" fill="white"/>
+  </g>
+  
+  <!-- Wordmark -->
+  <text x="44" y="42" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" fill="white" letter-spacing="-0.02em">ContriTrack</text>
+</svg>
