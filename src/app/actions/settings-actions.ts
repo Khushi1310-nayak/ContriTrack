@@ -1154,8 +1154,12 @@ export async function startFreshAction(email: string) {
   }
 }
 
-export async function generateVerificationOTP(userId: string, phone: string) {
+export async function generateVerificationOTP(firebaseUid: string, email: string, phone: string) {
   try {
+    const dbUser = await prisma.user.findUnique({ where: { email } });
+    if (!dbUser) return { success: false, error: "User not found in database." };
+    const dbUserId = dbUser.id;
+
     // Basic E.164 validation logic
     if (!/^\+?[1-9]\d{1,14}$/.test(phone.replace(/[\s-()]/g, ""))) {
       return { success: false, error: "Invalid phone number format." };
@@ -1164,7 +1168,7 @@ export async function generateVerificationOTP(userId: string, phone: string) {
     const numericPhone = phone.replace(/[\s-()]/g, "");
 
     // Check rate limit: if existing session is within 1 minute
-    const existing = await prisma.oTPSession.findUnique({ where: { userId } });
+    const existing = await prisma.oTPSession.findUnique({ where: { userId: dbUserId } });
     if (existing) {
       const diff = new Date().getTime() - existing.createdAt.getTime();
       if (diff < 60000) {
@@ -1177,7 +1181,7 @@ export async function generateVerificationOTP(userId: string, phone: string) {
     const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
 
     await prisma.oTPSession.upsert({
-      where: { userId },
+      where: { userId: dbUserId },
       update: {
         hashedOtp,
         phone: numericPhone,
@@ -1186,7 +1190,7 @@ export async function generateVerificationOTP(userId: string, phone: string) {
         createdAt: new Date()
       },
       create: {
-        userId,
+        userId: dbUserId,
         hashedOtp,
         phone: numericPhone,
         expiresAt: new Date(Date.now() + 10 * 60 * 1000)
@@ -1198,7 +1202,7 @@ export async function generateVerificationOTP(userId: string, phone: string) {
     console.log(`To: ${numericPhone}`);
     console.log(`Body: Your ContriTrack verification code is ${otp}. Expires in 10 minutes.`);
 
-    await recordUserActivityLog(userId, "otp_requested", { device: "System" });
+    await recordUserActivityLog(dbUserId, "otp_requested", { device: "System" });
 
     return { success: true };
   } catch (err) {
@@ -1207,25 +1211,29 @@ export async function generateVerificationOTP(userId: string, phone: string) {
   }
 }
 
-export async function verifyOTPCode(userId: string, code: string) {
+export async function verifyOTPCode(firebaseUid: string, email: string, code: string) {
   try {
-    const session = await prisma.oTPSession.findUnique({ where: { userId } });
+    const dbUser = await prisma.user.findUnique({ where: { email } });
+    if (!dbUser) return { success: false, error: "User not found in database." };
+    const dbUserId = dbUser.id;
+
+    const session = await prisma.oTPSession.findUnique({ where: { userId: dbUserId } });
     if (!session) return { success: false, error: "No active OTP session." };
 
     if (session.expiresAt < new Date()) {
-      await prisma.oTPSession.delete({ where: { userId } });
+      await prisma.oTPSession.delete({ where: { userId: dbUserId } });
       return { success: false, error: "OTP expired." };
     }
 
     if (session.attempts >= 5) {
-      await prisma.oTPSession.delete({ where: { userId } });
-      return { success: false, error: "Too many failed attempts. Request a new OTP." };
+      await prisma.oTPSession.delete({ where: { userId: dbUserId } });
+      return { success: false, error: "Too many failed attempts. Session locked." };
     }
 
     const hashedInput = crypto.createHash("sha256").update(code).digest("hex");
     if (hashedInput !== session.hashedOtp) {
       await prisma.oTPSession.update({
-        where: { userId },
+        where: { userId: dbUserId },
         data: { attempts: session.attempts + 1 }
       });
       return { success: false, error: "Invalid OTP code." };
@@ -1233,12 +1241,12 @@ export async function verifyOTPCode(userId: string, code: string) {
 
     // Success
     await prisma.userSecurity.update({
-      where: { userId },
+      where: { userId: dbUserId },
       data: { verifiedPhone: session.phone }
     });
 
-    await prisma.oTPSession.delete({ where: { userId } });
-    await recordUserActivityLog(userId, "otp_verified", { device: "System" });
+    await prisma.oTPSession.delete({ where: { userId: dbUserId } });
+    await recordUserActivityLog(dbUserId, "otp_verified", { device: "System" });
 
     return { success: true };
   } catch (err) {

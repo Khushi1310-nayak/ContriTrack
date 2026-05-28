@@ -416,7 +416,8 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
     }
     
     setAutosaveState("saving");
-    const res = await generateVerificationOTP(userId, phoneToVerify);
+    const userEmail = user?.email || "";
+    const res = await generateVerificationOTP(userId, userEmail, phoneToVerify);
     
     if (res.success) {
       setOtpSent(true);
@@ -445,7 +446,8 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
 
     setAutosaveState("saving");
 
-    const verifyRes = await verifyOTPCode(userId, otpCode);
+    const userEmail = user?.email || "";
+    const verifyRes = await verifyOTPCode(userId, userEmail, otpCode);
     if (!verifyRes.success) {
       setErrorMessage(verifyRes.error || "Invalid OTP code.");
       setAutosaveState("error");
