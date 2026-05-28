@@ -298,9 +298,9 @@ export async function updateUserProfile(userId: string, data: ProfileInput) {
       }
     });
 
-    // Sync updates to the base User model
+    // Sync updates to the base User model using email to prevent ID mismatch from Firebase re-registrations
     await prisma.user.update({
-      where: { id: userId },
+      where: { email: updated.email },
       data: {
         fullName: data.fullName,
         displayName: data.displayName,

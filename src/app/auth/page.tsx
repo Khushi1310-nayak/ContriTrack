@@ -24,9 +24,12 @@ import {
   Compass,
   RotateCcw,
   Trash2,
-  ShieldAlert
+  ShieldAlert,
+  Database
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { auth } from "@/lib/firebase";
+import { triggerUserDataBackup } from "@/app/actions/settings-actions";
 import { 
   LoginSchema, 
   SignUpSchema, 
@@ -36,7 +39,7 @@ import {
   ForgotPasswordInput 
 } from "@/lib/validations";
 
-type AuthMode = "login" | "signup" | "forgot" | "verify" | "success";
+type AuthMode = "login" | "signup" | "forgot" | "verify" | "success" | "backup";
 
 export default function AuthPage() {
   const { 
@@ -265,10 +268,11 @@ export default function AuthPage() {
       await login(data.email, data.password);
       
       // Check if email verification is completed
-      if (user && !user.emailVerified) {
+      const currentUser = auth.currentUser;
+      if (currentUser && !currentUser.emailVerified) {
         setMode("verify");
       } else {
-        setMode("success");
+        setMode("backup");
       }
     } catch (e: unknown) {
       console.error(e);
@@ -720,6 +724,22 @@ export default function AuthPage() {
                   </h3>
                   <p className="text-sm font-sans text-[#857C91] tracking-wide">
                     Workspace successfully calibrated
+                  </p>
+                </motion.div>
+              )}
+              {mode === "backup" && (
+                <motion.div
+                  key="backup-title"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <h3 className="text-2xl font-serif text-[#F8CCAA] tracking-wide mb-1">
+                    Welcome Back!
+                  </h3>
+                  <p className="text-sm font-sans text-[#857C91] tracking-wide">
+                    Would you like to backup your data from your previous session?
                   </p>
                 </motion.div>
               )}
@@ -1313,7 +1333,7 @@ export default function AuthPage() {
               )}
 
               {/* ==============================
-                  SUCCESS PANEL CARD
+                  SUCCESS PANEL
                   ============================== */}
               {mode === "success" && (
                 <motion.div
