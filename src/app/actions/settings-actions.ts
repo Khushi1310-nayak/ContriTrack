@@ -1205,9 +1205,9 @@ export async function generateVerificationOTP(firebaseUid: string, email: string
     await recordUserActivityLog(dbUserId, "otp_requested", { device: "System" });
 
     return { success: true };
-  } catch (err) {
+  } catch (err: any) {
     console.error("generateVerificationOTP error:", err);
-    return { success: false, error: "Failed to generate OTP." };
+    return { success: false, error: err.message || "Failed to generate OTP." };
   }
 }
 
@@ -1249,8 +1249,8 @@ export async function verifyOTPCode(firebaseUid: string, email: string, code: st
     await recordUserActivityLog(dbUserId, "otp_verified", { device: "System" });
 
     return { success: true };
-  } catch (err) {
+  } catch (err: any) {
     console.error("verifyOTPCode error:", err);
-    return { success: false, error: "Failed to verify OTP." };
+    return { success: false, error: err.message || "Failed to verify OTP." };
   }
 }
