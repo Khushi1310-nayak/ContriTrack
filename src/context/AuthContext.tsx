@@ -206,12 +206,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
       }
 
-      // Initialize Server-Side meeting reminder worker daemon
-      import("@/app/actions/meeting-actions")
-        .then(({ triggerReminderDaemon }) => triggerReminderDaemon())
-        .catch((err) => {
-          console.error("Failed to trigger reminder daemon server action:", err);
-        });
+      // Initialize periodic meeting reminder processing via API to avoid static route 405 errors on Vercel
+      fetch("/api/cron/process-reminders").catch(() => {});
+      const intervalId = setInterval(() => {
+        fetch("/api/cron/process-reminders").catch(() => {});
+      }, 60000);
+
+      return () => clearInterval(intervalId);
     }
   }, []);
 

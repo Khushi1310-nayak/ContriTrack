@@ -46,8 +46,8 @@ self.addEventListener('fetch', (event) => {
         .then((response) => {
           // If it's a GET, cache it for offline fallback
           if (event.request.method === 'GET' && response.status === 200) {
-            const clone = response.clone();
-            caches.open(DYNAMIC_CACHE).then((cache) => cache.put(event.request, clone));
+            const responseToCache = response.clone();
+            caches.open(DYNAMIC_CACHE).then((cache) => cache.put(event.request, responseToCache));
           }
           return response;
         })
@@ -72,7 +72,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
         const fetchPromise = fetch(event.request).then((networkResponse) => {
-          caches.open(DYNAMIC_CACHE).then((cache) => cache.put(event.request, networkResponse.clone()));
+          if (networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(DYNAMIC_CACHE).then((cache) => cache.put(event.request, responseToCache));
+          }
           return networkResponse;
         }).catch(() => null);
 
@@ -92,8 +95,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
         return cachedResponse || fetch(event.request).then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          if (response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          }
           return response;
         });
       })
