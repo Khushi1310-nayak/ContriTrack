@@ -576,7 +576,44 @@ export async function sendSuspiciousLoginAlertEmail(
     console.error("Nodemailer transporter error:", error);
     return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
-}export async function markAccountForDeletion(userId: string, userEmail: string, fullName: string) {
+}
+
+export async function sendOTPVerificationEmail(
+  userEmail: string,
+  fullName: string,
+  otpCode: string
+) {
+  try {
+    const transporter = getTransporter();
+    const mailOptions = {
+      from: '"ContriTrack Security" <teamtrace.observatory@gmail.com>',
+      to: userEmail,
+      subject: "🔒 Your ContriTrack Verification Code",
+      html: `
+        <div style="background-color: #12131e; color: #ffffff; padding: 30px; font-family: serif; border: 1px solid #F2C1A3; border-radius: 12px; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #F2C1A3; font-weight: normal; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">Security Verification</h2>
+          <p>Hello ${fullName},</p>
+          <p>You have requested a One-Time Password (OTP) to verify your handset or update your security credentials in ContriTrack.</p>
+          <div style="background-color: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.05); padding: 25px; border-radius: 8px; text-align: center; margin: 30px 0;">
+            <p style="font-size: 14px; color: #857C91; margin-top: 0;">YOUR VERIFICATION CODE</p>
+            <h1 style="font-family: monospace; font-size: 42px; color: #F8CCAA; margin: 10px 0; letter-spacing: 5px;">${otpCode}</h1>
+            <p style="font-size: 12px; color: #857C91; margin-bottom: 0;">This code expires in 10 minutes.</p>
+          </div>
+          <p>If you did not request this code, please ignore this email.</p>
+          <p style="font-size: 11px; color: #857C91; margin-top: 30px;">This is an automated security message. Do not reply directly to this mail.</p>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    return { success: true };
+  } catch (error) {
+    console.error("Nodemailer transporter error:", error);
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+export async function markAccountForDeletion(userId: string, userEmail: string, fullName: string) {
   try {
     const graceDays = 30; // 30-day grace recovery window
     const recoverableUntil = new Date(Date.now() + 1000 * 60 * 60 * 24 * graceDays);
@@ -1203,10 +1240,12 @@ export async function generateVerificationOTP(firebaseUid: string, email: string
       }
     });
 
-    // Simulate SMS dispatch
-    console.log("=== MOCK SMS DISPATCH ===");
-    console.log(`To: ${numericPhone}`);
-    console.log(`Body: Your ContriTrack verification code is ${otp}. Expires in 10 minutes.`);
+    // Send OTP via Email (Fallback/Replacement for SMS since we don't have Twilio hooked up)
+    console.log("=== SENDING OTP VIA EMAIL ===");
+    const emailResult = await sendOTPVerificationEmail(email, dbUser.fullName, otp);
+    if (!emailResult.success) {
+      console.warn("Failed to send OTP email, but proceeding.", emailResult.error);
+    }
 
     await recordUserActivityLog(dbUserId, "otp_requested", { device: "System" });
 
