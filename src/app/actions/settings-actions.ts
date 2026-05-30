@@ -1197,105 +1197,30 @@ export async function startFreshAction(email: string) {
   }
 }
 
-export async function generateVerificationOTP(firebaseUid: string, email: string, phone: string) {
+export async function finalizeSecuritySettings(userId: string, verifiedPhone: string) {
   try {
-    const dbUser = await prisma.user.findUnique({ where: { email } });
+    const dbUser = await prisma.user.findUnique({ where: { id: userId } });
     if (!dbUser) return { success: false, error: "User not found in database." };
-    const dbUserId = dbUser.id;
 
-    // Basic E.164 validation logic
-    if (!/^\+?[1-9]\d{1,14}$/.test(phone.replace(/[\s-()]/g, ""))) {
-      return { success: false, error: "Invalid phone number format." };
+    let numericPhone = verifiedPhone.trim();
+    if (!numericPhone.startsWith("+")) {
+       numericPhone = "+" + numericPhone; 
     }
 
-    const numericPhone = phone.replace(/[\s-()]/g, "");
-
-    // Check rate limit: if existing session is within 1 minute
-    const existing = await prisma.oTPSession.findUnique({ where: { userId: dbUserId } });
-    if (existing) {
-      const diff = new Date().getTime() - existing.createdAt.getTime();
-      if (diff < 60000) {
-        return { success: false, error: "Please wait 60 seconds before requesting a new OTP." };
-      }
-    }
-
-    // Generate 6 digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
-
-    await prisma.oTPSession.upsert({
-      where: { userId: dbUserId },
-      update: {
-        hashedOtp,
-        phone: numericPhone,
-        expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 mins
-        attempts: 0,
-        createdAt: new Date()
-      },
-      create: {
-        userId: dbUserId,
-        hashedOtp,
-        phone: numericPhone,
-        expiresAt: new Date(Date.now() + 10 * 60 * 1000)
-      }
-    });
-
-    // Send OTP via Email (Fallback/Replacement for SMS since we don't have Twilio hooked up)
-    console.log("=== SENDING OTP VIA EMAIL ===");
-    const emailResult = await sendOTPVerificationEmail(email, dbUser.fullName, otp);
-    if (!emailResult.success) {
-      console.warn("Failed to send OTP email, but proceeding.", emailResult.error);
-    }
-
-    await recordUserActivityLog(dbUserId, "otp_requested", { device: "System" });
-
-    return { success: true };
-  } catch (err: any) {
-    console.error("generateVerificationOTP error:", err);
-    return { success: false, error: err.message || "Failed to generate OTP." };
-  }
-}
-
-export async function verifyOTPCode(firebaseUid: string, email: string, code: string) {
-  try {
-    const dbUser = await prisma.user.findUnique({ where: { email } });
-    if (!dbUser) return { success: false, error: "User not found in database." };
-    const dbUserId = dbUser.id;
-
-    const session = await prisma.oTPSession.findUnique({ where: { userId: dbUserId } });
-    if (!session) return { success: false, error: "No active OTP session." };
-
-    if (session.expiresAt < new Date()) {
-      await prisma.oTPSession.delete({ where: { userId: dbUserId } });
-      return { success: false, error: "OTP expired." };
-    }
-
-    if (session.attempts >= 5) {
-      await prisma.oTPSession.delete({ where: { userId: dbUserId } });
-      return { success: false, error: "Too many failed attempts. Session locked." };
-    }
-
-    const hashedInput = crypto.createHash("sha256").update(code).digest("hex");
-    if (hashedInput !== session.hashedOtp) {
-      await prisma.oTPSession.update({
-        where: { userId: dbUserId },
-        data: { attempts: session.attempts + 1 }
-      });
-      return { success: false, error: "Invalid OTP code." };
-    }
-
-    // Success
     await prisma.userSecurity.update({
-      where: { userId: dbUserId },
-      data: { verifiedPhone: session.phone }
+      where: { userId },
+      data: {
+        verifiedPhone: numericPhone,
+        passwordChangedAt: new Date()
+      }
     });
 
-    await prisma.oTPSession.delete({ where: { userId: dbUserId } });
-    await recordUserActivityLog(dbUserId, "otp_verified", { device: "System" });
+    await recordUserActivityLog(userId, "otp_verified", { device: "System" });
+    await recordUserActivityLog(userId, "password_changed", { device: "System" });
 
     return { success: true };
-  } catch (err: any) {
-    console.error("verifyOTPCode error:", err);
-    return { success: false, error: err.message || "Failed to verify OTP." };
+  } catch (error: any) {
+    console.error("finalizeSecuritySettings error:", error);
+    return { success: false, error: error.message || "Failed to finalize security settings." };
   }
 }

@@ -27,12 +27,11 @@ import {
   fetchUserBackupSnapshots,
   revokeActiveSession,
   markAccountForDeletion,
-  generateVerificationOTP,
-  verifyOTPCode
+  finalizeSecuritySettings
 } from "@/app/actions/settings-actions";
 import { updateNotificationPreferences, fetchNotificationPreferences } from "@/app/actions/notification-actions";
 import { useRouter } from "next/navigation";
-import { deleteUser, updateProfile, updatePassword } from "firebase/auth";
+import { deleteUser, updateProfile, updatePassword, RecaptchaVerifier, linkWithPhoneNumber, ConfirmationResult } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import SearchableDropdown from "@/components/SearchableDropdown";
@@ -120,6 +119,7 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
   const [passStrength, setPassStrength] = useState({ score: 0, label: "Weak" });
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState("");
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [otpTimer, setOtpTimer] = useState(0);
 
   // Sessions list
@@ -407,7 +407,16 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
     }
   };
 
-  // Trigger SMS OTP
+  // Setup Recaptcha
+  const setupRecaptcha = () => {
+    if (!(window as any).recaptchaVerifier) {
+      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        'size': 'invisible'
+      });
+    }
+  };
+
+  // Trigger SMS OTP using Firebase Phone Auth
   const handleSendOTP = async () => {
     const phoneToVerify = verifiedPhone || phoneNumber;
     if (!phoneToVerify) {
@@ -416,16 +425,26 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
     }
     
     setAutosaveState("saving");
-    const userEmail = user?.email || "";
-    const res = await generateVerificationOTP(userId, userEmail, phoneToVerify);
     
-    if (res.success) {
+    try {
+      setupRecaptcha();
+      const appVerifier = (window as any).recaptchaVerifier;
+      
+      let formattedPhone = phoneToVerify.trim();
+      if (!formattedPhone.startsWith("+")) {
+         formattedPhone = "+" + formattedPhone; 
+      }
+      
+      const confirmation = await linkWithPhoneNumber(auth.currentUser!, formattedPhone, appVerifier);
+      setConfirmationResult(confirmation);
+      
       setOtpSent(true);
       setOtpTimer(60);
-      setSuccessMessage("OTP Token sent to verified handset.");
+      setSuccessMessage("OTP Token sent to verified handset via Firebase.");
       setAutosaveState("saved");
-    } else {
-      setErrorMessage(res.error || "Failed to send OTP.");
+    } catch (error: any) {
+      console.error("Firebase Phone Auth error:", error);
+      setErrorMessage(error.message || "Failed to send OTP via SMS.");
       setAutosaveState("error");
     }
   };
@@ -444,48 +463,49 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
       return;
     }
 
-    setAutosaveState("saving");
-
-    const userEmail = user?.email || "";
-    const verifyRes = await verifyOTPCode(userId, userEmail, otpCode);
-    if (!verifyRes.success) {
-      setErrorMessage(verifyRes.error || "Invalid OTP code.");
-      setAutosaveState("error");
+    if (!confirmationResult) {
+      setErrorMessage("No active OTP session. Please resend the code.");
       return;
     }
 
+    setAutosaveState("saving");
+
     try {
+      // 1. Confirm OTP directly with Firebase
+      await confirmationResult.confirm(otpCode);
+      
+      // 2. Change password in Firebase
       const currentUser = auth.currentUser;
       if (currentUser) {
         await updatePassword(currentUser, newPassword);
       } else {
         throw new Error("No authenticated session found in Firebase.");
       }
+      
+      // 3. Finalize security settings in Postgres
+      const phoneToVerify = verifiedPhone || phoneNumber;
+      const res = await finalizeSecuritySettings(userId, phoneToVerify);
+      
+      if (res.success) {
+        setSuccessMessage("Password updated and handset verified successfully.");
+        setAutosaveState("saved");
+        setNewPassword("");
+        setConfirmPassword("");
+        setOtpCode("");
+        setOtpSent(false);
+        setConfirmationResult(null);
+      } else {
+        throw new Error(res.error || "Failed to update Postgres database.");
+      }
+      
     } catch (err: any) {
-      console.error("Firebase updatePassword error:", err);
+      console.error("Firebase Verification error:", err);
       if (err.code === "auth/requires-recent-login") {
         setErrorMessage("Please sign out and sign in again before changing password.");
       } else {
-        setErrorMessage(err.message || "Failed to update password with Auth provider.");
+        setErrorMessage(err.message || "Invalid OTP or failed to verify.");
       }
       setAutosaveState("error");
-      return;
-    }
-
-    const res = await updateUserSecurity(userId, {
-      passwordChangedAt: new Date()
-    });
-
-    if (res.success) {
-      setAutosaveState("saved");
-      setSuccessMessage("Security keys verified and password reset successfully!");
-      setNewPassword("");
-      setConfirmPassword("");
-      setOtpSent(false);
-      setOtpCode("");
-    } else {
-      setAutosaveState("error");
-      setErrorMessage(res.error || "Transaction error.");
     }
   };
 
@@ -579,7 +599,7 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
     } else {
       setAutosaveState("error");
       setErrorMessage(res.error || "Failed to synchronize preferences.");
-      setTimeout(() => setErrorMessage(null), 5000);
+      setTimeout(() => setSuccessMessage(null), 5000);
       // Revert state
       if (type === "browser") setPrefBrowser(currentVal);
       if (type === "email") setPrefEmail(currentVal);
@@ -633,6 +653,7 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
   return (
     <div className="flex flex-col gap-8 text-left max-w-5xl">
       {/* Top Title Bar */}
+      <div id="recaptcha-container"></div>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
         <div className="flex flex-col gap-1.5">
           <span className="text-[10px] uppercase tracking-widest text-[#F2C1A3] font-mono">AAA System Security</span>
@@ -651,7 +672,6 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
           </span>
         </div>
       </div>
-
       {/* Primary Alerts */}
       <AnimatePresence>
         {errorMessage && (
