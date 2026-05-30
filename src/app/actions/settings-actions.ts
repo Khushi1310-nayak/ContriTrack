@@ -148,13 +148,17 @@ export async function syncUserProfileWithPostgres(
       }
     });
 
+    // Find if the user already had a profile under this email (e.g., from another Auth provider)
+    const existingProfile = await prisma.userProfile.findUnique({ where: { email: data.email } });
+    const oldUserId = existingProfile ? existingProfile.userId : null;
+
     // 1. Transactionally upsert both Profile and Security registries
     profile = await prisma.userProfile.upsert({
-      where: { userId },
+      where: { email: data.email },
       update: {
+        userId, // update to the new Firebase UID
         fullName: data.fullName,
         displayName: data.displayName || undefined,
-        email: data.email,
         university: data.university || undefined,
         githubUsername: data.githubUsername || undefined
       },
@@ -174,8 +178,9 @@ export async function syncUserProfileWithPostgres(
     });
 
     // Track multiple active sessions and alert if IP changed
+    const searchUserId = oldUserId && oldUserId !== userId ? oldUserId : userId;
     const existingSecurity = await prisma.userSecurity.findUnique({
-      where: { userId }
+      where: { userId: searchUserId }
     });
 
     let sessions: Array<any> = [];
@@ -209,8 +214,9 @@ export async function syncUserProfileWithPostgres(
     const initialSession = JSON.stringify(sessions);
 
     await prisma.userSecurity.upsert({
-      where: { userId },
+      where: { userId: searchUserId },
       update: {
+        userId, // Update to the new Firebase UID
         lastLogin: new Date(),
         activeSessions: initialSession
       },
