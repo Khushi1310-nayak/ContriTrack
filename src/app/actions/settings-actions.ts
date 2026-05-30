@@ -1224,3 +1224,91 @@ export async function finalizeSecuritySettings(userId: string, verifiedPhone: st
     return { success: false, error: error.message || "Failed to finalize security settings." };
   }
 }
+
+export async function generateEmailOTP(email: string) {
+  try {
+    const dbUser = await prisma.user.findUnique({ where: { email } });
+    if (!dbUser) return { success: false, error: "User not found in database." };
+    const dbUserId = dbUser.id;
+
+    // Check rate limit: if existing session is within 1 minute
+    const existing = await prisma.oTPSession.findUnique({ where: { userId: dbUserId } });
+    if (existing) {
+      const diff = new Date().getTime() - existing.createdAt.getTime();
+      if (diff < 60000) {
+        return { success: false, error: "Please wait 60 seconds before requesting a new OTP." };
+      }
+    }
+
+    // Generate 6 digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
+
+    await prisma.oTPSession.upsert({
+      where: { userId: dbUserId },
+      update: {
+        hashedOtp,
+        phone: email, // store email in the phone field for simplicity
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 mins
+        attempts: 0,
+        createdAt: new Date()
+      },
+      create: {
+        userId: dbUserId,
+        hashedOtp,
+        phone: email,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+      }
+    });
+
+    console.log("=== SENDING OTP VIA EMAIL ===");
+    const emailResult = await sendOTPVerificationEmail(email, dbUser.fullName, otp);
+    if (!emailResult.success) {
+      console.warn("Failed to send OTP email.", emailResult.error);
+      return { success: false, error: "Failed to dispatch email." };
+    }
+
+    await recordUserActivityLog(dbUserId, "otp_requested", { device: "Email" });
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("generateEmailOTP error:", err);
+    return { success: false, error: err.message || "Failed to generate OTP." };
+  }
+}
+
+export async function verifyEmailOTP(email: string, code: string) {
+  try {
+    const dbUser = await prisma.user.findUnique({ where: { email } });
+    if (!dbUser) return { success: false, error: "User not found in database." };
+    const dbUserId = dbUser.id;
+
+    const session = await prisma.oTPSession.findUnique({ where: { userId: dbUserId } });
+    if (!session) return { success: false, error: "No active OTP session." };
+
+    if (session.expiresAt < new Date()) {
+      await prisma.oTPSession.delete({ where: { userId: dbUserId } });
+      return { success: false, error: "OTP expired." };
+    }
+
+    if (session.attempts >= 5) {
+      await prisma.oTPSession.delete({ where: { userId: dbUserId } });
+      return { success: false, error: "Too many failed attempts. Session locked." };
+    }
+
+    const hashedInput = crypto.createHash("sha256").update(code).digest("hex");
+    if (hashedInput !== session.hashedOtp) {
+      await prisma.oTPSession.update({
+        where: { userId: dbUserId },
+        data: { attempts: session.attempts + 1 }
+      });
+      return { success: false, error: "Invalid OTP code." };
+    }
+
+    await prisma.oTPSession.delete({ where: { userId: dbUserId } });
+    return { success: true };
+  } catch (err: any) {
+    console.error("verifyEmailOTP error:", err);
+    return { success: false, error: err.message || "Failed to verify OTP." };
+  }
+}

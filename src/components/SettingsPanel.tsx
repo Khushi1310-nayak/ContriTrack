@@ -27,7 +27,9 @@ import {
   fetchUserBackupSnapshots,
   revokeActiveSession,
   markAccountForDeletion,
-  finalizeSecuritySettings
+  finalizeSecuritySettings,
+  generateEmailOTP,
+  verifyEmailOTP
 } from "@/app/actions/settings-actions";
 import { updateNotificationPreferences, fetchNotificationPreferences } from "@/app/actions/notification-actions";
 import { useRouter } from "next/navigation";
@@ -119,6 +121,7 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
   const [passStrength, setPassStrength] = useState({ score: 0, label: "Weak" });
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState("");
+  const [otpMethod, setOtpMethod] = useState<"sms" | "email" | null>(null);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [otpTimer, setOtpTimer] = useState(0);
 
@@ -417,7 +420,7 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
   };
 
   // Trigger SMS OTP using Firebase Phone Auth
-  const handleSendOTP = async () => {
+  const handleSendPhoneOTP = async () => {
     const phoneToVerify = verifiedPhone || phoneNumber;
     if (!phoneToVerify) {
       setErrorMessage("Please supply a valid mobile registry number first.");
@@ -438,6 +441,7 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
       const confirmation = await linkWithPhoneNumber(auth.currentUser!, formattedPhone, appVerifier);
       setConfirmationResult(confirmation);
       
+      setOtpMethod("sms");
       setOtpSent(true);
       setOtpTimer(60);
       setSuccessMessage("OTP Token sent to verified handset via Firebase.");
@@ -445,6 +449,28 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
     } catch (error: any) {
       console.error("Firebase Phone Auth error:", error);
       setErrorMessage(error.message || "Failed to send OTP via SMS.");
+      setAutosaveState("error");
+    }
+  };
+
+  const handleSendEmailOTP = async () => {
+    const userEmail = user?.email || "";
+    if (!userEmail) {
+      setErrorMessage("No verified email address found.");
+      return;
+    }
+    
+    setAutosaveState("saving");
+    const res = await generateEmailOTP(userEmail);
+    
+    if (res.success) {
+      setOtpMethod("email");
+      setOtpSent(true);
+      setOtpTimer(60);
+      setSuccessMessage("OTP Token sent to your verified email address.");
+      setAutosaveState("saved");
+    } else {
+      setErrorMessage(res.error || "Failed to send OTP via email.");
       setAutosaveState("error");
     }
   };
@@ -463,16 +489,29 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
       return;
     }
 
-    if (!confirmationResult) {
-      setErrorMessage("No active OTP session. Please resend the code.");
+    if (!otpMethod) {
+      setErrorMessage("No active OTP session.");
+      return;
+    }
+    
+    if (otpMethod === "sms" && !confirmationResult) {
+      setErrorMessage("No active SMS OTP session. Please resend the code.");
       return;
     }
 
     setAutosaveState("saving");
 
     try {
-      // 1. Confirm OTP directly with Firebase
-      await confirmationResult.confirm(otpCode);
+      // 1. Confirm OTP
+      if (otpMethod === "sms") {
+        await confirmationResult!.confirm(otpCode);
+      } else {
+        const userEmail = user?.email || "";
+        const verifyRes = await verifyEmailOTP(userEmail, otpCode);
+        if (!verifyRes.success) {
+          throw new Error(verifyRes.error || "Invalid Email OTP code.");
+        }
+      }
       
       // 2. Change password in Firebase
       const currentUser = auth.currentUser;
@@ -493,6 +532,7 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
         setConfirmPassword("");
         setOtpCode("");
         setOtpSent(false);
+        setOtpMethod(null);
         setConfirmationResult(null);
       } else {
         throw new Error(res.error || "Failed to update Postgres database.");
@@ -1103,19 +1143,29 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
                     <div className="flex flex-col gap-2 p-4 rounded-2xl bg-white/[0.01] border border-white/5">
                       <span className="text-[10px] uppercase font-mono text-[#857C91]">Step 1: Security Handset Verification</span>
                       
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-col sm:flex-row items-center gap-3">
                         <button 
-                          onClick={handleSendOTP}
+                          onClick={handleSendPhoneOTP}
                           disabled={otpTimer > 0}
-                          className="px-5 py-2.5 rounded-full bg-[#F2C1A3] hover:bg-[#F8CCAA] text-[#12131e] text-[10px] font-bold uppercase tracking-wider transition disabled:opacity-40"
+                          className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-[#F2C1A3] hover:bg-[#F8CCAA] text-[#12131e] text-[10px] font-bold uppercase tracking-wider transition disabled:opacity-40"
                         >
-                          {otpSent ? `Resend OTP (${otpTimer}s)` : "Send SMS verification OTP"}
+                          {otpSent && otpMethod === "sms" ? `Resend SMS OTP (${otpTimer}s)` : "Send SMS verification OTP"}
+                        </button>
+                        <span className="text-[10px] text-[#857C91] font-mono">OR</span>
+                        <button 
+                          onClick={handleSendEmailOTP}
+                          disabled={otpTimer > 0}
+                          className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-white/5 hover:bg-white/10 text-white border border-white/10 text-[10px] font-bold uppercase tracking-wider transition disabled:opacity-40"
+                        >
+                          {otpSent && otpMethod === "email" ? `Resend Email OTP (${otpTimer}s)` : "Send Email OTP"}
                         </button>
                       </div>
 
                       {otpSent && (
                         <div className="flex flex-col gap-1.5 mt-2 animate-fadeIn">
-                          <label htmlFor="otp-c" className="text-[#857C91] text-[9px] uppercase font-mono">SMS Verification Code</label>
+                          <label htmlFor="otp-c" className="text-[#857C91] text-[9px] uppercase font-mono">
+                            {otpMethod === "sms" ? "SMS Verification Code" : "Email Verification Code"}
+                          </label>
                           <input 
                             id="otp-c"
                             type="text" 
