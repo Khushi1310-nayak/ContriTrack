@@ -317,7 +317,12 @@ This project is licensed under the MIT License.
 
 ## **Manisa Nayak**
 
-Passionate about modern web architecture, AI integrations, and full-stack development.
+🎓 Student | Full-Stack Developer | AI Product Builder
+
+Passionate about:
+- Full-Stack Architecture
+- User Experience (UI/UX)
+- AI Automation & Product Building
 
 ### Connect with Me
 
