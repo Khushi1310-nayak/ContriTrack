@@ -1,283 +1,253 @@
-# ContriTrack
+<div align="center">
 
-ContriTrack is an AI-powered academic collaboration and telemetry platform designed for students, developers, engineering teams, and hackathon communities.
+# 📊 ContriTrack
 
-The platform helps teams manage workspaces, track contributions, monitor collaboration fairness, visualize productivity trends, conduct meetings, manage recruitment pipelines, and receive AI-powered insights through real-time analytics systems.
+## AI-Powered Academic Collaboration & Telemetry Platform
 
-Built with a modern full-stack architecture and enterprise-inspired design system, ContriTrack transforms collaborative workflows into a structured and intelligent productivity ecosystem.
+*A platform designed for students, developers, engineering teams, and hackathon communities to manage workspaces, track contributions, monitor fairness, and receive AI-powered insights.*
 
----
+![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=for-the-badge&logo=typescript)
+![Google Gemini](https://img.shields.io/badge/Google-Gemini-orange?style=for-the-badge&logo=google)
+![Supabase](https://img.shields.io/badge/Supabase-green?style=for-the-badge&logo=supabase)
+![Status](https://img.shields.io/badge/Project-Active-success?style=for-the-badge)
 
-## Core Features
-
-### Workspace Management
-- Create and manage collaborative workspaces
-- Dynamic workspace initialization
-- Workspace-specific analytics and telemetry
-- Multi-user collaboration support
-
-### Overview Dashboard
-- Workspace activity summaries
-- Productivity snapshots
-- Contribution insights
-- Recent team activity
-- AI-generated workspace observations
-
-### AI Insights
-- AI-powered collaboration analysis
-- Productivity recommendations
-- Contribution pattern evaluation
-- Burnout-awareness indicators
-- Intelligent workspace suggestions using Gemini API
-
-### Analytics & Telemetry
-- Contribution tracking systems
-- Sprint analytics
-- Productivity graphs
-- Workspace engagement metrics
-- Team activity visualizations
-- Real-time telemetry dashboards
-
-### Teams Management
-- Contributor management
-- Role assignment systems
-- Member classifications
-- Workspace identity synchronization
-- Team collaboration monitoring
-
-### Meetings System
-- Meeting scheduling interface
-- Team discussion workflows
-- Collaboration coordination
-- Workspace communication support
-
-### Recruitment Center
-- Candidate application tracking
-- Resume upload management
-- Recruitment analytics
-- Role-based candidate filtering
-- Candidate deletion workflows
-- Recruitment dashboard systems
-
-### GitHub Purging & Repository Utilities
-- GitHub integration systems
-- Contribution monitoring
-- Repository activity tracking
-- GitHub telemetry visualization
-
-### Reports System
-- Workspace performance reports
-- Contribution summaries
-- Analytics exports
-- AI-generated reporting insights
-
-### Settings & Security
-- Profile management
-- Contributor identity synchronization
-- Security key management
-- Alert controls
-- Notification systems
-- Workspace personalization
-- Authentication settings
-
-### Authentication System
-- Google Authentication
-- GitHub Authentication
-- Email & Password Authentication
-- Account restoration workflows
-- Secure account deletion systems
+</div>
 
 ---
 
-## Tech Stack
+# 📖 Overview
 
-### Frontend
-- Next.js 15
-- TypeScript
-- Tailwind CSS
-- Framer Motion
-- shadcn/ui
+Collaboration in student teams and developer communities often suffers from uneven contribution visibility, poor sprint transparency, and a lack of accountability. Tracking workflows manually leads to collaboration imbalance and disconnected productivity monitoring.
 
-### Backend
-- Node.js
-- Express.js
+**ContriTrack** is an AI-powered **Collaboration and Telemetry Platform** that solves these challenges.
 
-### Database & ORM
-- Supabase PostgreSQL
-- Prisma ORM
-
-### Authentication
-- Firebase Authentication
-
-### AI Systems
-- Gemini API
-
-### Monitoring & Testing
-- Sentry
-- Playwright
-- GitHub Actions CI/CD
-
-### Deployment
-- Vercel
+It centralizes collaboration intelligence into a single structured environment. By combining dynamic workspace management, real-time analytics, and AI-powered insights, ContriTrack transforms collaborative workflows into a structured, intelligent productivity ecosystem.
 
 ---
 
-## Architecture Highlights
+# ✨ Core Features
 
-- Full-stack scalable architecture
-- Modular component-based frontend system
-- Real-time telemetry workflows
-- AI-integrated analytics systems
-- Production-grade monitoring and testing infrastructure
-- Enterprise-inspired UI/UX patterns
-- Responsive workspace ecosystem
-
----
-
-## Productivity & Collaboration Systems
-
-ContriTrack focuses on solving common collaboration challenges faced by student teams and developer communities:
-
-- Uneven contribution visibility
-- Poor sprint transparency
-- Lack of accountability
-- Collaboration imbalance
-- Disconnected workflow tracking
-- Manual productivity monitoring
-
-The platform centralizes collaboration intelligence into a single structured environment.
+- 🏢 **Workspace Management:** Dynamic multi-user collaborative workspaces.
+- 📊 **Analytics & Telemetry:** Contribution tracking, sprint analytics, and real-time dashboards.
+- 🤖 **AI Insights:** Gemini-powered collaboration analysis and burnout-awareness indicators.
+- 👥 **Teams Management:** Contributor roles, member classifications, and identity synchronization.
+- 📅 **Meetings System:** Meeting scheduling, team discussions, and collaboration coordination.
+- 🎯 **Recruitment Center:** Candidate application tracking and resume upload management.
+- 🧠 **GitHub Integration:** Contribution monitoring and repository activity tracking.
+- 📄 **Reports System:** Workspace performance reports and AI-generated insights.
+- 🔒 **Settings & Security:** Profile management, alert controls, and secure authentication workflows.
 
 ---
 
-## AI Integration
+# 🏗 Architecture
 
-ContriTrack integrates Gemini-powered AI systems to provide:
+```mermaid
+graph TD
+    Client["Client Browser (Next.js UI)"]
 
-- Workspace insights
-- Productivity recommendations
-- Collaboration analysis
-- Team engagement summaries
-- Intelligent reporting workflows
+    subgraph Vercel ["Vercel Hosting Network"]
+        NextApp["Next.js 15 Application"]
+        ServerActions["Server Actions API (/actions)"]
+        Cron["Background/Cron Endpoints (/api/cron)"]
+    end
 
-The AI systems are context-aware and dynamically adapt to workspace activity.
+    subgraph Supabase ["Supabase Cloud"]
+        Prisma["Prisma ORM Layer"]
+        DB["PostgreSQL Database"]
+    end
+    
+    subgraph External ["External Services"]
+        GitHub["GitHub REST API (Octokit)"]
+        FirebaseAuth["Firebase Auth (Identity)"]
+        Sentry["Sentry (Telemetry & Monitoring)"]
+    end
 
----
-
-## Monitoring & Reliability
-
-### Automated End-to-End Testing
-Playwright-based automated testing validates:
-- Authentication workflows
-- Workspace creation
-- Navigation systems
-- Analytics rendering
-- Responsive behavior
-- Settings functionality
-
-### Real-Time Error Monitoring
-Sentry integration provides:
-- Production error tracking
-- API monitoring
-- Performance tracing
-- Frontend exception reporting
-
----
-
-## Design Philosophy
-
-ContriTrack follows a modern enterprise-inspired visual system focused on:
-- Productivity-first workflows
-- Telemetry-driven dashboards
-- Futuristic UI patterns
-- Smooth user interactions
-- Structured information hierarchy
-- Developer-oriented experiences
+    Client -- "HTTP/React State" --> NextApp
+    Client -- "Auth Tokens" --> FirebaseAuth
+    
+    NextApp -- "RPC / Forms" --> ServerActions
+    NextApp -- "Verify JWT" --> FirebaseAuth
+    NextApp -- "Client / Server Errors" --> Sentry
+    
+    ServerActions -- "Prisma Client" --> Prisma
+    Cron -- "Prisma Client" --> Prisma
+    
+    Cron -- "Fetch Repo/Commits" --> GitHub
+    Cron -- "Rate-Limited Polling" --> GitHub
+    
+    Prisma <-->|"Postgres TCP"| DB
+```
 
 ---
 
-## Deployment Infrastructure
+# 💻 System Modules
 
-The platform is fully deployed using:
-- Vercel Production Hosting
-- Supabase Cloud Database
-- Firebase Authentication
-- GitHub CI/CD Pipelines
-- Sentry Monitoring Infrastructure
+## 🏢 Workspace Management
+
+Create and manage collaborative workspaces with dynamic initialization, workspace-specific analytics, telemetry, and comprehensive multi-user support.
+
+---
+
+## 📊 Overview Dashboard
+
+Gain immediate visibility with workspace activity summaries, productivity snapshots, recent team activity, and AI-generated workspace observations.
+
+---
+
+## 🤖 AI Insights
+
+Leverage the Gemini API for AI-powered collaboration analysis, productivity recommendations, contribution pattern evaluation, and burnout-awareness indicators.
+
+---
+
+## 📈 Analytics & Telemetry
+
+Monitor engagement through contribution tracking systems, sprint analytics, productivity graphs, workspace engagement metrics, and real-time telemetry dashboards.
+
+---
+
+## 👥 Teams Management
+
+Manage your contributors efficiently with role assignment systems, member classifications, workspace identity synchronization, and team collaboration monitoring.
+
+---
+
+## 📅 Meetings System
+
+Coordinate effortlessly with a dedicated meeting scheduling interface, team discussion workflows, and robust workspace communication support.
+
+---
+
+## 🎯 Recruitment Center
+
+Streamline team expansion with candidate application tracking, resume upload management, recruitment analytics, role-based candidate filtering, and recruitment dashboard systems.
+
+---
+
+## 🧠 GitHub Purging & Repository Utilities
+
+Integrate seamlessly with GitHub for contribution monitoring, repository activity tracking, and visual GitHub telemetry.
+
+---
+
+## 📄 Reports System
+
+Export and analyze workspace performance reports, contribution summaries, analytics exports, and AI-generated reporting insights.
+
+---
+
+## 🔒 Authentication System
+
+Secure user access via Google Authentication, GitHub Authentication, and Email/Password with account restoration and secure account deletion workflows.
+
+---
+
+# 🧠 Engineering Concepts & Architecture Highlights
+
+This project demonstrates several production-grade engineering concepts:
+
+✅ Full-stack scalable architecture
+✅ Modular component-based frontend system
+✅ Real-time telemetry workflows
+✅ AI-integrated analytics systems
+✅ Production-grade monitoring (Sentry) and testing (Playwright) infrastructure
+✅ Enterprise-inspired UI/UX patterns
+✅ Responsive workspace ecosystem
+
+---
+
+# 🛠 Tech Stack
+
+| Category | Technology |
+| --- | --- |
+| **Frontend** | Next.js 15, TypeScript, Tailwind CSS, Framer Motion, shadcn/ui |
+| **Backend** | Node.js, Express.js |
+| **Database & ORM** | Supabase PostgreSQL, Prisma ORM |
+| **Authentication** | Firebase Authentication |
+| **AI Systems** | Gemini API |
+| **Monitoring & Testing** | Sentry, Playwright, GitHub Actions CI/CD |
+| **Deployment** | Vercel |
 
 ---
 
 # 📸 Screenshots
 
-## 🏠 Overview Dashboard
+## 🏠 Overview Dashboard Screenshot
+
 <img width="100%" alt="Overview Dashboard" src="https://drive.google.com/uc?export=view&id=1MifXrKFyauD5WwHPzeTKYoPYyQmz_ent" />
 
 ---
 
-## 📊 Analytics Dashboard
+## 📊 Analytics Dashboard Screenshot
+
 <img width="100%" alt="Analytics Dashboard" src="https://drive.google.com/uc?export=view&id=18xzncaojF6gKn5JIDuJRYq2a5cR6atN5" />
 
 ---
 
-## 🤖 AI Insights
+## 🤖 AI Insights Screenshot
+
 <img width="100%" alt="AI Insights" src="https://drive.google.com/uc?export=view&id=1YgUjoiqrjNyOAaSKNtogZ5LrCAVtiYnA" />
 
 ---
 
-## 👥 Teams Management
+## 👥 Teams Management Screenshot
+
 <img width="100%" alt="Teams Management" src="https://drive.google.com/uc?export=view&id=1q-1IFyoojYzeQbjjIF1JmFD9yNZS1kQl" />
 
 ---
 
-## 📅 Meetings Workspace
+## 📅 Meetings Workspace Screenshot
+
 <img width="100%" alt="Meetings Workspace" src="https://drive.google.com/uc?export=view&id=1kDYZx7fSqtfeQxf7n8Qj82GA6C8v8bxl" />
 
 ---
 
-## 📄 Reports System
+## 📄 Reports System Screenshot
+
 <img width="100%" alt="Reports System" src="https://drive.google.com/uc?export=view&id=1NIvHbQN7QA0BLtohJjOPeWRN9IufureH" />
 
 ---
 
-## ⚙️ Settings & Security
+## ⚙️ Settings & Security Screenshot
+
 <img width="100%" alt="Settings & Security" src="https://drive.google.com/uc?export=view&id=1wS43XUyJWfzIS9s7TJXQB0goUkoK9gYk" />
 
 ---
 
-## 🧠 GitHub Purging & Telemetry
+## 🧠 GitHub Purging & Telemetry Screenshot
+
 <img width="100%" alt="GitHub Purging" src="https://drive.google.com/uc?export=view&id=1YTRyneX_yF3Aanu9SrAIzFc_wdjDqU9f" />
 
 ---
 
-## Getting Started
+# 🚀 Getting Started
 
-### Clone the Repository
+## 1. Clone the Repository
 
 ```bash
 git clone https://github.com/Khushi1310-nayak/ContriTrack.git
 cd ContriTrack
 ```
 
-### Install Dependencies
+## 2. Install Dependencies
 
 ```bash
 npm install
 ```
 
-### Configure Environment Variables
+## 3. Configure Environment Variables
 
-Create a `.env.local` file and add:
+Create a `.env.local` file and add the required variables:
 
 ```env
 # SUPABASE DATABASE & STORAGE
-
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
-
 DATABASE_URL=
 DIRECT_URL=
 
 # FIREBASE AUTHENTICATION
-
 NEXT_PUBLIC_FIREBASE_API_KEY=
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=
@@ -286,21 +256,17 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_APP_ID=
 
 # GITHUB OAUTH
-
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
 
 # AI SYSTEMS
-
 OPENAI_API_KEY=
 GEMINI_API_KEY=
 
 # SITE CONFIGURATION
-
 NEXT_PUBLIC_SITE_URL=
 
 # SMTP / EMAIL SYSTEM
-
 SMTP_HOST=
 SMTP_PORT=
 SMTP_USER=
@@ -308,14 +274,13 @@ SMTP_PASS=
 SMTP_FROM=
 
 # SENTRY MONITORING
-
 NEXT_PUBLIC_SENTRY_DSN=
 SENTRY_AUTH_TOKEN=
 SENTRY_ORG=
 SENTRY_PROJECT=
 ```
 
-### Run Development Server
+## 4. Run Development Server
 
 ```bash
 npm run dev
@@ -323,7 +288,7 @@ npm run dev
 
 ---
 
-## Future Roadmap
+# 🔮 Future Roadmap
 
 - Real-time collaboration systems
 - AI-powered sprint optimization
@@ -336,23 +301,29 @@ npm run dev
 
 ---
 
-## Contributing
+# 🤝 Contributing
 
-Contributions are welcome.
-
-Fork the repository, create a feature branch, and submit a pull request.
+Contributions are welcome! Fork the repository, create a feature branch, and submit a pull request.
 
 ---
 
-## License
+# 📄 License
 
 This project is licensed under the MIT License.
 
 ---
 
-## Author
+# 👩💻 Author
 
-### Manisa Nayak
+## **Manisa Nayak**
 
-- GitHub: https://github.com/Khushi1310-nayak
-- LinkedIn: https://www.linkedin.com/in/manisa-nayak-185bb5378/
+Passionate about modern web architecture, AI integrations, and full-stack development.
+
+### Connect with Me
+
+**GitHub:** [Khushi1310-nayak](https://github.com/Khushi1310-nayak)  
+**LinkedIn:** [Manisa Nayak](https://www.linkedin.com/in/manisa-nayak-185bb5378/)
+
+---
+
+## ⭐ If you found this project interesting, consider giving it a Star
