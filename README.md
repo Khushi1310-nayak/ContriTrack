@@ -97,7 +97,7 @@ Gain immediate visibility with workspace activity summaries, productivity snapsh
 
 ## 🤖 AI Insights
 
-Leverage the Gemini API for AI-powered collaboration analysis, productivity recommendations, contribution pattern evaluation, and burnout-awareness indicators.
+Leverage the OpenRouter API for AI-powered collaboration analysis, productivity recommendations, contribution pattern evaluation, and burnout-awareness indicators.
 
 ---
 
@@ -165,7 +165,7 @@ This project demonstrates several production-grade engineering concepts:
 | **Backend** | Node.js, Express.js |
 | **Database & ORM** | Supabase PostgreSQL, Prisma ORM |
 | **Authentication** | Firebase Authentication |
-| **AI Systems** | Gemini API |
+| **AI Systems** | OpenRouter API |
 | **Monitoring & Testing** | Sentry, Playwright, GitHub Actions CI/CD |
 | **Deployment** | Vercel |
 
@@ -260,8 +260,7 @@ GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
 
 # AI SYSTEMS
-OPENAI_API_KEY=
-GEMINI_API_KEY=
+OPENROUTER_API_KEY=
 
 # SITE CONFIGURATION
 NEXT_PUBLIC_SITE_URL=
