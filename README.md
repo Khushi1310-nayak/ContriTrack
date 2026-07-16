@@ -8,7 +8,7 @@
 
 ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=for-the-badge&logo=typescript)
-![Google Gemini](https://img.shields.io/badge/Google-Gemini-orange?style=for-the-badge&logo=google)
+![OpenRouter](https://img.shields.io/badge/OpenRouter-API-blue?style=for-the-badge)
 ![Supabase](https://img.shields.io/badge/Supabase-green?style=for-the-badge&logo=supabase)
 ![Status](https://img.shields.io/badge/Project-Active-success?style=for-the-badge)
 
