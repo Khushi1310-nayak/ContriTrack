@@ -13,7 +13,7 @@ Currently, only the latest `main` branch and the current major release are activ
 
 We take the security of ContriTrack seriously. If you discover a security vulnerability, **please do not report it through public GitHub issues.**
 
-Instead, please send an email to: **khushi@example.com**
+Instead, please send an email to: **khushinayak127@gmail.com**
 
 Please include the following information in your report:
 1. A description of the vulnerability.
