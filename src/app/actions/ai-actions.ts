@@ -133,7 +133,7 @@ export async function generateOrGetWorkspaceAIInsights(
         const prof = await prisma.userProfile.findUnique({
           where: { userId: m.userId }
         });
-        const openTasksCount = tasks.filter(t => t.assigneeId === m.userId && t.status !== "completed").length;
+        const openTasksCount = tasks.filter((t) => t.assigneeId === m.userId && t.status !== "completed").length;
         return {
           userId: m.userId,
           fullName: prof?.fullName || "Collaborator",
@@ -158,40 +158,40 @@ export async function generateOrGetWorkspaceAIInsights(
     });
 
     // Calculate core statistics for current user
-    const userTasks = tasks.filter(t => t.assigneeId === userId);
-    const userCompletedTasks = userTasks.filter(t => t.status === "completed");
-    const userOverdueTasks = userTasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "completed");
+    const userTasks = tasks.filter((t) => t.assigneeId === userId);
+    const userCompletedTasks = userTasks.filter((t) => t.status === "completed");
+    const userOverdueTasks = userTasks.filter((t) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "completed");
     
     const taskCompletionRate = userTasks.length > 0 
       ? (userCompletedTasks.length / userTasks.length) * 100 
       : 100;
 
-    const userMeetings = meetings.filter(m => m.userId === userId);
-    const attendedMeetings = userMeetings.filter(m => m.attendanceStatus === "attended");
+    const userMeetings = meetings.filter((m) => m.userId === userId);
+    const attendedMeetings = userMeetings.filter((m) => m.attendanceStatus === "attended");
     const meetingAttendance = userMeetings.length > 0
       ? (attendedMeetings.length / userMeetings.length) * 100
       : 100;
 
     const userCommits = repoMetrics
-      .filter(rm => rm.userId === userId)
+      .filter((rm) => rm.userId === userId)
       .reduce((sum, rm) => sum + rm.commits, 0);
 
     const userPRs = repoMetrics
-      .filter(rm => rm.userId === userId)
+      .filter((rm) => rm.userId === userId)
       .reduce((sum, rm) => sum + rm.pullRequests, 0);
 
     const userIssues = repoMetrics
-      .filter(rm => rm.userId === userId)
+      .filter((rm) => rm.userId === userId)
       .reduce((sum, rm) => sum + rm.issuesClosed, 0);
 
     // Calculate interactive telemetry scores
     const collaborationScore = Math.min(100, Math.max(0, (taskCompletionRate * 0.4) + (meetingAttendance * 0.3) + (Math.min(5, userCommits) * 6)));
-    const workloadScore = Math.min(100, (userTasks.filter(t => t.status !== "completed").length * 20));
+    const workloadScore = Math.min(100, (userTasks.filter((t) => t.status !== "completed").length * 20));
     
     // Stress & burnout metrics
     const lateSessions = 2; // Simulated base tracking late sessions
-    const overtimeDetected = userTasks.filter(t => t.status === "in_progress").length > 3 || lateSessions > 3;
-    const taskOverflow = Math.max(0, userTasks.filter(t => t.status !== "completed").length - 3);
+    const overtimeDetected = userTasks.filter((t) => t.status === "in_progress").length > 3 || lateSessions > 3;
+    const taskOverflow = Math.max(0, userTasks.filter((t) => t.status !== "completed").length - 3);
     const missedDeadlines = userOverdueTasks.length;
     
     const stressLevel = Math.min(100, (taskOverflow * 15) + (missedDeadlines * 20) + (overtimeDetected ? 25 : 0));
@@ -253,10 +253,10 @@ export async function generateOrGetWorkspaceAIInsights(
     // Analyze teammates workload balancing
     for (const member of collaborators) {
       const mId = member.userId;
-      const mTasks = tasks.filter(t => t.assigneeId === mId);
-      const mOpen = mTasks.filter(t => t.status !== "completed");
-      const mOverdue = mTasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "completed");
-      const mMetrics = repoMetrics.filter(rm => rm.userId === mId);
+      const mTasks = tasks.filter((t) => t.assigneeId === mId);
+      const mOpen = mTasks.filter((t) => t.status !== "completed");
+      const mOverdue = mTasks.filter((t) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "completed");
+      const mMetrics = repoMetrics.filter((rm) => rm.userId === mId);
       const mCommits = mMetrics.reduce((sum, rm) => sum + rm.commits, 0);
 
       // Overloaded condition
@@ -312,28 +312,161 @@ export async function generateOrGetWorkspaceAIInsights(
     // -------------------------------------------------------------
     // 4. PRODUCTIVITY VELOCITY FORECASTING
     // -------------------------------------------------------------
-    const completedTasks = tasks.filter(t => t.status === "completed");
+    const completedTasks = tasks.filter((t) => t.status === "completed");
     const sprintVelocity = completedTasks.length > 0 ? (completedTasks.length / tasks.length) * 100 : 80;
     
     // Predicted completion probability based on velocity and overdue ratios
-    const delayRatio = tasks.length > 0 ? (tasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "completed").length / tasks.length) : 0;
+    const delayRatio = tasks.length > 0 ? (tasks.filter((t) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "completed").length / tasks.length) : 0;
     const predictedCompletion = Math.max(20, Math.min(100, sprintVelocity - (delayRatio * 120)));
 
-    const estimatedDelaysList = underperformingMembers.map(m => m.fullName);
+    const estimatedDelaysList = underperformingMembers.map((m) => m.fullName);
     
-    // Create adaptive recommendations
-    const dynamicRecs = [];
-    if (overloadedMembers.length > 0) {
-      dynamicRecs.push(`Workload imbalance detected! Overloaded members like ${overloadedMembers[0].fullName} could delay the sprint completion timeline.`);
+    // Create adaptive recommendations via OpenRouter API (Fallback to heuristics if unavailable)
+    let dynamicRecs: string[] = [];
+    let insightsData: Omit<AIInsight, "id" | "createdAt">[] = [];
+    let usedAI = false;
+
+    const openRouterKey = process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY;
+
+    if (openRouterKey) {
+      try {
+        const promptContext = `
+          Analyze the following team telemetry data and provide insights:
+          - Overloaded Members: ${JSON.stringify(overloadedMembers.map(m => m.fullName))}
+          - Underperforming Members: ${JSON.stringify(underperformingMembers.map(m => m.fullName))}
+          - Free Rider Flags: ${JSON.stringify(freeRiderFlags.map(m => m.fullName))}
+          - User Stress Level: ${stressLevel}%
+          - Burnout Score: ${burnoutScore}%
+          - Task Overflow: ${taskOverflow}
+          - Missed Deadlines: ${missedDeadlines}
+          - Overtime Detected: ${overtimeDetected}
+          - Workload Balance Score: ${workloadBalanceScore}
+          - Sprint Velocity: ${sprintVelocity}%
+          - Predicted Completion: ${predictedCompletion}%
+
+          Respond STRICTLY with valid JSON in the exact following format, with no other markdown text:
+          {
+            "recommendations": [
+              "String recommendation 1",
+              "String recommendation 2"
+            ],
+            "insights": [
+              {
+                "insightType": "burnout" | "parity" | "freerider" | "recommendation",
+                "severity": "critical" | "warning" | "info",
+                "title": "String title",
+                "description": "String description",
+                "confidenceScore": 0.95
+              }
+            ]
+          }
+        `;
+
+        const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${openRouterKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemma-4-31b-it:free", // Fully free OpenRouter model (Google Gemma)
+            messages: [{ role: "user", content: promptContext }]
+          })
+        });
+
+        if (aiResponse.ok) {
+          const data = await aiResponse.json();
+          let content = data.choices?.[0]?.message?.content || "";
+          
+          // Strip out markdown backticks if returned by the LLM
+          content = content.replace(/```json/g, '').replace(/```/g, '').trim();
+
+          if (content) {
+            const parsed = JSON.parse(content);
+            if (Array.isArray(parsed.recommendations) && Array.isArray(parsed.insights)) {
+              dynamicRecs = parsed.recommendations;
+              insightsData = parsed.insights.map((ins: any) => ({
+                workspaceId,
+                userId,
+                insightType: ins.insightType,
+                severity: ins.severity,
+                title: ins.title,
+                description: ins.description,
+                confidenceScore: ins.confidenceScore
+              }));
+              usedAI = true;
+            }
+          }
+        }
+      } catch (err) {
+        console.error("OpenRouter API failed, falling back to heuristics:", err);
+      }
     }
-    if (freeRiderFlags.length > 0) {
-      dynamicRecs.push(`Active contribution gaps observed! Teammate ${freeRiderFlags[0].fullName} is flagged for zero commits in the active repo.`);
-    }
-    if (stressLevel > 60) {
-      dynamicRecs.push("High stress levels warning! Consider scheduling a task distribution sync session to protect your teammates from burning out.");
-    }
-    if (dynamicRecs.length === 0) {
-      dynamicRecs.push("Sprint trajectory is stable. Continue maintaining consistent task reviews and push schedules.");
+
+    // Fallback if AI was not configured or failed
+    if (!usedAI) {
+      if (overloadedMembers.length > 0) {
+        dynamicRecs.push(`Workload imbalance detected! Overloaded members like ${overloadedMembers[0].fullName} could delay the sprint completion timeline.`);
+      }
+      if (freeRiderFlags.length > 0) {
+        dynamicRecs.push(`Active contribution gaps observed! Teammate ${freeRiderFlags[0].fullName} is flagged for zero commits in the active repo.`);
+      }
+      if (stressLevel > 60) {
+        dynamicRecs.push("High stress levels warning! Consider scheduling a task distribution sync session to protect your teammates from burning out.");
+      }
+      if (dynamicRecs.length === 0) {
+        dynamicRecs.push("Sprint trajectory is stable. Continue maintaining consistent task reviews and push schedules.");
+      }
+
+      // 1. Burnout Insight
+      if (burnoutScore > 50) {
+        insightsData.push({
+          workspaceId,
+          userId,
+          insightType: "burnout",
+          severity: "critical",
+          title: "Workload Stress Alarm",
+          description: `Stress score at ${Math.round(burnoutScore)}% due to late-night active sessions and ${missedDeadlines} overdue tasks. Consider distributing assignment weights.`,
+          confidenceScore: 0.94
+        });
+      }
+
+      // 2. Parity Insight
+      if (workloadBalanceScore < 80 && overloadedMembers.length > 0) {
+        insightsData.push({
+          workspaceId,
+          userId,
+          insightType: "parity",
+          severity: "warning",
+          title: "Load Balancing Action Triggered",
+          description: `Recommended task redistribution: balance Open tasks from overloaded member ${overloadedMembers[0].fullName} to stabilize velocity.`,
+          confidenceScore: 0.88
+        });
+      }
+
+      // 3. Free Rider Insight
+      if (freeRiderFlags.length > 0) {
+        insightsData.push({
+          workspaceId,
+          userId,
+          insightType: "freerider",
+          severity: "warning",
+          title: "Teammate Contribution Warning",
+          description: `${freeRiderFlags[0].fullName} displays low repository presence with zero commits this period. Please verify workspace branch connections.`,
+          confidenceScore: 0.91
+        });
+      }
+
+      // 4. Forecast Insight
+      insightsData.push({
+        workspaceId,
+        userId,
+        insightType: "recommendation",
+        severity: "info",
+        title: "Sprint Productivity Target",
+        description: `Projected completion probability is ${Math.round(predictedCompletion)}% at a sprint velocity of ${Math.round(sprintVelocity)} tasks/sprint.`,
+        confidenceScore: 0.85
+      });
     }
 
     const forecast = await prisma.productivityForecast.upsert({
@@ -351,67 +484,6 @@ export async function generateOrGetWorkspaceAIInsights(
         estimatedDelays: JSON.stringify(estimatedDelaysList),
         aiRecommendations: JSON.stringify(dynamicRecs)
       }
-    });
-
-    // -------------------------------------------------------------
-    // 5. UPDATE AND RETURN LIVE RECOMMENDATION INSIGHTS
-    // -------------------------------------------------------------
-    // Purge outdated workspace insights first
-    await prisma.aIInsight.deleteMany({
-      where: { workspaceId, insightType: { in: ["burnout", "parity", "freerider", "recommendation"] } }
-    });
-
-    // Re-create new dynamically generated insights
-    const insightsData = [];
-    
-    // 1. Burnout Insight
-    if (burnoutScore > 50) {
-      insightsData.push({
-        workspaceId,
-        userId,
-        insightType: "burnout",
-        severity: "critical",
-        title: "Workload Stress Alarm",
-        description: `Stress score at ${Math.round(burnoutScore)}% due to late-night active sessions and ${missedDeadlines} overdue tasks. Consider distributing assignment weights.`,
-        confidenceScore: 0.94
-      });
-    }
-
-    // 2. Parity Insight
-    if (workloadBalanceScore < 80 && overloadedMembers.length > 0) {
-      insightsData.push({
-        workspaceId,
-        userId,
-        insightType: "parity",
-        severity: "warning",
-        title: "Load Balancing Action Triggered",
-        description: `Recommended task redistribution: balance Open tasks from overloaded member ${overloadedMembers[0].fullName} to stabilize velocity.`,
-        confidenceScore: 0.88
-      });
-    }
-
-    // 3. Free Rider Insight
-    if (freeRiderFlags.length > 0) {
-      insightsData.push({
-        workspaceId,
-        userId,
-        insightType: "freerider",
-        severity: "warning",
-        title: "Teammate Contribution Warning",
-        description: `${freeRiderFlags[0].fullName} displays low repository presence with zero commits this period. Please verify workspace branch connections.`,
-        confidenceScore: 0.91
-      });
-    }
-
-    // 4. Forecast Insight
-    insightsData.push({
-      workspaceId,
-      userId,
-      insightType: "recommendation",
-      severity: "info",
-      title: "Sprint Productivity Target",
-      description: `Projected completion probability is ${Math.round(predictedCompletion)}% at a sprint velocity of ${Math.round(sprintVelocity)} tasks/sprint.`,
-      confidenceScore: 0.85
     });
 
     // Insert created insights
@@ -491,7 +563,7 @@ export async function autoRedistributeWorkspaceTasks(
 
     // 3. Re-assign the most urgent open task from overloaded to underloaded member
     const taskToMoveId = overloadedTaskIds[0];
-    const taskToMove = tasks.find(t => t.id === taskToMoveId);
+    const taskToMove = tasks.find((t) => t.id === taskToMoveId);
 
     if (!taskToMove) {
       return { success: false, message: "No appropriate task located for redistribution." };
