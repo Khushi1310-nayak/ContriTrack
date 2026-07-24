@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { 
   Calendar, 
@@ -29,13 +29,14 @@ const graphData = [
   { name: "May 16", Aanya: 92, Rohan: 87, Ishita: 76, Kunal: 62 },
 ];
 
-export default function DashboardMockup() {
-  const [mounted, setMounted] = useState(false);
+const emptySubscribe = () => () => {};
 
-  useEffect(() => {
-    const handle = requestAnimationFrame(() => setMounted(true));
-    return () => cancelAnimationFrame(handle);
-  }, []);
+export default function DashboardMockup() {
+  const mounted = React.useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
 
   if (!mounted) {
     // Return a beautiful glassmorphic skeleton while mounting on client
@@ -130,8 +131,8 @@ export default function DashboardMockup() {
             </div>
           </div>
           
-          <div className="w-full h-44 md:h-52 text-[10px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full h-44 md:h-52 text-[10px] min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={180}>
               <LineChart data={graphData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
                 <CartesianGrid stroke="rgba(255,255,255,0.03)" vertical={false} />
                 <XAxis 

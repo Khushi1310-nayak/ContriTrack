@@ -68,15 +68,16 @@ export async function GET(request: Request) {
     await saveGitHubConnection(userId, email, name, githubUsername, avatarUrl, accessToken);
 
     return NextResponse.redirect(`${new URL(request.url).origin}/dashboard?github_connected=true`);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("OAuth flow callback exception occurred:", error);
     // Graceful demo simulation callback fallback:
     try {
       const mockToken = "gho_mockTokenStableAndSecureWorkspaceIntegrator321";
       await saveGitHubConnection(userId, email, name, "mock_developer_user", "https://avatars.githubusercontent.com/u/583231?v=4", mockToken);
       return NextResponse.redirect(`${new URL(request.url).origin}/dashboard?github_connected=true`);
-    } catch (dbErr) {
-      return NextResponse.json({ error: error.message || "Database synchronization failed" }, { status: 500 });
+    } catch (_dbErr) {
+      const errorMsg = error instanceof Error ? error.message : "Database synchronization failed";
+      return NextResponse.json({ error: errorMsg }, { status: 500 });
     }
   }
 }
@@ -94,7 +95,7 @@ async function saveGitHubConnection(
   const resolvedName = name || username;
 
   // Upsert base User
-  await prisma.user.upsert({
+  const dbUser = await prisma.user.upsert({
     where: { email: resolvedEmail },
     update: {
       fullName: resolvedName,
@@ -113,14 +114,14 @@ async function saveGitHubConnection(
 
   // Upsert account link
   await prisma.gitHubAccount.upsert({
-    where: { userId },
+    where: { userId: dbUser.id },
     update: {
       accessToken: encryptedToken,
       username,
       avatarUrl,
     },
     create: {
-      userId,
+      userId: dbUser.id,
       accessToken: encryptedToken,
       username,
       avatarUrl,

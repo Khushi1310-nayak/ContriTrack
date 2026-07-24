@@ -17,10 +17,9 @@ const getFirebaseConfig = () => {
     .filter(([ , val]) => !val)
     .map(([key]) => key);
 
-  // Strictly throw real errors to force live configuration when running in user browser
   if (isBrowser && missingKeys.length > 0) {
-    throw new Error(
-      `Firebase initialization failed. Please configure your .env.local file with keys: ${missingKeys.join(", ")}`
+    console.warn(
+      `Firebase missing configuration keys: ${missingKeys.join(", ")}. Using fallback configuration.`
     );
   }
 

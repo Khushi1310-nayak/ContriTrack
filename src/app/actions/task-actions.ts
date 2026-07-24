@@ -57,6 +57,59 @@ export async function fetchWorkspaceTasks(workspaceId: string, repositoryId?: st
  */
 export async function createWorkspaceTask(input: CreateTaskInput) {
   try {
+    const creatorId = input.creatorId;
+    let assigneeId = input.assigneeId || null;
+    let repositoryId = input.repositoryId || null;
+    let workspaceId = input.workspaceId;
+
+    // 1. Ensure creator User record exists in PostgreSQL
+    if (creatorId) {
+      const creatorExists = await prisma.user.findUnique({ where: { id: creatorId } });
+      if (!creatorExists) {
+        await prisma.user.create({
+          data: {
+            id: creatorId,
+            fullName: "Contributor",
+            email: `user_${creatorId.substring(0, 8)}@contritrack.app`,
+            status: "ACTIVE"
+          }
+        }).catch(() => {});
+      }
+    }
+
+    // 2. Validate assigneeId exists in PostgreSQL
+    if (assigneeId) {
+      const assigneeExists = await prisma.user.findUnique({ where: { id: assigneeId } });
+      if (!assigneeExists) {
+        assigneeId = null;
+      }
+    }
+
+    // 3. Validate repositoryId exists
+    if (repositoryId) {
+      const repoExists = await prisma.gitHubRepository.findUnique({ where: { id: repositoryId } });
+      if (!repoExists) {
+        repositoryId = null;
+      }
+    }
+
+    // 4. Validate workspaceId exists or auto-resolve default workspace
+    if (!workspaceId || workspaceId.trim() === "") {
+      const defaultWorkspace = await prisma.workspace.findFirst();
+      if (defaultWorkspace) {
+        workspaceId = defaultWorkspace.id;
+      } else {
+        const newWs = await prisma.workspace.create({
+          data: {
+            name: "Default Workspace",
+            ownerId: creatorId || "default-owner",
+            inviteCode: "WS-" + Math.random().toString(36).substring(2, 8).toUpperCase()
+          }
+        });
+        workspaceId = newWs.id;
+      }
+    }
+
     const task = await prisma.task.create({
       data: {
         title: input.title,
@@ -66,10 +119,10 @@ export async function createWorkspaceTask(input: CreateTaskInput) {
         labels: input.labels || "",
         dueDate: input.dueDate ? new Date(input.dueDate) : null,
         estimatedHours: input.estimatedHours || 0,
-        repositoryId: input.repositoryId || null,
-        workspaceId: input.workspaceId,
-        creatorId: input.creatorId,
-        assigneeId: input.assigneeId || null,
+        repositoryId: repositoryId,
+        workspaceId: workspaceId,
+        creatorId: creatorId,
+        assigneeId: assigneeId,
       },
       include: {
         assignee: true,

@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
 };
 
 export default withSentryConfig(nextConfig, {
-  org: "teamtrace-dev",
-  project: "contritrack",
+  org: "contritrack-ev",
+  project: "javascript-nextjs",
   silent: !process.env.CI,
   widenClientFileUpload: true,
   tunnelRoute: "/monitoring",

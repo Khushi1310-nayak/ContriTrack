@@ -12,7 +12,7 @@ import {
   sendPasswordResetEmail,
   updateProfile
 } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import { auth, db, googleProvider, githubProvider } from "@/lib/firebase";
 import { 
   syncUserProfileWithPostgres,
@@ -117,8 +117,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Write/Merge into Firestore to align cache with Postgres
-      const docRef = doc(db, "users", firebaseUser.uid);
-      await setDoc(docRef, profileData, { merge: true });
+      try {
+        const docRef = doc(db, "users", firebaseUser.uid);
+        await setDoc(docRef, profileData, { merge: true });
+      } catch (fsErr) {
+        console.warn("Firestore cache merge deferred:", fsErr);
+      }
 
     } else {
       // PostgreSQL profile does NOT exist yet (first signup or onboarding)
@@ -167,8 +171,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Save to Firestore
-      const docRef = doc(db, "users", firebaseUser.uid);
-      await setDoc(docRef, profileData);
+      try {
+        const docRef = doc(db, "users", firebaseUser.uid);
+        await setDoc(docRef, profileData);
+      } catch (fsErr) {
+        console.warn("Firestore user document write deferred:", fsErr);
+      }
     }
 
     setProfile(profileData);
@@ -244,7 +252,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       // Send Verification Link (strictly live)
-      await sendEmailVerification(cred.user);
+      try {
+        await sendEmailVerification(cred.user);
+      } catch (emailErr) {
+        console.warn("Email verification link dispatch deferred:", emailErr);
+      }
     } finally {
       setLoading(false);
     }

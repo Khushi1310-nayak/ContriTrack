@@ -1,21 +1,35 @@
 import * as admin from 'firebase-admin';
 
-// Check if app is already initialized to avoid hot-reload errors in development
-if (!admin.apps.length) {
+function getFirebaseAdminApp(): admin.app.App {
+  if (admin.apps.length > 0 && admin.apps[0]) {
+    return admin.apps[0];
+  }
+
+  const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "contritrack-app";
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
   try {
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        // Replace escaped newline characters from the environment variable
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      }),
-    });
-    console.log("Firebase Admin initialized successfully.");
+    if (clientEmail && privateKey) {
+      return admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId,
+          clientEmail,
+          privateKey,
+        }),
+      });
+    } else {
+      return admin.initializeApp({
+        projectId,
+      });
+    }
   } catch (error) {
-    console.error("Firebase Admin initialization error", error);
+    console.warn("Firebase Admin fallback initialization used:", error);
+    return admin.apps[0] || admin.initializeApp({ projectId }, "[DEFAULT]");
   }
 }
 
-export const adminAuth = admin.auth();
-export const adminDb = admin.firestore();
+const adminApp = getFirebaseAdminApp();
+
+export const adminAuth = admin.auth(adminApp);
+export const adminDb = admin.firestore(adminApp);

@@ -3,6 +3,7 @@ import { Playfair_Display, Inter } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
 import { PwaRegistry } from "@/components/PwaRegistry";
 import OfflineBanner from "@/components/OfflineBanner";
+import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -49,6 +50,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans bg-[#1b1c2b] text-white selection:bg-[#F2C1A3] selection:text-[#1b1c2b] overflow-x-hidden" suppressHydrationWarning>
         <AuthProvider>
+          <NextTopLoader color="#F2C1A3" showSpinner={false} height={3} />
           <PwaRegistry />
           <OfflineBanner />
           {children}

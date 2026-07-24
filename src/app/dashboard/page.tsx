@@ -15,7 +15,6 @@ import {
   Trash2, 
   Calendar, 
   Sparkles, 
-  ShieldCheck, 
   Clock, 
   TrendingUp, 
   AlertTriangle, 
@@ -49,6 +48,7 @@ const NotificationsPanel = dynamic(() => import("@/components/NotificationsPanel
 const ReportsPanel = dynamic(() => import("@/components/ReportsPanel"), { ssr: false });
 const SettingsPanel = dynamic(() => import("@/components/SettingsPanel"), { ssr: false });
 const AIInsightsPanel = dynamic(() => import("@/components/AIInsightsPanel"), { ssr: false });
+const DashboardSkeleton = dynamic(() => import("@/components/DashboardSkeleton"), { ssr: false });
 import { fetchUserWorkspaces, createWorkspace } from "@/app/actions/team-actions";
 import { fetchNotifications } from "@/app/actions/notification-actions";
 import {
@@ -182,33 +182,36 @@ interface Notification {
   category: "task" | "github" | "meeting" | "system";
 }
 
+interface UserProfileData {
+  displayName?: string | null;
+  fullName?: string | null;
+  roleInContriTrack?: string | null;
+  userType?: string | null;
+  avatarUrl?: string | null;
+  [key: string]: unknown;
+}
+
 export default function Dashboard() {
   const router = useRouter();
   const { user, profile, logout } = useAuth();
   
   // Relational database profile syncing state
-  const [dbProfile, setDbProfile] = useState<any>(null);
-  // Greeting state to avoid SSR hydration mismatches
-  const [greeting, setGreeting] = useState("Good morning");
+  const [dbProfile, setDbProfile] = useState<UserProfileData | null>(null);
 
-
-
-  React.useEffect(() => {
+  // Greeting computed dynamically without cascading render state side-effects
+  const greeting = (() => {
+    if (typeof window === "undefined") return "Good morning";
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) {
-      setGreeting("Good morning");
-    } else if (hour >= 12 && hour < 17) {
-      setGreeting("Good afternoon");
-    } else {
-      setGreeting("Good evening");
-    }
-  }, []);
+    if (hour >= 5 && hour < 12) return "Good morning";
+    if (hour >= 12 && hour < 17) return "Good afternoon";
+    return "Good evening";
+  })();
 
   const getGreeting = () => greeting;
 
-  const userName = dbProfile?.displayName || dbProfile?.fullName || profile?.displayName || profile?.fullName || user?.displayName || user?.email?.split("@")[0] || "User";
-  const userRole = dbProfile?.roleInContriTrack || dbProfile?.userType || "Student";
-  const userClassification = dbProfile?.userType || "Student";
+  const userName = ((dbProfile?.displayName as string) || (dbProfile?.fullName as string) || (profile?.displayName as string) || (profile?.fullName as string) || (user?.displayName as string) || user?.email?.split("@")[0] || "User") as string;
+  const userRole = ((dbProfile?.roleInContriTrack as string) || (dbProfile?.userType as string) || "Student") as string;
+  const userClassification = ((dbProfile?.userType as string) || "Student") as string;
 
   // Navigation & UI States
   const [activeTab, setActiveTab] = useState<string>("overview");
@@ -707,7 +710,8 @@ export default function Dashboard() {
   const sprintPct = totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0;
 
   // AI insights telemetry parser
-  const realInsights: Array<{ title: string; desc: string; icon: any; color: string; bg: string }> = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const realInsights: Array<{ title: string; desc: string; icon: React.ComponentType<any>; color: string; bg: string }> = [];
   
   if (displayStats.length > 0) {
     const topContributor = displayStats.reduce((max, s) => s.pct > max.pct ? s : max, displayStats[0]);
@@ -759,9 +763,6 @@ export default function Dashboard() {
     });
   }
 
-  // Activity Heatmap Generation Helper
-  const days = ["S", "M", "T", "W", "T", "F", "S"];
-
   return (
     <div className="min-h-screen bg-[#0e0f17] text-white flex flex-col font-sans select-none overflow-x-hidden antialiased">
       
@@ -773,11 +774,12 @@ export default function Dashboard() {
       <div className="flex flex-1 relative min-h-screen">
         
         {/* ========================================================= */}
-        {/* DESKTOP SIDEBAR PANEL (Left Layout - 18%)                 */}
+        {/* DESKTOP SIDEBAR PANEL (Left Layout - Extended Full Height)*/}
         {/* ========================================================= */}
-        <aside className="hidden lg:flex flex-col w-64 bg-[#111221]/80 border-r border-white/5 p-6 justify-between shrink-0 backdrop-blur-md sticky top-0 h-screen overflow-y-auto z-30">
-          <div className="flex flex-col gap-8">
-            
+        <aside className="hidden lg:flex flex-col w-64 bg-[#111221] border-r border-white/5 p-6 shrink-0 sticky top-0 h-screen z-30 overflow-hidden">
+          
+          {/* Top Fixed Header: Brand & Workspace Switcher */}
+          <div className="flex flex-col gap-6 shrink-0">
             {/* SaaS branding row */}
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#F2C1A3] to-[#F8CCAA] flex items-center justify-center shadow-[0_0_15px_rgba(242,193,163,0.2)]">
@@ -883,62 +885,60 @@ export default function Dashboard() {
                 )}
               </AnimatePresence>
             </div>
-
-            {/* Sidebar list items */}
-            <nav className="flex flex-col gap-1.5">
-              {[
-                { id: "overview", label: "Overview", icon: Activity },
-                { id: "projects", label: "Projects", icon: Layers },
-                { id: "tasks", label: "Tasks", icon: Check },
-                { id: "github", label: "GitHub", icon: Github },
-                { id: "analytics", label: "Analytics", icon: TrendingUp },
-                { id: "meetings", label: "Meetings", icon: Calendar },
-                { id: "reports", label: "Reports", icon: FileText },
-                { id: "team", label: "Team", icon: Users },
-                { id: "ai-insights", label: "AI Insights", icon: Sparkles },
-                { id: "notifications", label: "Notifications", icon: Bell, badge: unreadCount },
-                { id: "settings", label: "Settings", icon: Settings },
-                { id: "logout", label: "Sign Out", icon: LogOut }
-              ].map((item) => {
-                const Icon = item.icon;
-                const isActive = activeTab === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      if (item.id === "logout") {
-                        setShowSignOutConfirmModal(true);
-                      } else {
-                        setActiveTab(item.id);
-                      }
-                    }}
-                    className={`w-full px-4 py-2.5 rounded-2xl flex items-center justify-between text-xs font-light transition-all duration-300 cursor-pointer group ${
-                      isActive 
-                        ? "bg-[#F2C1A3]/10 border border-[#F2C1A3]/20 text-[#F2C1A3] font-medium shadow-[0_0_15px_rgba(242,193,163,0.03)]" 
-                        : item.id === "logout"
-                          ? "text-[#CD9FA0] hover:text-white hover:bg-red-500/5 border border-transparent"
-                          : "text-[#857C91] hover:text-white hover:bg-white/[0.02] border border-transparent"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Icon size={14} className={isActive ? "text-[#F2C1A3]" : item.id === "logout" ? "text-[#CD9FA0] group-hover:text-white transition" : "text-[#857C91] group-hover:text-white transition"} />
-                      <span>{item.label}</span>
-                    </div>
-                    {item.badge && item.badge > 0 ? (
-                      <span className="px-2 py-0.5 rounded-full bg-[#CD9FA0]/35 text-[#CD9FA0] text-[9px] font-bold font-mono">
-                        {item.badge}
-                      </span>
-                    ) : null}
-                  </button>
-                );
-              })}
-            </nav>
           </div>
 
-          {/* Sidebar Footer layout */}
-          <div className="flex flex-col gap-4 border-t border-white/5 pt-6">
-            
-            {/* Active Academic Tier card */}
+          {/* Center Middle: Independently Scrollable Navigation List */}
+          <nav className="flex-1 my-4 py-2 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+            {[
+              { id: "overview", label: "Overview", icon: Activity },
+              { id: "projects", label: "Projects", icon: Layers },
+              { id: "tasks", label: "Tasks", icon: Check },
+              { id: "github", label: "GitHub", icon: Github },
+              { id: "analytics", label: "Analytics", icon: TrendingUp },
+              { id: "meetings", label: "Meetings", icon: Calendar },
+              { id: "reports", label: "Reports", icon: FileText },
+              { id: "team", label: "Team", icon: Users },
+              { id: "ai-insights", label: "AI Insights", icon: Sparkles },
+              { id: "notifications", label: "Notifications", icon: Bell, badge: unreadCount },
+              { id: "settings", label: "Settings", icon: Settings },
+              { id: "logout", label: "Sign Out", icon: LogOut }
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    if (item.id === "logout") {
+                      setShowSignOutConfirmModal(true);
+                    } else {
+                      setActiveTab(item.id);
+                    }
+                  }}
+                  className={`w-full px-4 py-2.5 rounded-2xl flex items-center justify-between text-xs font-light transition-all duration-300 cursor-pointer group ${
+                    isActive 
+                      ? "bg-[#F2C1A3]/10 border border-[#F2C1A3]/20 text-[#F2C1A3] font-medium shadow-[0_0_15px_rgba(242,193,163,0.03)]" 
+                      : item.id === "logout"
+                        ? "text-[#CD9FA0] hover:text-white hover:bg-red-500/5 border border-transparent"
+                        : "text-[#857C91] hover:text-white hover:bg-white/[0.02] border border-transparent"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon size={14} className={isActive ? "text-[#F2C1A3]" : item.id === "logout" ? "text-[#CD9FA0] group-hover:text-white transition" : "text-[#857C91] group-hover:text-white transition"} />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge && item.badge > 0 ? (
+                    <span className="px-2 py-0.5 rounded-full bg-[#CD9FA0]/35 text-[#CD9FA0] text-[9px] font-bold font-mono">
+                      {item.badge}
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Bottom Fixed Footer Layout */}
+          <div className="shrink-0 border-t border-white/5 pt-4">
             <div className="p-4 rounded-2xl bg-gradient-to-br from-white/[0.02] to-transparent border border-white/5 relative overflow-hidden">
               <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-[#F2C1A3]/5 blur-xl pointer-events-none" />
               <span className="text-[10px] font-mono uppercase tracking-widest text-[#F2C1A3] block mb-1">
@@ -1056,6 +1056,7 @@ export default function Dashboard() {
               
               <div className="flex flex-col items-start leading-tight">
                 <button 
+                  suppressHydrationWarning
                   onClick={() => setActiveTab("settings")}
                   className="text-white text-base md:text-lg font-serif font-light flex items-center gap-2 hover:text-[#F8CCAA] transition focus:outline-none cursor-pointer"
                   title="Edit your workspace profile"
@@ -1093,6 +1094,7 @@ export default function Dashboard() {
               >
                 <div className="relative">
                   {dbProfile?.avatarUrl && !dbProfile.avatarUrl.includes("dicebear") ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
                     <img 
                       src={dbProfile.avatarUrl} 
                       className="w-8 h-8 rounded-full object-cover border border-[#F2C1A3]/30" 
@@ -1150,6 +1152,16 @@ export default function Dashboard() {
                         className="w-full h-full flex flex-col justify-center items-center"
                       >
                         <EmptyWorkspaceState onCreateClick={() => setIsCreateWorkspaceModalOpen(true)} />
+                      </motion.div>
+                    ) : loadingTasks ? (
+                      <motion.div
+                        key="dashboard-loading"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <DashboardSkeleton />
                       </motion.div>
                     ) : (
                       <motion.div
@@ -1330,8 +1342,8 @@ export default function Dashboard() {
                         <span className="text-[#857C91] text-xs font-light font-mono">Querying Supabase collaborative database...</span>
                       </div>
                     ) : (
-                      /* Draggable Kanban columns grid layout - 5 Columns */
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-6 items-stretch">
+                      /* Draggable Kanban columns layout with generous min-width and horizontal scroll */
+                      <div className="flex gap-4 mt-6 overflow-x-auto pb-4 items-start scrollbar-thin scrollbar-thumb-white/10">
                         
                         {[
                           { key: "backlog", label: "Backlog", color: "bg-[#857C91]" },
@@ -1344,7 +1356,7 @@ export default function Dashboard() {
                           return (
                             <div 
                               key={column.key}
-                              className="p-4 rounded-3xl bg-[#111221]/60 border border-white/5 flex flex-col gap-4 min-h-[480px]"
+                              className="p-4 rounded-3xl bg-[#111221]/60 border border-white/5 flex flex-col gap-4 min-h-[480px] flex-1 min-w-[280px] max-w-[340px]"
                             >
                               
                               {/* Column Header */}
@@ -1370,7 +1382,7 @@ export default function Dashboard() {
                                         setSelectedTask(task);
                                         setShowTaskDetailDrawer(true);
                                       }}
-                                      className={`p-4 rounded-2xl bg-[#141523]/80 border transition duration-300 flex flex-col gap-3 group text-left relative cursor-pointer ${
+                                      className={`p-3.5 rounded-2xl bg-[#141523]/80 border transition duration-300 flex flex-col gap-3 group text-left relative cursor-pointer ${
                                         isOverdue 
                                           ? "border-red-500/20 hover:border-red-500/30 shadow-[0_0_12px_rgba(239,68,68,0.05)]" 
                                           : "border-white/5 hover:border-[#F2C1A3]/25"
@@ -1388,35 +1400,38 @@ export default function Dashboard() {
                                         <Trash2 size={10} />
                                       </button>
 
-                                      <div className="flex flex-col gap-1 pr-6">
+                                      <div className="flex flex-col gap-1.5 pr-6">
                                         <div className="flex items-center gap-1.5 flex-wrap">
-                                          <span className="text-[9px] font-mono text-[#857C91] uppercase tracking-wide">
+                                          <span className="text-[9px] font-mono text-[#857C91] uppercase tracking-wide px-1.5 py-0.5 rounded bg-white/5 border border-white/5">
                                             {task.labels ? task.labels.split(",")[0] : "Task"}
                                           </span>
                                           {task.repository && (
-                                            <span className="text-[8px] font-mono text-[#F2C1A3]/75 bg-[#F2C1A3]/5 px-1.5 py-0.5 rounded border border-[#F2C1A3]/10">
+                                            <span className="text-[8px] font-mono text-[#F2C1A3]/75 bg-[#F2C1A3]/5 px-1.5 py-0.5 rounded border border-[#F2C1A3]/10 truncate max-w-[130px]">
                                               {task.repository.name}
                                             </span>
                                           )}
                                         </div>
-                                        <h4 className="text-white text-xs font-semibold leading-snug group-hover:text-[#F8CCAA] transition mt-1">{task.title}</h4>
+                                        <h4 className="text-white text-xs font-semibold leading-snug group-hover:text-[#F8CCAA] transition break-words">{task.title}</h4>
                                       </div>
 
-                                      <div className="flex items-center justify-between border-t border-white/5 pt-3 mt-1">
-                                        <div className="flex items-center gap-1.5">
-                                          <div className="w-5 h-5 rounded-full bg-[#CD9FA0]/25 text-[#CD9FA0] border border-white/10 flex items-center justify-center text-[7px] font-bold font-mono" title={task.assignee?.fullName || "Unassigned"}>
+                                      {/* Meta Row: Assignee + Priority Badge */}
+                                      <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-2.5 mt-1">
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                          <div className="w-5 h-5 rounded-full bg-[#CD9FA0]/25 text-[#CD9FA0] border border-white/10 flex items-center justify-center text-[7px] font-bold font-mono shrink-0" title={task.assignee?.fullName || "Unassigned"}>
                                             {(task.assignee?.fullName || "UN").substring(0, 2).toUpperCase()}
                                           </div>
-                                          <span className="text-[#857C91] text-[9px] font-light truncate max-w-[80px]">
+                                          <span className="text-[#857C91] text-[10px] font-light truncate max-w-[110px]">
                                             {task.assignee?.fullName || "Unassigned"}
                                           </span>
                                         </div>
                                         
-                                        <span className={`px-2 py-0.5 rounded-full text-[8px] font-mono font-bold capitalize ${
+                                        <span className={`shrink-0 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold capitalize tracking-wide whitespace-nowrap ${
                                           task.priority === "urgent" 
-                                            ? "bg-red-500/10 text-red-400 border border-red-500/20" 
+                                            ? "bg-red-500/15 text-red-300 border border-red-500/30" 
                                             : task.priority === "high"
-                                            ? "bg-[#F2C1A3]/10 text-[#F2C1A3] border border-[#F2C1A3]/20"
+                                            ? "bg-[#F2C1A3]/15 text-[#F2C1A3] border border-[#F2C1A3]/30"
+                                            : task.priority === "medium"
+                                            ? "bg-amber-400/15 text-amber-300 border border-amber-400/30"
                                             : "bg-[#857C91]/15 text-[#857C91] border border-[#857C91]/20"
                                         }`}>
                                           {task.priority}
@@ -1424,15 +1439,15 @@ export default function Dashboard() {
                                       </div>
 
                                       {/* Column Shifters Controls */}
-                                      <div className="flex items-center justify-between gap-1 mt-1 border-t border-white/5 pt-2" onClick={(e) => e.stopPropagation()}>
-                                        <div className="flex items-center gap-1">
+                                      <div className="flex items-center justify-between gap-1 border-t border-white/5 pt-2" onClick={(e) => e.stopPropagation()}>
+                                        <div className="flex items-center gap-1 min-w-0">
                                           {(task.telemetry?.[0]?.contributionScore ?? 0) > 0 && (
-                                            <span className="text-[8px] font-mono text-emerald-400 bg-emerald-500/5 px-1 py-0.5 rounded" title="Synced telemetry contribution score">
+                                            <span className="text-[8px] font-mono text-emerald-400 bg-emerald-500/5 px-1.5 py-0.5 rounded border border-emerald-500/10 truncate" title="Synced telemetry contribution score">
                                               Score: {task.telemetry?.[0]?.contributionScore}
                                             </span>
                                           )}
                                         </div>
-                                        <div className="flex items-center gap-1">
+                                        <div className="flex items-center gap-1.5 shrink-0">
                                           {column.key !== "backlog" && (
                                             <button 
                                               onClick={() => {
@@ -1440,7 +1455,7 @@ export default function Dashboard() {
                                                 const prevIdx = statuses.indexOf(column.key) - 1;
                                                 handleMoveTask(task.id, statuses[prevIdx]);
                                               }}
-                                              className="px-2 py-1 rounded bg-white/5 text-[9px] hover:text-[#F2C1A3] transition cursor-pointer"
+                                              className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-[9px] text-white/70 hover:text-[#F2C1A3] transition cursor-pointer"
                                               title="Shift left"
                                             >
                                               ←
@@ -1532,7 +1547,7 @@ export default function Dashboard() {
                         <Loader2 className="w-8 h-8 text-[#F2C1A3] animate-spin mx-auto opacity-80" />
                         <h2 className="text-xl font-serif text-white tracking-wide">Compiling Telemetry Matrix</h2>
                         <p className="text-xs font-mono text-[#857C91] max-w-md mx-auto">
-                          Synchronizing with GitHub events, computing Jain's Fairness Index, and processing workspace velocity...
+                          Synchronizing with GitHub events, computing Jain&apos;s Fairness Index, and processing workspace velocity...
                         </p>
                       </div>
                     );
@@ -1680,9 +1695,8 @@ export default function Dashboard() {
                         </div>
                       </div>
 
-                      {/* 10 Advanced Charts Dashboard Grid wrapped in useMemo */}
-                      {React.useMemo(() => (
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-2">
+                      {/* 10 Advanced Charts Dashboard Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-2">
 
                           {/* Chart 1: Sprint Velocity Area Graph (8 cols) */}
                           <div className="md:col-span-8 p-5 rounded-3xl border border-white/5 bg-[#141523]/45 flex flex-col gap-4">
@@ -1854,7 +1868,6 @@ export default function Dashboard() {
                         </div>
 
                       </div>
-                      ), [data, colors])}
                     </div>
                   );
                 })()}

@@ -14,7 +14,6 @@ import {
   Lock,
   Zap,
   Info,
-  Database,
   ClipboardList,
   Trash2,
   Archive,
@@ -32,12 +31,8 @@ import {
   UserCheck,
   RefreshCw,
   Plus,
-  SlidersHorizontal,
-  ChevronLeft,
   X,
   Award,
-  Globe,
-  Briefcase,
   Columns
 } from "lucide-react";
 import Link from "next/link";
@@ -147,7 +142,6 @@ export default function AdminCareersPage() {
 
   // Scorecard states
   const [scores, setScores] = useState({ frontend: 0, backend: 0, architecture: 0, communication: 0 });
-  const [showResumePreview, setShowResumePreview] = useState<boolean>(false);
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   
@@ -155,7 +149,6 @@ export default function AdminCareersPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "scorecard" | "interview" | "answers" | "resume">("overview");
 
   // Drag and drop column hovering feedback states
-  const [draggedAppId, setDraggedAppId] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
   // Load candidates & database open roles
@@ -186,7 +179,6 @@ export default function AdminCareersPage() {
       setMeetLink("");
       setMeetDate("");
       setScores({ frontend: 0, backend: 0, architecture: 0, communication: 0 });
-      setShowResumePreview(false);
     }
   };
 
@@ -199,10 +191,13 @@ export default function AdminCareersPage() {
         if (active) {
           setApplications(appsRes as JobApplicationData[]);
           setDbRoles(rolesRes);
-          setIsLoading(false);
         }
       } catch (err) {
-        console.error(err);
+        console.error("ATS initialization error:", err);
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
       }
     };
     initFetch();
@@ -315,11 +310,9 @@ export default function AdminCareersPage() {
   // Drag-and-drop handlers
   const handleDragStart = (e: React.DragEvent, appId: string) => {
     e.dataTransfer.setData("text/plain", appId);
-    setDraggedAppId(appId);
   };
 
   const handleDragEnd = () => {
-    setDraggedAppId(null);
     setDragOverColumn(null);
   };
 
@@ -336,7 +329,6 @@ export default function AdminCareersPage() {
     if (appId) {
       handleStatusChange(targetStatus, appId);
     }
-    setDraggedAppId(null);
     setDragOverColumn(null);
   };
 
@@ -928,7 +920,7 @@ Report generated: ${new Date().toLocaleString()}
                 ].map(t => (
                   <button
                     key={t.id}
-                    onClick={() => setActiveTab(t.id as any)}
+                    onClick={() => setActiveTab(t.id as "overview" | "scorecard" | "interview" | "answers" | "resume")}
                     className={`pb-3 px-3 relative transition whitespace-nowrap cursor-pointer font-medium ${
                       activeTab === t.id ? "text-[#F2C1A3]" : "text-white/45 hover:text-white"
                     }`}
