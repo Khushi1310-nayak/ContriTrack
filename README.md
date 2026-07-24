@@ -246,14 +246,18 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 DATABASE_URL=
 DIRECT_URL=
+SUPABASE_SERVICE_ROLE_KEY=
 
-# FIREBASE AUTHENTICATION
+# FIREBASE AUTHENTICATION & ADMIN SDK
 NEXT_PUBLIC_FIREBASE_API_KEY=
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_APP_ID=
+FIREBASE_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_PRIVATE_KEY=
 
 # GITHUB OAUTH
 GITHUB_CLIENT_ID=
@@ -277,7 +281,32 @@ NEXT_PUBLIC_SENTRY_DSN=
 SENTRY_AUTH_TOKEN=
 SENTRY_ORG=
 SENTRY_PROJECT=
+
+# WEB PUSH NOTIFICATIONS (VAPID KEYS)
+# How to generate: run 'npx web-push generate-vapid-keys' in terminal
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_SUBJECT=mailto:your-email@example.com
+
+# SECURITY & CRON SECRET
+# How to generate ENCRYPTION_KEY: run 'node -e "console.log(require(\"crypto\").randomBytes(32).toString(\"hex\"))"'
+ENCRYPTION_KEY=
+CRON_SECRET=
 ```
+
+### 💡 Environment Key Explanations & Generators
+
+* **VAPID Keys (`NEXT_PUBLIC_VAPID_PUBLIC_KEY` & `VAPID_PRIVATE_KEY`):** Used for browser Push Notifications. Generate them by running:
+  ```bash
+  npx web-push generate-vapid-keys
+  ```
+* **Encryption Key (`ENCRYPTION_KEY`):** Encrypts sensitive database tokens. Generate a cryptographically secure 256-bit key by running:
+  ```bash
+  node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+  ```
+* **Cron Secret (`CRON_SECRET`):** Secures background cron tasks (e.g. workspace synchronizations) from unauthorized triggers.
+  * **Local Dev:** Set this to any random strong string of your choice.
+  * **Production (Vercel):** Automatically created and configured by Vercel when you link Vercel Cron Jobs. No manual environment key addition is required in Vercel for production.
 
 ## 4. Run Development Server
 
