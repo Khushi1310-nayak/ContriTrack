@@ -47,9 +47,10 @@ export async function checkGitHubConnection(userId: string) {
       }
     });
     return { connected: !!account, account };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : "Database connection error";
     console.error("Failed to check GitHub integration connection:", error);
-    return { connected: false, error: error.message || "Database connection error" };
+    return { connected: false, error: errMsg };
   }
 }
 
@@ -61,9 +62,10 @@ export async function fetchAvailableRepositories(userId: string) {
     const dbUserId = await getDbUserId(userId);
     const repos = await getUserRepositories(dbUserId);
     return { success: true, repositories: repos };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : "Failed to load repositories";
     console.error("Failed to fetch user repositories from GitHub OAuth client:", error);
-    return { success: false, error: error.message || "Failed to load repositories" };
+    return { success: false, error: errMsg };
   }
 }
 
@@ -142,9 +144,10 @@ export async function linkRepository(userId: string, repoData: {
     }
 
     return { success: true, repository: repo };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : "Failed to link repository";
     console.error("Failed to bridge and link repository:", error);
-    return { success: false, error: error.message || "Failed to link repository" };
+    return { success: false, error: errMsg };
   }
 }
 
@@ -157,9 +160,10 @@ export async function triggerRepositorySync(repoId: string, userId: string) {
     await syncRepositoryTelemetry(repoId, dbUserId);
     await recalculateContributionAnalytics(repoId);
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : "Sync execution failed";
     console.error("Manual repository telemetry sync trigger failed:", error);
-    return { success: false, error: error.message || "Sync execution failed" };
+    return { success: false, error: errMsg };
   }
 }
 
@@ -228,9 +232,10 @@ export async function fetchLinkedRepositories(userId: string) {
     });
 
     return { success: true, repositories: formatted };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : "Failed to load linked repositories";
     console.error("Failed to load linked repositories:", error);
-    return { success: false, error: error.message || "Failed to load linked repositories" };
+    return { success: false, error: errMsg };
   }
 }
 
@@ -259,9 +264,10 @@ export async function disconnectGitHubAccount(userId: string) {
     });
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : "Failed to disconnect account";
     console.error("Failed to disconnect GitHub account:", error);
-    return { success: false, error: error.message || "Failed to disconnect account" };
+    return { success: false, error: errMsg };
   }
 }
 
@@ -325,9 +331,10 @@ export async function fetchRepositoryAnalyticsDetails(repoId: string) {
         activeDays: a.activeDays
       }))
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : "Database telemetry fetch failed";
     console.error("Failed to load repository telemetry metrics logs:", error);
-    return { success: false, error: error.message || "Database telemetry fetch failed" };
+    return { success: false, error: errMsg };
   }
 }
 
@@ -349,8 +356,9 @@ export async function deleteRepository(repoId: string) {
     });
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : "Failed to fully delete repository.";
     console.error("Failed to fully delete repository:", error);
-    return { success: false, error: error.message || "Failed to fully delete repository." };
+    return { success: false, error: errMsg };
   }
 }
