@@ -425,8 +425,9 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
 
   // Setup Recaptcha
   const setupRecaptcha = () => {
-    if (!(window as any).recaptchaVerifier) {
-      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+    const customWindow = window as unknown as { recaptchaVerifier?: RecaptchaVerifier };
+    if (!customWindow.recaptchaVerifier) {
+      customWindow.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
         'size': 'invisible'
       });
     }
@@ -444,7 +445,7 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
     
     try {
       setupRecaptcha();
-      const appVerifier = (window as any).recaptchaVerifier;
+      const appVerifier = (window as unknown as { recaptchaVerifier: RecaptchaVerifier }).recaptchaVerifier;
       
       let formattedPhone = phoneToVerify.trim();
       if (!formattedPhone.startsWith("+")) {
@@ -459,9 +460,10 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
       setOtpTimer(60);
       setSuccessMessage("OTP Token sent to verified handset via Firebase.");
       setAutosaveState("saved");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorObj = error as { message?: string };
       console.error("Firebase Phone Auth error:", error);
-      setErrorMessage(error.message || "Failed to send OTP via SMS.");
+      setErrorMessage(errorObj.message || "Failed to send OTP via SMS.");
       setAutosaveState("error");
     }
   };
@@ -551,12 +553,13 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
         throw new Error(res.error || "Failed to update Postgres database.");
       }
       
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorObj = err as { code?: string; message?: string };
       console.error("Firebase Verification error:", err);
-      if (err.code === "auth/requires-recent-login") {
+      if (errorObj.code === "auth/requires-recent-login") {
         setErrorMessage("Please sign out and sign in again before changing password.");
       } else {
-        setErrorMessage(err.message || "Invalid OTP or failed to verify.");
+        setErrorMessage(errorObj.message || "Invalid OTP or failed to verify.");
       }
       setAutosaveState("error");
     }

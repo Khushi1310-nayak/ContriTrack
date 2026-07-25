@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [archiveRecoverableUntil, setArchiveRecoverableUntil] = useState<string | null>(null);
 
   // Sync user metadata to Firestore users collection
-  const syncProfile = async (
+  const syncProfile = React.useCallback(async (
     firebaseUser: User,
     extraData?: {
       fullName?: string;
@@ -230,7 +230,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     setProfile(profileData);
-  };
+  }, [profile]);
 
   // Listen to Authentication session changes
   useEffect(() => {
@@ -249,7 +249,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return unsubscribe;
-  }, []);
+  }, [syncProfile]);
 
   // Register Service Worker and initialize meeting reminder worker
   useEffect(() => {
