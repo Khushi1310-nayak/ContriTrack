@@ -1,5 +1,6 @@
 import { Octokit } from "octokit";
 import { prisma } from "./db";
+import { Prisma } from "@prisma/client";
 import { decrypt } from "./crypto";
 
 // Instantiate Octokit using decrypted token
@@ -494,12 +495,11 @@ export async function syncRepositoryTelemetry(repoId: string, userId: string) {
     // Update synced times & CI/CD
     await prisma.gitHubRepository.update({
       where: { id: repoId },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data: {
         lastCommitAt: latestCommitDate,
         lastSyncedAt: new Date(),
         cicdPassRate,
-      } as any
+      } as unknown as Prisma.GitHubRepositoryUpdateInput
     });
 
     // Record logs

@@ -278,8 +278,7 @@ export async function fetchRepositoryAnalyticsDetails(repoId: string) {
   try {
     const repo = await prisma.gitHubRepository.findUnique({
       where: { id: repoId },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      select: { cicdPassRate: true } as any
+      select: { cicdPassRate: true } as unknown as Record<string, boolean>
     });
 
     const commits = await prisma.commit.findMany({
@@ -306,8 +305,7 @@ export async function fetchRepositoryAnalyticsDetails(repoId: string) {
 
     return {
       success: true,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      cicdPassRate: (repo as any)?.cicdPassRate || 0,
+      cicdPassRate: (repo as unknown as Record<string, number>)?.cicdPassRate || 0,
       commits: commits.map(c => ({
         sha: c.sha.substring(0, 7),
         message: c.message,
@@ -330,17 +328,19 @@ export async function fetchRepositoryAnalyticsDetails(repoId: string) {
         author: iss.authorName,
         createdAt: iss.createdAt.toISOString()
       })),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      analytics: analytics.map((a: any) => ({
-        username: a.gitUsername,
-        commitShare: Math.round(a.commitSharePct),
-        codeChangeShare: Math.round(a.codeChangePct),
-        fairness: Math.round(a.fairnessScore),
-        burnout: Math.round(a.burnoutIndex),
-        activeDays: a.activeDays,
-        prMergeTimeAvg: a.prMergeTimeAvg,
-        reviewQualityScore: a.reviewQualityScore
-      }))
+      analytics: analytics.map(a => {
+        const item = a as unknown as Record<string, number | string>;
+        return {
+          username: a.gitUsername,
+          commitShare: Math.round(a.commitSharePct),
+          codeChangeShare: Math.round(a.codeChangePct),
+          fairness: Math.round(a.fairnessScore),
+          burnout: Math.round(a.burnoutIndex),
+          activeDays: a.activeDays,
+          prMergeTimeAvg: (item.prMergeTimeAvg as number) || 0,
+          reviewQualityScore: (item.reviewQualityScore as number) || 0
+        };
+      })
     };
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : "Database telemetry fetch failed";
