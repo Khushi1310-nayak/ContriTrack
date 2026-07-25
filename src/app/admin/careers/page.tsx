@@ -1269,7 +1269,11 @@ Report generated: ${new Date().toLocaleString()}
                             <span>Physical Resume Reader</span>
                           </h3>
                           <a 
-                            href={selectedApp.resumeUrl} 
+                            href={
+                              selectedApp.resumeUrl?.startsWith("http://localhost:3000") || selectedApp.resumeUrl?.startsWith("http://127.0.0.1:3000")
+                                ? selectedApp.resumeUrl.replace(/^http:\/\/(localhost|127\.0\.0\.1):3000/, typeof window !== "undefined" ? window.location.origin : "")
+                                : selectedApp.resumeUrl
+                            } 
                             target="_blank" 
                             rel="noreferrer"
                             className="px-2.5 py-1 rounded bg-[#CD9FA0]/15 border border-[#CD9FA0]/30 text-[#F8CCAA] text-[10px] font-mono flex items-center gap-1 hover:bg-[#CD9FA0]/30 transition"
@@ -1282,7 +1286,11 @@ Report generated: ${new Date().toLocaleString()}
                         {selectedApp.resumeUrl ? (
                           <div className="flex-1 rounded-2xl border border-white/10 overflow-hidden bg-black/40 relative shadow-inner">
                             <iframe 
-                              src={selectedApp.resumeUrl} 
+                              src={
+                                selectedApp.resumeUrl?.startsWith("http://localhost:3000") || selectedApp.resumeUrl?.startsWith("http://127.0.0.1:3000")
+                                  ? selectedApp.resumeUrl.replace(/^http:\/\/(localhost|127\.0\.0\.1):3000/, typeof window !== "undefined" ? window.location.origin : "")
+                                  : selectedApp.resumeUrl
+                              } 
                               className="w-full h-full border-none min-h-[400px]" 
                               title="Applicant Resume Document" 
                             />
