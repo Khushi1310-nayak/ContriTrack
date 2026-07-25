@@ -21,15 +21,13 @@ import {
   Layers, 
   ShieldCheck, 
   Clock,
-  Compass,
   RotateCcw,
   Trash2,
-  ShieldAlert,
-  Database
+  ShieldAlert
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { auth } from "@/lib/firebase";
-import { triggerUserDataBackup } from "@/app/actions/settings-actions";
+
 import { 
   LoginSchema, 
   SignUpSchema, 
@@ -83,7 +81,10 @@ export default function AuthPage() {
         queryMode === "verify" ||
         queryMode === "success"
       ) {
-        setMode(queryMode as AuthMode);
+        // Defer state update to avoid synchronous cascading render warning
+        setTimeout(() => {
+          setMode(queryMode as AuthMode);
+        }, 0);
       }
     }
   }, []);
@@ -412,6 +413,7 @@ export default function AuthPage() {
 
           {/* Logo Segment */}
           <div className="relative flex items-center gap-3 z-10">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/brand/logo-horizontal.svg" alt="ContriTrack Logo" className="h-7 w-auto" />
           </div>
 

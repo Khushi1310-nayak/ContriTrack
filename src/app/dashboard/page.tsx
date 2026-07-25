@@ -787,6 +787,7 @@ export default function Dashboard() {
           <div className="flex flex-col gap-6 shrink-0">
             {/* SaaS branding row */}
             <div className="flex items-center gap-2.5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/brand/logo-horizontal.svg" alt="ContriTrack Logo" className="h-7 w-auto" />
             </div>
 
@@ -977,6 +978,7 @@ export default function Dashboard() {
               <div className="flex flex-col gap-8">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="/brand/logo-horizontal.svg" alt="ContriTrack Logo" className="h-7 w-auto" />
                   </div>
                   <button 
