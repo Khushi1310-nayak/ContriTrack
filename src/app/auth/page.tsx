@@ -412,14 +412,7 @@ export default function AuthPage() {
 
           {/* Logo Segment */}
           <div className="relative flex items-center gap-3 z-10">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#CD9FA0] via-[#F2C1A3] to-[#F8CCAA] p-[1.5px] flex items-center justify-center shadow-lg shadow-[#CD9FA0]/15">
-              <div className="w-full h-full rounded-[10px] bg-[#161725] flex items-center justify-center">
-                <Compass className="w-5 h-5 text-[#F2C1A3]" />
-              </div>
-            </div>
-            <span className="text-xl font-serif font-semibold tracking-widest bg-gradient-to-r from-[#F8CCAA] to-[#CD9FA0] bg-clip-text text-transparent">
-              ContriTrack
-            </span>
+            <img src="/brand/logo-horizontal.svg" alt="ContriTrack Logo" className="h-7 w-auto" />
           </div>
 
           {/* Hologram / Dashboard Visual mockup */}

@@ -18,14 +18,7 @@ export default function Footer({ activeModal, setActiveModal }: FooterProps) {
           {/* Logo & Info */}
           <div className="flex flex-col gap-4 text-left">
             <div className="flex items-center gap-2">
-              <div className="flex items-end gap-[3px] h-5 w-5 rounded bg-[#F2C1A3]/10 border border-[#F2C1A3]/20 p-1 justify-center">
-                <span className="w-[2px] h-1 bg-[#CD9FA0] rounded-full"></span>
-                <span className="w-[2px] h-3 bg-[#F2C1A3] rounded-full"></span>
-                <span className="w-[2px] h-2 bg-[#F8CCAA] rounded-full"></span>
-              </div>
-              <span className="font-semibold text-white tracking-wide text-base font-serif">
-                ContriTrack
-              </span>
+              <img src="/brand/logo-horizontal.svg" alt="ContriTrack Logo" className="h-6 w-auto" />
             </div>
             <p className="text-[#857C91] text-xs font-light leading-relaxed max-w-[200px]">
               Making group collaboration accountable, fair, and evidence-backed for modern college teams.

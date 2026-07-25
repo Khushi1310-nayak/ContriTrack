@@ -787,10 +787,7 @@ export default function Dashboard() {
           <div className="flex flex-col gap-6 shrink-0">
             {/* SaaS branding row */}
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#F2C1A3] to-[#F8CCAA] flex items-center justify-center shadow-[0_0_15px_rgba(242,193,163,0.2)]">
-                <Sparkles size={16} className="text-[#12131e]" />
-              </div>
-              <span className="font-serif text-lg tracking-tight text-white font-medium">ContriTrack</span>
+              <img src="/brand/logo-horizontal.svg" alt="ContriTrack Logo" className="h-7 w-auto" />
             </div>
 
             {/* Premium Workspace Selector Switcher */}
@@ -980,10 +977,7 @@ export default function Dashboard() {
               <div className="flex flex-col gap-8">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#F2C1A3] to-[#F8CCAA] flex items-center justify-center">
-                      <Sparkles size={16} className="text-[#12131e]" />
-                    </div>
-                    <span className="font-serif text-lg tracking-tight text-white font-medium">ContriTrack</span>
+                    <img src="/brand/logo-horizontal.svg" alt="ContriTrack Logo" className="h-7 w-auto" />
                   </div>
                   <button 
                     onClick={() => setIsMobileMenuOpen(false)} 
