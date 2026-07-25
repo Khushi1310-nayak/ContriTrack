@@ -74,7 +74,6 @@ export function RepositoryAnalyticsDrawer({
   const [activeTab, setActiveTab] = useState<"overview" | "commits" | "prs" | "issues">("overview");
 
   const loadDetails = useCallback(async () => {
-    setLoading(true);
     setError("");
     const res = await fetchRepositoryAnalyticsDetails(repoId);
     if (res.success && res.commits) {
@@ -92,9 +91,19 @@ export function RepositoryAnalyticsDrawer({
   }, [repoId]);
 
   useEffect(() => {
+    let isMounted = true;
     if (isOpen) {
-      loadDetails();
+      const initLoad = async () => {
+        await Promise.resolve();
+        if (!isMounted) return;
+        setLoading(true);
+        await loadDetails();
+      };
+      void initLoad();
     }
+    return () => {
+      isMounted = false;
+    };
   }, [isOpen, loadDetails]);
 
   const handleManualSync = async () => {
