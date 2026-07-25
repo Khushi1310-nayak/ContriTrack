@@ -278,20 +278,27 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
     });
 
     if (res.success) {
-      // Sync with Firebase Auth & Firestore
+      // Sync with Firebase Auth & Firestore in the background
       const currentUser = auth.currentUser;
       if (currentUser) {
-        try {
-          await updateProfile(currentUser, { displayName: displayName || fullName });
-          await syncProfile(currentUser, {
-            fullName,
-            displayName,
-            university,
-            githubUsername
-          });
-        } catch (syncErr) {
-          console.error("Failed to sync Firebase details:", syncErr);
-        }
+        void (async () => {
+          try {
+            await updateProfile(currentUser, { displayName: displayName || fullName });
+          } catch (err) {
+            console.error("Firebase updateProfile failed:", err);
+          }
+          try {
+            await syncProfile(currentUser, {
+              fullName,
+              displayName,
+              university,
+              githubUsername,
+              skipPostgresSync: true
+            });
+          } catch (err) {
+            console.error("Firebase syncProfile failed:", err);
+          }
+        })();
       }
 
       setAutosaveState("saved");
@@ -363,11 +370,17 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
       if (res.success) {
         const currentUser = auth.currentUser;
         if (currentUser) {
-          try {
-            await syncProfile(currentUser, { fullName, displayName, university, githubUsername });
-          } catch (syncErr) {
+          // Trigger local state and Firestore updates in the background immediately
+          void syncProfile(currentUser, {
+            fullName,
+            displayName,
+            university,
+            githubUsername,
+            avatarUrl: croppedBase64,
+            skipPostgresSync: true
+          }).catch((syncErr) => {
             console.error("Avatar sync error:", syncErr);
-          }
+          });
         }
         setSuccessMessage("Identity avatar synchronized successfully.");
         setTimeout(() => setSuccessMessage(null), 3000);

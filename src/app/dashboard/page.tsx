@@ -218,6 +218,7 @@ export default function Dashboard() {
   const [currentWorkspace, setCurrentWorkspace] = useState<string>("");
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string>("");
   const [dbWorkspaces, setDbWorkspaces] = useState<Workspace[]>([]);
+  const [loadingWorkspaces, setLoadingWorkspaces] = useState<boolean>(true);
   const [isWorkspaceDropdownOpen, setIsWorkspaceDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
@@ -421,17 +422,22 @@ export default function Dashboard() {
   React.useEffect(() => {
     async function initWorkspaces() {
       if (!user?.uid) return;
-      const res = await fetchUserWorkspaces(user.uid);
-      if (res.success && res.workspaces) {
-        setDbWorkspaces(res.workspaces);
-        if (res.workspaces.length > 0) {
-          const defaultWs = res.workspaces[0];
-          setCurrentWorkspaceId(defaultWs.id);
-          setCurrentWorkspace(defaultWs.name);
-        } else {
-          setCurrentWorkspaceId("");
-          setCurrentWorkspace("");
+      setLoadingWorkspaces(true);
+      try {
+        const res = await fetchUserWorkspaces(user.uid);
+        if (res.success && res.workspaces) {
+          setDbWorkspaces(res.workspaces);
+          if (res.workspaces.length > 0) {
+            const defaultWs = res.workspaces[0];
+            setCurrentWorkspaceId(defaultWs.id);
+            setCurrentWorkspace(defaultWs.name);
+          } else {
+            setCurrentWorkspaceId("");
+            setCurrentWorkspace("");
+          }
         }
+      } finally {
+        setLoadingWorkspaces(false);
       }
     }
     startTransition(() => { void initWorkspaces(); });
@@ -790,7 +796,15 @@ export default function Dashboard() {
 
             {/* Premium Workspace Selector Switcher */}
             <div className="relative">
-              {dbWorkspaces.length === 0 ? (
+              {loadingWorkspaces ? (
+                <div className="w-full h-10 px-4 py-3 rounded-2xl bg-white/[0.02] border border-white/5 animate-pulse flex items-center justify-between min-w-[140px]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-md bg-[#CD9FA0]/10 animate-pulse" />
+                    <div className="w-16 h-3 rounded bg-white/5 animate-pulse" />
+                  </div>
+                  <ChevronDown size={12} className="text-[#857C91]/30" />
+                </div>
+              ) : dbWorkspaces.length === 0 ? (
                 <button 
                   onClick={() => setIsCreateWorkspaceModalOpen(true)}
                   className="w-full px-4 py-3 rounded-2xl bg-[#CD9FA0]/5 border border-[#CD9FA0]/15 hover:border-[#F2C1A3]/30 text-left text-xs font-mono font-medium text-[#F2C1A3] flex items-center justify-between cursor-pointer transition-all duration-300 shadow-[0_0_15px_rgba(242,193,163,0.02)] hover:shadow-[0_0_20px_rgba(242,193,163,0.08)] group"
@@ -1142,7 +1156,17 @@ export default function Dashboard() {
                 {/* 1. OVERVIEW VIEW */}
                 {activeTab === "overview" && (
                   <AnimatePresence mode="wait">
-                    {dbWorkspaces.length === 0 ? (
+                    {loadingWorkspaces || loadingTasks ? (
+                      <motion.div
+                        key="dashboard-loading"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <DashboardSkeleton />
+                      </motion.div>
+                    ) : dbWorkspaces.length === 0 ? (
                       <motion.div
                         key="empty-state"
                         initial={{ opacity: 0, scale: 0.95 }}
@@ -1152,16 +1176,6 @@ export default function Dashboard() {
                         className="w-full h-full flex flex-col justify-center items-center"
                       >
                         <EmptyWorkspaceState onCreateClick={() => setIsCreateWorkspaceModalOpen(true)} />
-                      </motion.div>
-                    ) : loadingTasks ? (
-                      <motion.div
-                        key="dashboard-loading"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <DashboardSkeleton />
                       </motion.div>
                     ) : (
                       <motion.div

@@ -59,7 +59,7 @@ interface AuthContextType {
   checkEmailVerifiedStatus: () => Promise<boolean>;
   restoreArchivedAccount: () => Promise<void>;
   startFresh: () => Promise<void>;
-  syncProfile: (firebaseUser: User, extraData?: { fullName?: string; displayName?: string; university?: string; githubUsername?: string }) => Promise<void>;
+  syncProfile: (firebaseUser: User, extraData?: { fullName?: string; displayName?: string; university?: string; githubUsername?: string; avatarUrl?: string; skipPostgresSync?: boolean }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -77,7 +77,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [archiveRecoverableUntil, setArchiveRecoverableUntil] = useState<string | null>(null);
 
   // Sync user metadata to Firestore users collection
-  const syncProfile = async (firebaseUser: User, extraData?: { fullName?: string; displayName?: string; university?: string; githubUsername?: string }) => {
+  const syncProfile = async (
+    firebaseUser: User,
+    extraData?: {
+      fullName?: string;
+      displayName?: string;
+      university?: string;
+      githubUsername?: string;
+      avatarUrl?: string;
+      skipPostgresSync?: boolean;
+    }
+  ) => {
+    // Optimistic Client-Side State Update
+    if (extraData && profile) {
+      const updatedProfile: UserProfile = {
+        ...profile,
+        fullName: extraData.fullName !== undefined ? extraData.fullName : profile.fullName,
+        displayName: extraData.displayName !== undefined ? extraData.displayName : profile.displayName,
+        university: extraData.university !== undefined ? extraData.university : profile.university,
+        githubUsername: extraData.githubUsername !== undefined ? extraData.githubUsername : profile.githubUsername,
+        avatarUrl: extraData.avatarUrl !== undefined ? extraData.avatarUrl : profile.avatarUrl,
+        avatar: extraData.avatarUrl !== undefined ? extraData.avatarUrl : profile.avatar,
+      };
+      setProfile(updatedProfile);
+
+      // Perform backend operations in the background
+      void (async () => {
+        if (!extraData.skipPostgresSync) {
+          try {
+            await syncUserProfileWithPostgres(firebaseUser.uid, {
+              fullName: updatedProfile.fullName,
+              displayName: updatedProfile.displayName || undefined,
+              email: updatedProfile.email,
+              university: updatedProfile.university,
+              githubUsername: updatedProfile.githubUsername
+            });
+          } catch (dbErr) {
+            console.error("Background Postgres sync failed:", dbErr);
+          }
+        }
+
+        try {
+          const docRef = doc(db, "users", firebaseUser.uid);
+          await setDoc(docRef, updatedProfile, { merge: true });
+        } catch (fsErr) {
+          console.warn("Background Firestore cache sync failed:", fsErr);
+        }
+      })();
+
+      return;
+    }
+
     // 1. Fetch profile from PostgreSQL (Source of Truth)
     const dbProfileResult = await fetchUserProfileAndSecurity(firebaseUser.uid);
     let profileData: UserProfile;
@@ -92,8 +142,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         displayName: extraData?.displayName !== undefined ? extraData.displayName : (dbProfile.displayName || firebaseUser.displayName || ""),
         username: firebaseUser.email?.split("@")[0] || "user",
         email: firebaseUser.email || dbProfile.email || "",
-        avatarUrl: dbProfile.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(dbProfile.fullName || "US")}`,
-        avatar: dbProfile.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(dbProfile.fullName || "US")}`,
+        avatarUrl: extraData?.avatarUrl || dbProfile.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(dbProfile.fullName || "US")}`,
+        avatar: extraData?.avatarUrl || dbProfile.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(dbProfile.fullName || "US")}`,
         university: extraData?.university !== undefined ? extraData.university : (dbProfile.university || ""),
         roleInContriTrack: dbProfile.roleInContriTrack || "Student",
         role: dbProfile.roleInContriTrack || "Student",
@@ -106,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
 
       // If extraData is provided (manual settings save), update Postgres as well to keep it 100% in sync
-      if (extraData) {
+      if (extraData && !extraData.skipPostgresSync) {
         await syncUserProfileWithPostgres(firebaseUser.uid, {
           fullName: profileData.fullName,
           displayName: profileData.displayName || undefined,
