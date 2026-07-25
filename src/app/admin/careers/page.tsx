@@ -1261,48 +1261,72 @@ Report generated: ${new Date().toLocaleString()}
                     )}
 
                     {/* TAB: RESUME */}
-                    {activeTab === "resume" && (
-                      <div className="flex-1 flex flex-col gap-4 min-h-[450px]">
-                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                          <h3 className="text-xs uppercase font-mono tracking-wider text-[#CD9FA0] flex items-center gap-1.5">
-                            <FileText size={15} />
-                            <span>Physical Resume Reader</span>
-                          </h3>
-                          <a 
-                            href={
-                              selectedApp.resumeUrl?.startsWith("http://localhost:3000") || selectedApp.resumeUrl?.startsWith("http://127.0.0.1:3000")
-                                ? selectedApp.resumeUrl.replace(/^http:\/\/(localhost|127\.0\.0\.1):3000/, typeof window !== "undefined" ? window.location.origin : "")
-                                : selectedApp.resumeUrl
-                            } 
-                            target="_blank" 
-                            rel="noreferrer"
-                            className="px-2.5 py-1 rounded bg-[#CD9FA0]/15 border border-[#CD9FA0]/30 text-[#F8CCAA] text-[10px] font-mono flex items-center gap-1 hover:bg-[#CD9FA0]/30 transition"
-                          >
-                            <span>Open PDF Tab</span>
-                            <ExternalLink size={10} />
-                          </a>
-                        </div>
+                    {activeTab === "resume" && (() => {
+                      const isLocalAssetOnProd = 
+                        selectedApp.resumeUrl?.includes("/uploads/resumes/") && 
+                        typeof window !== "undefined" && 
+                        !window.location.hostname.includes("localhost") && 
+                        !window.location.hostname.includes("127.0.0.1");
 
-                        {selectedApp.resumeUrl ? (
-                          <div className="flex-1 rounded-2xl border border-white/10 overflow-hidden bg-black/40 relative shadow-inner">
-                            <iframe 
-                              src={
-                                selectedApp.resumeUrl?.startsWith("http://localhost:3000") || selectedApp.resumeUrl?.startsWith("http://127.0.0.1:3000")
-                                  ? selectedApp.resumeUrl.replace(/^http:\/\/(localhost|127\.0\.0\.1):3000/, typeof window !== "undefined" ? window.location.origin : "")
-                                  : selectedApp.resumeUrl
-                              } 
-                              className="w-full h-full border-none min-h-[400px]" 
-                              title="Applicant Resume Document" 
-                            />
+                      return (
+                        <div className="flex-1 flex flex-col gap-4 min-h-[450px]">
+                          <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                            <h3 className="text-xs uppercase font-mono tracking-wider text-[#CD9FA0] flex items-center gap-1.5">
+                              <FileText size={15} />
+                              <span>Physical Resume Reader</span>
+                            </h3>
+                            {!isLocalAssetOnProd && selectedApp.resumeUrl && (
+                              <a 
+                                href={
+                                  selectedApp.resumeUrl?.startsWith("http://localhost:3000") || selectedApp.resumeUrl?.startsWith("http://127.0.0.1:3000")
+                                    ? selectedApp.resumeUrl.replace(/^http:\/\/(localhost|127\.0\.0\.1):3000/, typeof window !== "undefined" ? window.location.origin : "")
+                                    : selectedApp.resumeUrl
+                                } 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="px-2.5 py-1 rounded bg-[#CD9FA0]/15 border border-[#CD9FA0]/30 text-[#F8CCAA] text-[10px] font-mono flex items-center gap-1 hover:bg-[#CD9FA0]/30 transition"
+                              >
+                                <span>Open PDF Tab</span>
+                                <ExternalLink size={10} />
+                              </a>
+                            )}
                           </div>
-                        ) : (
-                          <div className="flex-1 flex flex-col items-center justify-center text-white/20 border border-dashed border-white/10 rounded-2xl p-12 bg-white/[0.01]">
-                            <AlertTriangle size={24} className="mb-2 text-[#CD9FA0]" />
-                            <span className="text-xs font-mono uppercase">Resume Document Missing</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
+
+                          {isLocalAssetOnProd ? (
+                            <div className="flex-1 flex flex-col items-center justify-center border border-white/10 rounded-2xl p-8 bg-white/[0.01] text-center max-w-md mx-auto my-6">
+                              <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-4 animate-pulse">
+                                <AlertTriangle size={22} />
+                              </div>
+                              <h4 className="text-sm font-semibold text-white mb-2 font-mono uppercase tracking-wide">Local Workspace Asset</h4>
+                              <p className="text-xs text-white/50 leading-relaxed mb-4">
+                                This resume was uploaded using a local development server (<code className="text-[#F2C1A3]">localhost</code>). 
+                                Because local files are not persisted to the cloud, this file is not accessible on the deployed environment.
+                              </p>
+                              <div className="text-[11px] font-mono text-[#CD9FA0] bg-[#CD9FA0]/5 border border-[#CD9FA0]/10 rounded-xl p-3 leading-normal">
+                                💡 <strong>How to test:</strong> Submit a new job application directly on this deployed site. It will use the secure serverless Base64 pipeline to render your resume instantly!
+                              </div>
+                            </div>
+                          ) : selectedApp.resumeUrl ? (
+                            <div className="flex-1 rounded-2xl border border-white/10 overflow-hidden bg-black/40 relative shadow-inner">
+                              <iframe 
+                                src={
+                                  selectedApp.resumeUrl?.startsWith("http://localhost:3000") || selectedApp.resumeUrl?.startsWith("http://127.0.0.1:3000")
+                                    ? selectedApp.resumeUrl.replace(/^http:\/\/(localhost|127\.0\.0\.1):3000/, typeof window !== "undefined" ? window.location.origin : "")
+                                    : selectedApp.resumeUrl
+                                } 
+                                className="w-full h-full border-none min-h-[400px]" 
+                                title="Applicant Resume Document" 
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center text-white/20 border border-dashed border-white/10 rounded-2xl p-12 bg-white/[0.01]">
+                              <AlertTriangle size={24} className="mb-2 text-[#CD9FA0]" />
+                              <span className="text-xs font-mono uppercase">Resume Document Missing</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </motion.div>
                 </AnimatePresence>
               </div>
