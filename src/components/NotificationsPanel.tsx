@@ -21,7 +21,8 @@ import {
   addNotificationReply,
   savePushSubscription,
   fetchNotificationPreferences,
-  updateNotificationPreferences
+  updateNotificationPreferences,
+  deleteAllNotifications
 } from "@/app/actions/notification-actions";
 
 interface TeammateReply {
@@ -61,6 +62,7 @@ export default function NotificationsPanel({ workspaceId, user }: NotificationsP
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [workspaceFilter, setWorkspaceFilter] = useState("all");
 
   // Interactive replies states
   const [replyInputs, setReplyInputs] = useState<{ [notificationId: string]: string }>({});
@@ -86,7 +88,7 @@ export default function NotificationsPanel({ workspaceId, user }: NotificationsP
       unreadOnly,
       priority: priorityFilter,
       type: typeFilter,
-      workspaceId
+      workspaceId: workspaceFilter === "current" ? workspaceId : undefined
     });
 
     if (res.success && res.notifications) {
@@ -101,7 +103,7 @@ export default function NotificationsPanel({ workspaceId, user }: NotificationsP
       });
     }
     setLoading(false);
-  }, [user, unreadOnly, priorityFilter, typeFilter, workspaceId]);
+  }, [user, unreadOnly, priorityFilter, typeFilter, workspaceId, workspaceFilter]);
 
   useEffect(() => {
     if (user?.uid) {
@@ -222,6 +224,13 @@ export default function NotificationsPanel({ workspaceId, user }: NotificationsP
     await deleteNotification(id);
   };
 
+  const handleDeleteAllLocal = async () => {
+    if (!user?.uid) return;
+    if (!confirm("Are you sure you want to permanently empty your notification inbox?")) return;
+    setNotifications([]);
+    await deleteAllNotifications(user.uid, workspaceFilter === "current" ? workspaceId : undefined);
+  };
+
   // Direct teammate replies trigger
   const handleSendReply = async (notificationId: string) => {
     const replyText = replyInputs[notificationId];
@@ -294,6 +303,13 @@ export default function NotificationsPanel({ workspaceId, user }: NotificationsP
             className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-mono text-[#F2C1A3] cursor-pointer"
           >
             Mark all read
+          </button>
+          <button 
+            onClick={handleDeleteAllLocal}
+            className="px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-xs font-mono text-red-400 cursor-pointer flex items-center gap-1.5"
+          >
+            <Trash2 size={12} />
+            Empty fully
           </button>
           <button 
             onClick={handleEnablePush}
@@ -424,6 +440,21 @@ export default function NotificationsPanel({ workspaceId, user }: NotificationsP
         >
           Unread Only
         </button>
+
+        <div className="h-4 w-[1px] bg-white/10 hidden sm:block" />
+
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-mono text-[#857C91] uppercase">Workspace:</span>
+          <select 
+            value={workspaceFilter} 
+            onChange={e => setWorkspaceFilter(e.target.value)}
+            className="bg-[#12131e] border border-white/5 rounded-xl px-2 py-1 text-xs text-[#857C91] outline-none"
+            aria-label="Filter by Workspace"
+          >
+            <option value="all">All Workspaces</option>
+            <option value="current">Current Workspace Only</option>
+          </select>
+        </div>
 
         <div className="h-4 w-[1px] bg-white/10 hidden sm:block" />
 

@@ -275,6 +275,25 @@ export async function deleteNotification(id: string) {
 }
 
 /**
+ * Delete all notifications for a user (or optionally filtered by workspace)
+ */
+export async function deleteAllNotifications(userId: string, workspaceId?: string) {
+  try {
+    const where: Prisma.NotificationWhereInput = { receiverId: userId };
+    if (workspaceId) {
+      where.workspaceId = workspaceId;
+    }
+    await prisma.notification.deleteMany({
+      where
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error in deleteAllNotifications server action:", error);
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+/**
  * Create a persistent notification and trigger background web push notifications
  */
 export async function createNotification(data: {
