@@ -87,55 +87,37 @@ graph TD
 
 Create and manage collaborative workspaces with dynamic initialization, workspace-specific analytics, telemetry, and comprehensive multi-user support.
 
----
-
 ## 📊 Overview Dashboard
 
 Gain immediate visibility with workspace activity summaries, productivity snapshots, recent team activity, and AI-generated workspace observations.
-
----
 
 ## 🤖 AI Insights
 
 Leverage the OpenRouter API for AI-powered collaboration analysis, productivity recommendations, contribution pattern evaluation, and burnout-awareness indicators.
 
----
-
 ## 📈 Analytics & Telemetry
 
 Monitor engagement through contribution tracking systems, sprint analytics, productivity graphs, workspace engagement metrics, and real-time telemetry dashboards.
-
----
 
 ## 👥 Teams Management
 
 Manage your contributors efficiently with role assignment systems, member classifications, workspace identity synchronization, and team collaboration monitoring.
 
----
-
 ## 📅 Meetings System
 
 Coordinate effortlessly with a dedicated meeting scheduling interface, team discussion workflows, and robust workspace communication support.
-
----
 
 ## 🎯 Recruitment Center
 
 Streamline team expansion with candidate application tracking, resume upload management, recruitment analytics, role-based candidate filtering, and recruitment dashboard systems.
 
----
-
 ## 🧠 GitHub Purging & Repository Utilities
 
 Integrate seamlessly with GitHub for contribution monitoring, repository activity tracking, and visual GitHub telemetry.
 
----
-
 ## 📄 Reports System
 
 Export and analyze workspace performance reports, contribution summaries, analytics exports, and AI-generated reporting insights.
-
----
 
 ## 🔒 Authentication System
 
@@ -177,43 +159,29 @@ This project demonstrates several production-grade engineering concepts:
 
 <img width="100%" alt="Overview Dashboard" src="https://drive.google.com/uc?export=view&id=1MifXrKFyauD5WwHPzeTKYoPYyQmz_ent" />
 
----
-
 ## 📊 Analytics Dashboard Screenshot
 
 <img width="100%" alt="Analytics Dashboard" src="https://drive.google.com/uc?export=view&id=18xzncaojF6gKn5JIDuJRYq2a5cR6atN5" />
-
----
 
 ## 🤖 AI Insights Screenshot
 
 <img width="100%" alt="AI Insights" src="https://drive.google.com/uc?export=view&id=1YgUjoiqrjNyOAaSKNtogZ5LrCAVtiYnA" />
 
----
-
 ## 👥 Teams Management Screenshot
 
 <img width="100%" alt="Teams Management" src="https://drive.google.com/uc?export=view&id=1q-1IFyoojYzeQbjjIF1JmFD9yNZS1kQl" />
-
----
 
 ## 📅 Meetings Workspace Screenshot
 
 <img width="100%" alt="Meetings Workspace" src="https://drive.google.com/uc?export=view&id=1kDYZx7fSqtfeQxf7n8Qj82GA6C8v8bxl" />
 
----
-
 ## 📄 Reports System Screenshot
 
 <img width="100%" alt="Reports System" src="https://drive.google.com/uc?export=view&id=1NIvHbQN7QA0BLtohJjOPeWRN9IufureH" />
 
----
-
 ## ⚙️ Settings & Security Screenshot
 
 <img width="100%" alt="Settings & Security" src="https://drive.google.com/uc?export=view&id=1wS43XUyJWfzIS9s7TJXQB0goUkoK9gYk" />
-
----
 
 ## 🧠 GitHub Purging & Telemetry Screenshot
 
