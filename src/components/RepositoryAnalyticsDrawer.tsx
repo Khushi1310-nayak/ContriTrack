@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, RefreshCw, Star, GitFork, GitBranch, AlertCircle, ShieldAlert, Sparkles, CheckCircle2, History, GitPullRequest, Flame, Milestone } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { X, RefreshCw, ShieldAlert, Sparkles, CheckCircle2, Flame, Milestone } from "lucide-react";
 import { fetchRepositoryAnalyticsDetails, triggerRepositorySync } from "@/app/actions/github-actions";
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
 
@@ -73,13 +72,7 @@ export function RepositoryAnalyticsDrawer({
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<"overview" | "commits" | "prs" | "issues">("overview");
 
-  useEffect(() => {
-    if (isOpen) {
-      loadDetails();
-    }
-  }, [isOpen, repoId]);
-
-  const loadDetails = async () => {
+  const loadDetails = useCallback(async () => {
     setLoading(true);
     setError("");
     const res = await fetchRepositoryAnalyticsDetails(repoId);
@@ -95,7 +88,13 @@ export function RepositoryAnalyticsDrawer({
       setError(res.error || "Failed to load detailed repository analytics logs.");
     }
     setLoading(false);
-  };
+  }, [repoId]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadDetails();
+    }
+  }, [isOpen, loadDetails]);
 
   const handleManualSync = async () => {
     setSyncing(true);
@@ -315,7 +314,7 @@ export function RepositoryAnalyticsDrawer({
                               </Pie>
                               <Tooltip 
                                 contentStyle={{ backgroundColor: "#111221", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", color: "white", fontSize: "10px" }}
-                                formatter={(value: any) => [`${value}%`, "Commit Share"]}
+                                formatter={(value: number) => [`${value}%`, "Commit Share"]}
                               />
                             </PieChart>
                           </ResponsiveContainer>
