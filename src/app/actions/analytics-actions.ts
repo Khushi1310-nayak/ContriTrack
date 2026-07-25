@@ -3,6 +3,43 @@
 import { prisma } from "@/lib/db";
 import { syncRepositoryTelemetry } from "@/lib/github-service";
 
+async function resolveDbUserId(userId: string): Promise<string> {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(userId)) {
+    return userId;
+  }
+
+  const profile = await prisma.userProfile.findUnique({
+    where: { userId },
+    select: { email: true }
+  });
+
+  if (profile) {
+    const user = await prisma.user.findUnique({
+      where: { email: profile.email },
+      select: { id: true }
+    });
+    if (user) return user.id;
+  }
+
+  const directUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true }
+  });
+  if (directUser) return directUser.id;
+
+  return userId;
+}
+
+async function resolveDbUserIds(userIds: string[]): Promise<string[]> {
+  const resolvedIds: string[] = [];
+  for (const id of userIds) {
+    const resolved = await resolveDbUserId(id);
+    resolvedIds.push(resolved);
+  }
+  return resolvedIds;
+}
+
 /**
  * Fetch and dynamically compile workspace analytics
  */
@@ -66,11 +103,12 @@ export async function fetchWorkspaceAnalyticsData(
       where: { workspaceId }
     });
     
-    const userIds = workspaceMembers.map(wm => wm.userId);
+    const memberFirebaseUserIds = workspaceMembers.map(wm => wm.userId);
+    const dbUserIds = await resolveDbUserIds(memberFirebaseUserIds);
 
     // Find all repositories where at least one workspace member is a RepositoryMember
     const memberRepos = await prisma.repositoryMember.findMany({
-      where: { userId: { in: userIds } },
+      where: { userId: { in: dbUserIds } },
       select: { repoId: true }
     });
     
@@ -91,7 +129,7 @@ export async function fetchWorkspaceAnalyticsData(
 
     // 2. Fetch all users
     const users = await prisma.user.findMany({
-      where: { id: { in: userIds } },
+      where: { id: { in: dbUserIds } },
       include: {
         createdTasks: true,
         assignedTasks: true
@@ -336,16 +374,19 @@ export async function fetchWorkspaceAnalyticsData(
  */
 export async function syncWorkspaceGithubTelemetry(workspaceId: string, userId: string) {
   try {
+    const dbExecutionUserId = await resolveDbUserId(userId);
+
     // 1. Fetch all members / users associated with this workspace
     const workspaceMembers = await prisma.workspaceMember.findMany({
       where: { workspaceId }
     });
     
-    const userIds = workspaceMembers.map(wm => wm.userId);
+    const memberFirebaseUserIds = workspaceMembers.map(wm => wm.userId);
+    const dbUserIds = await resolveDbUserIds(memberFirebaseUserIds);
 
     // Find all repositories where at least one workspace member is a RepositoryMember
     const memberRepos = await prisma.repositoryMember.findMany({
-      where: { userId: { in: userIds } },
+      where: { userId: { in: dbUserIds } },
       select: { repoId: true }
     });
     
@@ -361,7 +402,7 @@ export async function syncWorkspaceGithubTelemetry(workspaceId: string, userId: 
     let successCount = 0;
     for (const repo of repositories) {
       try {
-        await syncRepositoryTelemetry(repo.id, userId);
+        await syncRepositoryTelemetry(repo.id, dbExecutionUserId);
         successCount++;
       } catch (err) {
         console.error(`Failed to sync repository ${repo.name}:`, err);
