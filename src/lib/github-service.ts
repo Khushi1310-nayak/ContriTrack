@@ -494,11 +494,12 @@ export async function syncRepositoryTelemetry(repoId: string, userId: string) {
     // Update synced times & CI/CD
     await prisma.gitHubRepository.update({
       where: { id: repoId },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data: {
         lastCommitAt: latestCommitDate,
         lastSyncedAt: new Date(),
         cicdPassRate,
-      }
+      } as any
     });
 
     // Record logs

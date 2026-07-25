@@ -134,6 +134,7 @@ export async function recalculateContributionAnalytics(repoId: string) {
           gitUsername: username,
         }
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       update: {
         commitSharePct,
         codeChangePct,
@@ -142,7 +143,8 @@ export async function recalculateContributionAnalytics(repoId: string) {
         activeDays: activeDaysCount,
         prMergeTimeAvg,
         reviewQualityScore,
-      },
+      } as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       create: {
         repoId,
         gitUsername: username,
@@ -153,7 +155,7 @@ export async function recalculateContributionAnalytics(repoId: string) {
         activeDays: activeDaysCount,
         prMergeTimeAvg,
         reviewQualityScore,
-      }
+      } as any,
     });
   }
 }
