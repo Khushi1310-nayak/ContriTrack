@@ -770,14 +770,14 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0e0f17] text-white flex flex-col font-sans select-none overflow-x-hidden antialiased">
+    <div className="h-screen bg-[#0e0f17] text-white flex flex-col font-sans select-none overflow-hidden antialiased">
       
       {/* Dynamic Background Ambient Glowing Elements */}
       <div className="absolute top-0 right-1/4 -z-10 h-[500px] w-[500px] rounded-full bg-[#F2C1A3] opacity-[0.03] blur-[150px] pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 -z-10 h-[450px] w-[450px] rounded-full bg-[#CD9FA0] opacity-[0.02] blur-[130px] pointer-events-none" />
 
       {/* Main SaaS Responsive Flex Row Layout */}
-      <div className="flex flex-1 relative min-h-screen">
+      <div className="flex flex-1 relative h-full overflow-hidden">
         
         {/* ========================================================= */}
         {/* DESKTOP SIDEBAR PANEL (Left Layout - Extended Full Height)*/}
@@ -1054,7 +1054,7 @@ export default function Dashboard() {
         {/* ========================================================= */}
         {/* CORE WORKSPACE CONTENT PANEL (Right Layout)               */}
         {/* ========================================================= */}
-        <main className="flex-1 flex flex-col min-w-0 relative">
+        <main className="flex-1 flex flex-col min-w-0 relative h-full overflow-hidden">
           
           {/* Dashboard Header Bar row */}
           <header className="sticky top-0 bg-[#0e0f17]/60 backdrop-blur-md border-b border-white/5 py-4 px-6 md:px-8 flex items-center justify-between z-20">

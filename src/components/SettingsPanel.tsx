@@ -461,9 +461,13 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
       setSuccessMessage("OTP Token sent to verified handset via Firebase.");
       setAutosaveState("saved");
     } catch (error: unknown) {
-      const errorObj = error as { message?: string };
+      const errorObj = error as { code?: string; message?: string };
       console.error("Firebase Phone Auth error:", error);
-      setErrorMessage(errorObj.message || "Failed to send OTP via SMS.");
+      if (errorObj.code === "auth/operation-not-allowed") {
+        setErrorMessage("Phone sign-in is not enabled in your Firebase Console. Please go to your Firebase Console -> Authentication -> Sign-in Method and enable the Phone provider.");
+      } else {
+        setErrorMessage(errorObj.message || "Failed to send OTP via SMS.");
+      }
       setAutosaveState("error");
     }
   };
