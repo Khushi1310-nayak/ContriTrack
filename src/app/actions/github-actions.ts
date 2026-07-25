@@ -4,13 +4,42 @@ import { prisma } from "@/lib/db";
 import { getUserRepositories, syncRepositoryTelemetry } from "@/lib/github-service";
 import { recalculateContributionAnalytics } from "@/lib/analytics-engine";
 
+async function getDbUserId(userId: string): Promise<string> {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(userId)) {
+    return userId;
+  }
+
+  const profile = await prisma.userProfile.findUnique({
+    where: { userId },
+    select: { email: true }
+  });
+
+  if (profile) {
+    const user = await prisma.user.findUnique({
+      where: { email: profile.email },
+      select: { id: true }
+    });
+    if (user) return user.id;
+  }
+
+  const directUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true }
+  });
+  if (directUser) return directUser.id;
+
+  return userId;
+}
+
 /**
  * Checks if the user profile has linked a GitHub OAuth profile.
  */
 export async function checkGitHubConnection(userId: string) {
   try {
+    const dbUserId = await getDbUserId(userId);
     const account = await prisma.gitHubAccount.findUnique({
-      where: { userId },
+      where: { userId: dbUserId },
       select: {
         username: true,
         avatarUrl: true,
@@ -29,7 +58,8 @@ export async function checkGitHubConnection(userId: string) {
  */
 export async function fetchAvailableRepositories(userId: string) {
   try {
-    const repos = await getUserRepositories(userId);
+    const dbUserId = await getDbUserId(userId);
+    const repos = await getUserRepositories(dbUserId);
     return { success: true, repositories: repos };
   } catch (error: any) {
     console.error("Failed to fetch user repositories from GitHub OAuth client:", error);
@@ -53,6 +83,7 @@ export async function linkRepository(userId: string, repoData: {
   openIssues?: number;
 }) {
   try {
+    const dbUserId = await getDbUserId(userId);
     // Check if repository has already been linked in the database
     let repo = await prisma.gitHubRepository.findUnique({
       where: { githubId: repoData.githubId },
@@ -77,7 +108,7 @@ export async function linkRepository(userId: string, repoData: {
 
     // Connect authorized user as repository member
     const account = await prisma.gitHubAccount.findUnique({
-      where: { userId },
+      where: { userId: dbUserId },
     });
 
     if (account) {
@@ -89,14 +120,14 @@ export async function linkRepository(userId: string, repoData: {
           }
         },
         update: {
-          userId,
+          userId: dbUserId,
           role: "lead", // Setting linking user as lead contributor by default
         },
         create: {
           repoId: repo.id,
           gitUsername: account.username,
           gitAvatarUrl: account.avatarUrl || "https://avatars.githubusercontent.com/u/583231?v=4",
-          userId,
+          userId: dbUserId,
           role: "lead",
         }
       });
@@ -104,7 +135,7 @@ export async function linkRepository(userId: string, repoData: {
 
     // Execute background synchronizations for immediate render
     try {
-      await syncRepositoryTelemetry(repo.id, userId);
+      await syncRepositoryTelemetry(repo.id, dbUserId);
       await recalculateContributionAnalytics(repo.id);
     } catch (syncErr) {
       console.warn("Initial sync failed, fallback mock logs generated:", syncErr);
@@ -122,7 +153,8 @@ export async function linkRepository(userId: string, repoData: {
  */
 export async function triggerRepositorySync(repoId: string, userId: string) {
   try {
-    await syncRepositoryTelemetry(repoId, userId);
+    const dbUserId = await getDbUserId(userId);
+    await syncRepositoryTelemetry(repoId, dbUserId);
     await recalculateContributionAnalytics(repoId);
     return { success: true };
   } catch (error: any) {
@@ -136,8 +168,9 @@ export async function triggerRepositorySync(repoId: string, userId: string) {
  */
 export async function fetchLinkedRepositories(userId: string) {
   try {
+    const dbUserId = await getDbUserId(userId);
     const memberRepos = await prisma.repositoryMember.findMany({
-      where: { userId },
+      where: { userId: dbUserId },
       select: { repoId: true }
     });
 
@@ -206,8 +239,9 @@ export async function fetchLinkedRepositories(userId: string) {
  */
 export async function disconnectGitHubAccount(userId: string) {
   try {
+    const dbUserId = await getDbUserId(userId);
     const memberRepos = await prisma.repositoryMember.findMany({
-      where: { userId },
+      where: { userId: dbUserId },
       select: { repoId: true }
     });
 
@@ -221,7 +255,7 @@ export async function disconnectGitHubAccount(userId: string) {
     }
 
     await prisma.gitHubAccount.delete({
-      where: { userId }
+      where: { userId: dbUserId }
     });
 
     return { success: true };
