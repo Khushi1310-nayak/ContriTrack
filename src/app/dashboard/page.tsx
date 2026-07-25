@@ -905,9 +905,8 @@ export default function Dashboard() {
           <nav className="flex-1 my-4 py-2 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
             {[
               { id: "overview", label: "Overview", icon: Activity },
-              { id: "projects", label: "Projects", icon: Layers },
               { id: "tasks", label: "Tasks", icon: Check },
-              { id: "github", label: "GitHub", icon: Github },
+              { id: "github", label: "GitHub Projects", icon: Github },
               { id: "analytics", label: "Analytics", icon: TrendingUp },
               { id: "meetings", label: "Meetings", icon: Calendar },
               { id: "reports", label: "Reports", icon: FileText },
@@ -1000,9 +999,8 @@ export default function Dashboard() {
                 <nav className="flex flex-col gap-2">
                   {[
                     { id: "overview", label: "Overview", icon: Activity },
-                    { id: "projects", label: "Projects", icon: Layers },
                     { id: "tasks", label: "Tasks", icon: Check },
-                    { id: "github", label: "GitHub", icon: Github },
+                    { id: "github", label: "GitHub Projects", icon: Github },
                     { id: "analytics", label: "Analytics", icon: TrendingUp },
                     { id: "meetings", label: "Meetings", icon: Calendar },
                     { id: "reports", label: "Reports", icon: FileText },
@@ -1208,67 +1206,7 @@ export default function Dashboard() {
                   </AnimatePresence>
                 )}
 
-                {/* 2. PROJECTS PANEL VIEW */}
-                {activeTab === "projects" && (
-                  <div className="flex flex-col gap-6 text-left max-w-4xl w-full">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <div className="flex flex-col gap-2">
-                        <span className="text-xs uppercase tracking-widest text-[#F2C1A3] font-mono">Workspace Projects</span>
-                        <h2 className="text-2xl md:text-3xl font-normal text-white font-serif tracking-tight">Bridged GitHub Repositories</h2>
-                      </div>
-                      
-                      {githubConnected && (
-                        <div className="flex items-center gap-2.5">
-                          <button
-                            onClick={() => setShowDisconnectConfirmModal(true)}
-                            className="px-4 py-2.5 rounded-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 text-red-400 text-xs font-medium tracking-wide transition flex items-center gap-1.5 cursor-pointer focus:outline-none"
-                            title="Disconnect GitHub OAuth connection and delete all bridged metadata"
-                          >
-                            <Trash2 size={13} /> Revoke GitHub
-                          </button>
-                          <button
-                            onClick={() => setIsImportModalOpen(true)}
-                            className="px-5 py-2.5 rounded-full bg-[#F2C1A3] hover:bg-[#F8CCAA] text-[#12131e] text-xs font-bold tracking-wide transition flex items-center gap-1.5 shadow-lg cursor-pointer focus:outline-none"
-                          >
-                            <Plus size={14} strokeWidth={2.5} /> Bridge New Repository
-                          </button>
-                        </div>
-                      )}
-                    </div>
 
-                    {!githubConnected ? (
-                      <div className="p-8 rounded-3xl border border-white/5 bg-[#141523]/45 backdrop-blur-md flex flex-col items-center justify-center text-center gap-6 mt-4 max-w-xl self-center">
-                        <div className="p-4 rounded-full bg-[#F2C1A3]/10 border border-[#F2C1A3]/20 text-[#F2C1A3]">
-                          <Github size={36} />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <h3 className="text-lg font-semibold text-white font-serif">Connect GitHub Workspace</h3>
-                          <p className="text-xs text-[#857C91] leading-relaxed max-w-sm">
-                            Unlock automatic, secure commit auditing, active peer parity evaluations, and mathematical fairness analytics by bridging your GitHub repository profile.
-                          </p>
-                        </div>
-                        <button 
-                          onClick={handleConnectGitHub}
-                          className="px-6 py-3 rounded-full bg-[#F2C1A3] hover:bg-[#F8CCAA] text-[#12131e] text-xs font-bold tracking-wide transition shadow-lg cursor-pointer"
-                        >
-                          Bridge GitHub Account
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="mt-4">
-                        <GitHubWaveTracker
-                          repositories={linkedRepositories}
-                          userId={user?.uid || ""}
-                          onSyncCompleted={loadLinkedRepos}
-                          onSelectRepo={(repo) => {
-                            setSelectedRepoForDrawer(repo);
-                            setIsDrawerOpen(true);
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 {/* 3. TASKS PANEL KANBAN BOARD */}
                 {activeTab === "tasks" && (
@@ -1514,9 +1452,29 @@ export default function Dashboard() {
                 {/* 4. GITHUB ANALYTICS PANEL VIEW */}
                 {activeTab === "github" && (
                   <div className="flex flex-col gap-6 text-left max-w-4xl w-full">
-                    <div className="flex flex-col gap-2">
-                      <span className="text-xs uppercase tracking-widest text-[#F2C1A3] font-mono">Indisputable Telemetry</span>
-                      <h2 className="text-2xl md:text-3xl font-normal text-white font-serif tracking-tight">Active Git Wave Tracking</h2>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div className="flex flex-col gap-2">
+                        <span className="text-xs uppercase tracking-widest text-[#F2C1A3] font-mono">Indisputable Telemetry</span>
+                        <h2 className="text-2xl md:text-3xl font-normal text-white font-serif tracking-tight">GitHub Projects</h2>
+                      </div>
+                      
+                      {githubConnected && (
+                        <div className="flex items-center gap-2.5">
+                          <button
+                            onClick={() => setShowDisconnectConfirmModal(true)}
+                            className="px-4 py-2.5 rounded-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 text-red-400 text-xs font-medium tracking-wide transition flex items-center gap-1.5 cursor-pointer focus:outline-none"
+                            title="Disconnect GitHub OAuth connection and delete all bridged metadata"
+                          >
+                            <Trash2 size={13} /> Revoke GitHub
+                          </button>
+                          <button
+                            onClick={() => setIsImportModalOpen(true)}
+                            className="px-5 py-2.5 rounded-full bg-[#F2C1A3] hover:bg-[#F8CCAA] text-[#12131e] text-xs font-bold tracking-wide transition flex items-center gap-1.5 shadow-lg cursor-pointer focus:outline-none"
+                          >
+                            <Plus size={14} strokeWidth={2.5} /> Bridge New Repository
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {!githubConnected ? (
