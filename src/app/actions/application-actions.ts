@@ -257,7 +257,7 @@ export async function createJobApplicationAction(rawInput: ApplicationInput) {
               </div>
 
               <div style="margin-top: 25px; text-align: center;">
-                <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/admin/careers" style="background-color: #CD9FA0; color: #12131e; padding: 10px 25px; border-radius: 20px; text-decoration: none; font-size: 12px; font-weight: bold; display: inline-block;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/admin/careers" style="background-color: #CD9FA0; color: #12131e; padding: 10px 25px; border-radius: 20px; text-decoration: none; font-size: 12px; font-weight: bold; display: inline-block;">
                   Manage Applicant in ATS Panel
                 </a>
               </div>

@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
     const localFilePath = path.join(publicUploadsDir, uniqueFileName);
     await fs.writeFile(localFilePath, buffer);
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
     const publicUrl = `${appUrl}/uploads/resumes/${uniqueFileName}`;
 
     return NextResponse.json({
