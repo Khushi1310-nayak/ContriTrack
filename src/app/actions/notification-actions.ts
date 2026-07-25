@@ -15,12 +15,12 @@ function getTransporter() {
   if (!user || !pass) {
     console.warn("SMTP credentials not configured in .env. Falling back to mock console transport.");
     return {
-      sendMail: async (options: any) => {
+      sendMail: async (options: nodemailer.SendMailOptions) => {
         console.log("=== MOCK EMAIL DISPATCH ===");
         console.log(`From: ${options.from}`);
         console.log(`To: ${options.to}`);
         console.log(`Subject: ${options.subject}`);
-        console.log("HTML Content preview:", options.html?.substring(0, 250));
+        console.log("HTML Content preview:", typeof options.html === "string" ? options.html.substring(0, 250) : "[Non-string HTML Content]");
         console.log("===========================");
         return { messageId: "mock-message-id-" + Date.now() };
       }
@@ -103,9 +103,9 @@ export async function sendWorkspaceEmailAlert(
 
     await transporter.sendMail(mailOptions);
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Failed to send workspace email alert:", error);
-    return { success: false, error: error.message || "Failed to dispatch email." };
+    return { success: false, error: error instanceof Error ? error.message : "Failed to dispatch email." };
   }
 }
 
