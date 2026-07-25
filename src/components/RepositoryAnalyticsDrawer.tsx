@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { X, RefreshCw, ShieldAlert, Sparkles, CheckCircle2, Flame, Milestone } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, RefreshCw, ShieldAlert, Sparkles, CheckCircle2, Flame, Milestone, History, GitPullRequest } from "lucide-react";
 import { fetchRepositoryAnalyticsDetails, triggerRepositorySync } from "@/app/actions/github-actions";
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
 
@@ -108,7 +109,7 @@ export function RepositoryAnalyticsDrawer({
     setSyncing(false);
   };
 
-  const pieData = data?.analytics.map((item, idx) => ({
+  const pieData = data?.analytics.map((item) => ({
     name: item.username,
     value: item.commitShare || 1,
   })) || [];
@@ -314,7 +315,8 @@ export function RepositoryAnalyticsDrawer({
                               </Pie>
                               <Tooltip 
                                 contentStyle={{ backgroundColor: "#111221", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", color: "white", fontSize: "10px" }}
-                                formatter={(value: number) => [`${value}%`, "Commit Share"]}
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                formatter={(value: any) => [`${value}%`, "Commit Share"]}
                               />
                             </PieChart>
                           </ResponsiveContainer>

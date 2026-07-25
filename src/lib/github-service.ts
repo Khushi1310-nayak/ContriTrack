@@ -481,9 +481,9 @@ export async function syncRepositoryTelemetry(repoId: string, userId: string) {
       });
 
       if (runs.data.total_count > 0 && runs.data.workflow_runs.length > 0) {
-        const completedRuns = runs.data.workflow_runs.filter((r: any) => r.status === "completed");
+        const completedRuns = runs.data.workflow_runs.filter((r: { status: string | null }) => r.status === "completed");
         if (completedRuns.length > 0) {
-          const passedRuns = completedRuns.filter((r: any) => r.conclusion === "success");
+          const passedRuns = completedRuns.filter((r: { conclusion: string | null }) => r.conclusion === "success");
           cicdPassRate = Math.round((passedRuns.length / completedRuns.length) * 100);
         }
       }
