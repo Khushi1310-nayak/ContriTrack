@@ -276,6 +276,11 @@ export async function disconnectGitHubAccount(userId: string) {
  */
 export async function fetchRepositoryAnalyticsDetails(repoId: string) {
   try {
+    const repo = await prisma.gitHubRepository.findUnique({
+      where: { id: repoId },
+      select: { cicdPassRate: true }
+    });
+
     const commits = await prisma.commit.findMany({
       where: { repoId },
       orderBy: { authoredAt: "desc" },
@@ -300,6 +305,7 @@ export async function fetchRepositoryAnalyticsDetails(repoId: string) {
 
     return {
       success: true,
+      cicdPassRate: repo?.cicdPassRate || 0,
       commits: commits.map(c => ({
         sha: c.sha.substring(0, 7),
         message: c.message,
@@ -328,7 +334,9 @@ export async function fetchRepositoryAnalyticsDetails(repoId: string) {
         codeChangeShare: Math.round(a.codeChangePct),
         fairness: Math.round(a.fairnessScore),
         burnout: Math.round(a.burnoutIndex),
-        activeDays: a.activeDays
+        activeDays: a.activeDays,
+        prMergeTimeAvg: a.prMergeTimeAvg,
+        reviewQualityScore: a.reviewQualityScore
       }))
     };
   } catch (error: unknown) {

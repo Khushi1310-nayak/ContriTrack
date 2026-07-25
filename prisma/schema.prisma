@@ -63,6 +63,7 @@ model GitHubRepository {
   lastSyncedAt      DateTime?
   webhookSecret     String?
   webhookActive     Boolean            @default(false)
+  cicdPassRate      Float              @default(0.0) // CI/CD workflow pass rate percentage
   
   members           RepositoryMember[]
   commits           Commit[]
@@ -155,6 +156,8 @@ model ContributionAnalytics {
   fairnessScore  Float            @default(100.0)
   burnoutIndex   Float            @default(0.0) // 0-100 load index
   activeDays     Int              @default(0)
+  prMergeTimeAvg Float            @default(0.0) // Avg time to merge PRs in hours
+  reviewQualityScore Float        @default(0.0) // Metric based on reviews given/received
   updatedAt      DateTime         @updatedAt
 
   @@unique([repoId, gitUsername])

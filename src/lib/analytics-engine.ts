@@ -69,14 +69,52 @@ export async function recalculateContributionAnalytics(repoId: string) {
     ? Math.round(((sumCommits * sumCommits) / (n * sumSqCommits)) * 100) 
     : 100;
 
+  // 3. Fetch Pull Requests for advanced telemetry
+  const prs = await prisma.pullRequest.findMany({
+    where: { repoId }
+  });
+
+  const prTimes: Record<string, number[]> = {};
+  const prCounts: Record<string, number> = {};
+
+  members.forEach((m) => {
+    prTimes[m.gitUsername] = [];
+    prCounts[m.gitUsername] = 0;
+  });
+
+  prs.forEach(pr => {
+    const author = pr.authorName;
+    if (prTimes[author] !== undefined) {
+      prCounts[author]++;
+      if (pr.mergedAt && pr.createdAt) {
+        const diffMs = pr.mergedAt.getTime() - pr.createdAt.getTime();
+        const diffHours = diffMs / (1000 * 60 * 60);
+        prTimes[author].push(diffHours);
+      }
+    }
+  });
+
   // Calculate & cache metrics for each member
   for (const member of members) {
-    const userCommits = commitCounts[member.gitUsername];
-    const userLines = linesModified[member.gitUsername];
-    const activeDaysCount = activeDaysMap[member.gitUsername].size;
+    const username = member.gitUsername;
+    const userCommits = commitCounts[username];
+    const userLines = linesModified[username];
+    const activeDaysCount = activeDaysMap[username].size;
 
     const commitSharePct = totalCommits > 0 ? (userCommits / totalCommits) * 100 : 0;
     const codeChangePct = totalLines > 0 ? (userLines / totalLines) * 100 : 0;
+
+    // Calculate PR Merge Time Average
+    const userPrTimes = prTimes[username];
+    let prMergeTimeAvg = 0;
+    if (userPrTimes.length > 0) {
+      prMergeTimeAvg = Math.round((userPrTimes.reduce((a, b) => a + b, 0) / userPrTimes.length) * 10) / 10;
+    }
+
+    // Proxy calculation for Review Quality Score based on PR volume and lines modified
+    // Real code review telemetry would use octokit review APIs directly
+    const userPrCount = prCounts[username];
+    const reviewQualityScore = Math.min(100, Math.round((userPrCount * 15) + (userLines / 500)));
 
     // Calculate dynamic burnout index: high line count and commit share in short active windows
     const burnoutIndex = Math.min(
@@ -93,7 +131,7 @@ export async function recalculateContributionAnalytics(repoId: string) {
       where: {
         repoId_gitUsername: {
           repoId,
-          gitUsername: member.gitUsername,
+          gitUsername: username,
         }
       },
       update: {
@@ -102,15 +140,19 @@ export async function recalculateContributionAnalytics(repoId: string) {
         fairnessScore: commitFairnessScore,
         burnoutIndex,
         activeDays: activeDaysCount,
+        prMergeTimeAvg,
+        reviewQualityScore,
       },
       create: {
         repoId,
-        gitUsername: member.gitUsername,
+        gitUsername: username,
         commitSharePct,
         codeChangePct,
         fairnessScore: commitFairnessScore,
         burnoutIndex,
         activeDays: activeDaysCount,
+        prMergeTimeAvg,
+        reviewQualityScore,
       }
     });
   }

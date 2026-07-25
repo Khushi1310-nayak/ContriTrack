@@ -471,12 +471,33 @@ export async function syncRepositoryTelemetry(repoId: string, userId: string) {
       });
     }
 
-    // Update synced times
+    // 7. Sync CI/CD Workflow Runs to calculate Pass Rate
+    let cicdPassRate = 0.0;
+    try {
+      const runs = await octokit.rest.actions.listWorkflowRunsForRepo({
+        owner: repository.owner,
+        repo: repository.name,
+        per_page: 30,
+      });
+
+      if (runs.data.total_count > 0 && runs.data.workflow_runs.length > 0) {
+        const completedRuns = runs.data.workflow_runs.filter((r: any) => r.status === "completed");
+        if (completedRuns.length > 0) {
+          const passedRuns = completedRuns.filter((r: any) => r.conclusion === "success");
+          cicdPassRate = Math.round((passedRuns.length / completedRuns.length) * 100);
+        }
+      }
+    } catch (err) {
+      console.warn("Could not fetch workflow runs. Repository might not have Actions enabled.", err);
+    }
+
+    // Update synced times & CI/CD
     await prisma.gitHubRepository.update({
       where: { id: repoId },
       data: {
         lastCommitAt: latestCommitDate,
         lastSyncedAt: new Date(),
+        cicdPassRate,
       }
     });
 

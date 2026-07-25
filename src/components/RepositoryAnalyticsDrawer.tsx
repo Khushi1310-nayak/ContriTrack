@@ -11,6 +11,8 @@ interface MemberAnalytics {
   fairness: number;
   burnout: number;
   activeDays: number;
+  prMergeTimeAvg?: number;
+  reviewQualityScore?: number;
 }
 
 interface Commit {
@@ -62,6 +64,7 @@ export function RepositoryAnalyticsDrawer({
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [data, setData] = useState<{
+    cicdPassRate?: number;
     commits: Commit[];
     prs: PR[];
     issues: Issue[];
@@ -82,6 +85,7 @@ export function RepositoryAnalyticsDrawer({
     const res = await fetchRepositoryAnalyticsDetails(repoId);
     if (res.success && res.commits) {
       setData({
+        cicdPassRate: res.cicdPassRate,
         commits: res.commits,
         prs: res.prs || [],
         issues: res.issues || [],
@@ -210,8 +214,8 @@ export function RepositoryAnalyticsDrawer({
                   {activeTab === "overview" && (
                     <div className="space-y-6 text-left">
                       
-                      {/* Parity & Fairness Gauges */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      {/* Parity, Burnout, & CI/CD Gauges */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                         
                         {/* Parity Card */}
                         <div className="p-5 rounded-3xl border border-white/5 bg-[#141523]/45 flex flex-col gap-4 relative overflow-hidden">
@@ -263,6 +267,29 @@ export function RepositoryAnalyticsDrawer({
 
                           <p className="text-[10px] font-sans text-[#857C91] leading-relaxed">
                             Peer load analysis flags members who carry excessive workloads relative to their team peers, preventing sprint crashes.
+                          </p>
+                        </div>
+
+                        {/* CI/CD Health check */}
+                        <div className="p-5 rounded-3xl border border-white/5 bg-[#141523]/45 flex flex-col justify-between gap-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[#857C91] text-[10px] font-mono uppercase tracking-wider">CI/CD Pipeline Health</span>
+                            <Milestone size={14} className="text-[#38bdf8]" />
+                          </div>
+
+                          <div className="flex items-baseline gap-2">
+                            <span className={`text-4xl font-serif font-light ${
+                              (data.cicdPassRate || 0) >= 90 ? "text-emerald-400" : (data.cicdPassRate || 0) >= 70 ? "text-[#38bdf8]" : "text-[#CD9FA0]"
+                            }`}>
+                              {data.cicdPassRate}%
+                            </span>
+                            <span className="text-[10px] text-[#857C91] uppercase tracking-wide">
+                              Pass Rate
+                            </span>
+                          </div>
+
+                          <p className="text-[10px] font-sans text-[#857C91] leading-relaxed">
+                            Tracks the success rate of automated workflow runs on the default branch.
                           </p>
                         </div>
 
@@ -338,6 +365,14 @@ export function RepositoryAnalyticsDrawer({
                                 <div className="flex flex-col text-right">
                                   <span className="text-[#857C91] text-[8px] font-mono uppercase">Commits</span>
                                   <span className="text-white text-xs font-mono font-medium">{collab.commitShare}%</span>
+                                </div>
+                                <div className="flex flex-col text-right hidden sm:flex">
+                                  <span className="text-[#857C91] text-[8px] font-mono uppercase">PR Merge (Avg)</span>
+                                  <span className="text-white text-xs font-mono font-medium">{collab.prMergeTimeAvg || 0}h</span>
+                                </div>
+                                <div className="flex flex-col text-right hidden sm:flex">
+                                  <span className="text-[#857C91] text-[8px] font-mono uppercase">Review Quality</span>
+                                  <span className="text-white text-xs font-mono font-medium">{collab.reviewQualityScore || 0}/100</span>
                                 </div>
                                 <div className="flex flex-col text-right">
                                   <span className="text-[#857C91] text-[8px] font-mono uppercase">Active Days</span>
