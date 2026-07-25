@@ -61,16 +61,22 @@ export async function fetchWorkspaceAnalyticsData(
       dateFilter = { gte: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000) };
     }
 
-    // 1. Fetch relevant repositories linked to this workspace
-    // Since repositories are linked to Tasks in the workspace
-    const tasksInWorkspace = await prisma.task.findMany({
-      where: { workspaceId: workspaceId },
-      select: { repositoryId: true }
+    // 1. Fetch all members / users associated with this workspace
+    const workspaceMembers = await prisma.workspaceMember.findMany({
+      where: { workspaceId }
+    });
+    
+    const userIds = workspaceMembers.map(wm => wm.userId);
+
+    // Find all repositories where at least one workspace member is a RepositoryMember
+    const memberRepos = await prisma.repositoryMember.findMany({
+      where: { userId: { in: userIds } },
+      select: { repoId: true }
     });
     
     const linkedRepoIds = Array.from(
-      new Set(tasksInWorkspace.map(t => t.repositoryId).filter(Boolean))
-    ) as string[];
+      new Set(memberRepos.map(mr => mr.repoId))
+    );
 
     const repositories = await prisma.gitHubRepository.findMany({
       where: {
@@ -83,13 +89,7 @@ export async function fetchWorkspaceAnalyticsData(
 
     const activeRepoId = repositoryId || (repositories[0]?.id || null);
 
-    // 2. Fetch all members / users associated with this workspace
-    const workspaceMembers = await prisma.workspaceMember.findMany({
-      where: { workspaceId }
-    });
-    
-    const userIds = workspaceMembers.map(wm => wm.userId);
-    
+    // 2. Fetch all users
     const users = await prisma.user.findMany({
       where: { id: { in: userIds } },
       include: {
@@ -336,15 +336,22 @@ export async function fetchWorkspaceAnalyticsData(
  */
 export async function syncWorkspaceGithubTelemetry(workspaceId: string, userId: string) {
   try {
-    // 1. Fetch repositories associated with workspace
-    const tasksInWorkspace = await prisma.task.findMany({
-      where: { workspaceId: workspaceId },
-      select: { repositoryId: true }
+    // 1. Fetch all members / users associated with this workspace
+    const workspaceMembers = await prisma.workspaceMember.findMany({
+      where: { workspaceId }
+    });
+    
+    const userIds = workspaceMembers.map(wm => wm.userId);
+
+    // Find all repositories where at least one workspace member is a RepositoryMember
+    const memberRepos = await prisma.repositoryMember.findMany({
+      where: { userId: { in: userIds } },
+      select: { repoId: true }
     });
     
     const linkedRepoIds = Array.from(
-      new Set(tasksInWorkspace.map(t => t.repositoryId).filter(Boolean))
-    ) as string[];
+      new Set(memberRepos.map(mr => mr.repoId))
+    );
 
     const repositories = await prisma.gitHubRepository.findMany({
       where: { id: { in: linkedRepoIds } }
