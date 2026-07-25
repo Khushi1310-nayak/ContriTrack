@@ -344,7 +344,7 @@ export default function Dashboard() {
     setLoadingTasks(true);
     try {
       const [tasksRes, usersRes, reposRes] = await Promise.all([
-        fetchWorkspaceTasks(currentWorkspace),
+        fetchWorkspaceTasks(currentWorkspaceId),
         fetchWorkspaceUsers(),
         fetchWorkspaceRepositories(),
       ]);
@@ -363,7 +363,7 @@ export default function Dashboard() {
     } finally {
       setLoadingTasks(false);
     }
-  }, [currentWorkspace]);
+  }, [currentWorkspaceId]);
 
   const loadDbProfile = React.useCallback(async () => {
     if (!user?.uid) return;
@@ -383,7 +383,7 @@ export default function Dashboard() {
     await Promise.resolve();
     setLoadingAnalytics(true);
     try {
-      const res = await fetchWorkspaceAnalyticsData(currentWorkspace, {
+      const res = await fetchWorkspaceAnalyticsData(currentWorkspaceId, {
         repositoryId: analyticsFilterRepo === "all" ? null : analyticsFilterRepo,
         memberId: analyticsFilterMember === "all" ? null : analyticsFilterMember,
         dateRange: analyticsFilterDate
@@ -396,13 +396,13 @@ export default function Dashboard() {
     } finally {
       setLoadingAnalytics(false);
     }
-  }, [currentWorkspace, analyticsFilterRepo, analyticsFilterMember, analyticsFilterDate]);
+  }, [currentWorkspaceId, analyticsFilterRepo, analyticsFilterMember, analyticsFilterDate]);
 
   const handleSyncWorkspaceAnalytics = async () => {
     if (!user?.uid) return;
     setSyncingAnalytics(true);
     try {
-      const res = await syncWorkspaceGithubTelemetry(currentWorkspace, user.uid);
+      const res = await syncWorkspaceGithubTelemetry(currentWorkspaceId, user.uid);
       if (res.success) {
         await loadAnalyticsData();
         await loadWorkspaceData();
@@ -464,7 +464,7 @@ export default function Dashboard() {
       dueDate: newTaskDueDate || null,
       estimatedHours: newTaskEstimatedHours,
       repositoryId: newTaskRepositoryId || null,
-      workspaceId: currentWorkspace,
+      workspaceId: currentWorkspaceId,
       creatorId: user.uid,
       assigneeId: newTaskAssigneeId || null,
     });
@@ -548,7 +548,7 @@ export default function Dashboard() {
     
     const res = await syncTaskGitHubTelemetry(taskId, user.uid);
     if (res.success && res.telemetry) {
-      const freshTasks = await fetchWorkspaceTasks(currentWorkspace);
+      const freshTasks = await fetchWorkspaceTasks(currentWorkspaceId);
       if (freshTasks.success && freshTasks.tasks) {
         setTasks(freshTasks.tasks as Task[]);
         const freshSelected = freshTasks.tasks.find((t) => t.id === taskId);
@@ -1875,7 +1875,7 @@ export default function Dashboard() {
                 {/* 6. MEETINGS PANEL VIEW */}
                 {activeTab === "meetings" && (
                   <MeetingsPanel 
-                    workspaceId={currentWorkspace}
+                    workspaceId={currentWorkspaceId}
                     user={user ? { uid: user.uid, displayName: userName, email: user.email } : null}
                     collaborators={collaborators}
                   />

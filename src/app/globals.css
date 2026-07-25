@@ -152,3 +152,12 @@ body {
 .delay-4s {
   animation-delay: 4s !important;
 }
+
+/* Force pointer cursor on all buttons, links, and interactive clickables */
+button,
+a,
+input[type="button"],
+input[type="submit"],
+[role="button"] {
+  cursor: pointer !important;
+}
