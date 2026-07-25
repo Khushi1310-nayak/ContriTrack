@@ -46,9 +46,41 @@ export async function POST(req: NextRequest) {
     const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+    // Helper to ensure Supabase resumes bucket exists
+    const ensureSupabaseBucket = async (url: string, key: string) => {
+      try {
+        const cleanUrl = url.replace(/\/$/, "");
+        const checkRes = await fetch(`${cleanUrl}/storage/v1/bucket/resumes`, {
+          headers: { "Authorization": `Bearer ${key}` }
+        });
+        if (checkRes.ok) return;
+
+        const createRes = await fetch(`${cleanUrl}/storage/v1/bucket`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${key}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            id: "resumes",
+            name: "resumes",
+            public: true
+          })
+        });
+        if (createRes.ok) {
+          console.log("Successfully auto-created missing Supabase resumes bucket.");
+        } else {
+          console.warn("Failed to auto-create resumes bucket:", await createRes.text());
+        }
+      } catch (err) {
+        console.error("Error checking/creating resumes bucket:", err);
+      }
+    };
+
     // 3. SECURE ADAPTER SWITCH: SUPABASE VS LOCAL RESOLUTION FALLBACK
     if (supabaseUrl && supabaseServiceRole) {
-      console.log("Piping file upload safely to Supabase Storage resumes bucket...");
+      console.log("Ensuring bucket existence and piping file upload safely to Supabase Storage resumes bucket...");
+      await ensureSupabaseBucket(supabaseUrl, supabaseServiceRole);
       
       const cleanUrl = supabaseUrl.replace(/\/$/, "");
       const uploadUrl = `${cleanUrl}/storage/v1/object/resumes/${uniqueFileName}`;
@@ -75,6 +107,22 @@ export async function POST(req: NextRequest) {
         const errorText = await response.text();
         console.error("Supabase Storage rejected upload. Falling back to local store:", errorText);
       }
+    }
+
+    // 4. SERVERLESS VS LOCAL FALLBACK
+    const isServerless = process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
+
+    if (isServerless) {
+      console.log("Serverless environment detected (Vercel). Converting payload to secure base64 Data URL to bypass read-only write limits.");
+      const base64Data = buffer.toString("base64");
+      const publicUrl = `data:${file.type || "application/pdf"};base64,${base64Data}`;
+
+      return NextResponse.json({
+        success: true,
+        fileName: file.name,
+        resumeUrl: publicUrl,
+        storageProvider: "Base64DataUrl"
+      });
     }
 
     // LOCAL RESOLUTION FALLBACK: Writes files to public/uploads/resumes for immediate workspace utility
