@@ -19,7 +19,6 @@ import {
   TrendingUp, 
   AlertTriangle, 
   LogOut, 
-  Layers,
   ChevronDown,
   Menu,
   X,
