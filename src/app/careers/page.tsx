@@ -172,19 +172,27 @@ export default function CareersPage() {
           className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-3xl mt-8 pt-8 border-t border-white/[0.06]"
         >
           {[
-            { value: "10", label: "Open Positions", icon: Briefcase },
-            { value: "100%", label: "Remote Eligible", icon: Globe },
-            { value: "5+", label: "Academic Hubs", icon: Users },
-            { value: "Prisma", label: "Relational DB ready", icon: Layers }
-          ].map((stat, idx) => (
-            <div key={idx} className="p-4 rounded-2xl bg-white/[0.01] border border-white/[0.04] text-center flex flex-col gap-1">
-              <div className="flex items-center justify-center gap-1.5 text-[#F2C1A3]">
-                <stat.icon size={13} />
-                <span className="text-xl font-serif font-light">{stat.value}</span>
+            { value: "10", label: "Open Positions", icon: Briefcase, href: undefined },
+            { value: "100%", label: "Remote Eligible", icon: Globe, href: undefined },
+            { value: "5+", label: "Academic Hubs", icon: Users, href: "/hubs" },
+            { value: "Prisma", label: "Relational DB ready", icon: Layers, href: undefined }
+          ].map((stat, idx) => {
+            const cardContent = (
+              <div key={idx} className="p-4 rounded-2xl bg-white/[0.01] border border-white/[0.04] hover:border-[#CD9FA0]/40 transition-all text-center flex flex-col gap-1 cursor-pointer group">
+                <div className="flex items-center justify-center gap-1.5 text-[#F2C1A3]">
+                  <stat.icon size={13} />
+                  <span className="text-xl font-serif font-light group-hover:text-[#F8CCAA]">{stat.value}</span>
+                </div>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#8e94a0] group-hover:text-white">{stat.label}</span>
               </div>
-              <span className="text-[10px] font-mono uppercase tracking-widest text-[#8e94a0]">{stat.label}</span>
-            </div>
-          ))}
+            );
+
+            return stat.href ? (
+              <Link key={idx} href={stat.href}>
+                {cardContent}
+              </Link>
+            ) : cardContent;
+          })}
         </motion.div>
       </section>
 

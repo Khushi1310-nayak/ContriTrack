@@ -71,6 +71,7 @@ model GitHubRepository {
   issues            Issue[]
   syncLogs          RepositorySyncLog[]
   analytics         ContributionAnalytics[]
+  academicHubProjects AcademicHubProject[]
   tasks             Task[]
   contributionMetrics ContributionMetric[]
   commitTelemetries   CommitTelemetry[]
@@ -403,6 +404,7 @@ model Workspace {
   activities TeamActivity[]
   presences  MemberPresence[]
   contributions ContributionSummary[]
+  academicHubProjects AcademicHubProject[]
 }
 
 model WorkspaceMember {
@@ -761,5 +763,45 @@ model OTPSession {
   attempts  Int      @default(0)
   createdAt DateTime @default(now())
 }
+
+model AcademicHub {
+  id             String               @id @default(uuid())
+  slug           String               @unique // "capstone" | "open-source" | "ai-research" | "hackathon" | "faculty-oversight"
+  name           String
+  type           String               // "capstone" | "open_source" | "ai_research" | "hackathon" | "faculty_oversight"
+  institution    String               @default("Global University Network")
+  description    String
+  icon           String               @default("GraduationCap")
+  bannerGradient String               @default("from-[#CD9FA0]/20 to-[#F2C1A3]/10")
+  members        AcademicHubMember[]
+  projects       AcademicHubProject[]
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+}
+
+model AcademicHubMember {
+  id        String      @id @default(uuid())
+  hubId     String
+  hub       AcademicHub @relation(fields: [hubId], references: [id], onDelete: Cascade)
+  userId    String
+  role      String      @default("STUDENT") // "STUDENT" | "PROFESSOR" | "MENTOR" | "ADMIN"
+  joinedAt  DateTime    @default(now())
+
+  @@unique([hubId, userId])
+}
+
+model AcademicHubProject {
+  id           String           @id @default(uuid())
+  hubId        String
+  hub          AcademicHub      @relation(fields: [hubId], references: [id], onDelete: Cascade)
+  workspaceId  String?
+  workspace    Workspace?       @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  repositoryId String?
+  repository   GitHubRepository? @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
+  projectName  String
+  description  String?
+  linkedAt     DateTime         @default(now())
+}
+
 
 
