@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme {
+:root {
   --font-serif: var(--font-playfair);
   --font-sans: var(--font-inter);
   
@@ -12,9 +12,7 @@
   
   --color-panel-bg: rgba(27, 28, 43, 0.7);
   --color-border-glow: rgba(242, 193, 163, 0.15);
-}
 
-:root {
   --background: #12131e;
   --foreground: #f3f4f6;
 }
@@ -162,13 +160,13 @@ input[type="submit"],
   cursor: pointer !important;
 }
 
-/* Hide scrollbar for Chrome, Safari, Opera, Firefox, IE/Edge */
+/* Hide scrollbar across all WebKit browsers, Firefox, and IE/Edge */
 .scrollbar-none::-webkit-scrollbar {
   display: none;
-  width: 0px;
-  height: 0px;
+  width: 0;
+  height: 0;
 }
 .scrollbar-none {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
