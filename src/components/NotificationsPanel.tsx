@@ -81,9 +81,9 @@ export default function NotificationsPanel({ workspaceId, user }: NotificationsP
   const [savingPrefs, setSavingPrefs] = useState(false);
 
   // Load notifications from database
-  const loadNotifications = React.useCallback(async () => {
+  const loadNotifications = React.useCallback(async (isSilent = false) => {
     if (!user?.uid) return;
-    setLoading(true);
+    if (!isSilent) setLoading(true);
     const res = await fetchNotifications(user.uid, {
       unreadOnly,
       priority: priorityFilter,
@@ -102,17 +102,17 @@ export default function NotificationsPanel({ workspaceId, user }: NotificationsP
         return fresh;
       });
     }
-    setLoading(false);
+    if (!isSilent) setLoading(false);
   }, [user, unreadOnly, priorityFilter, typeFilter, workspaceId, workspaceFilter]);
 
   useEffect(() => {
     if (!user?.uid) return;
     
-    startTransition(() => { void loadNotifications(); });
+    startTransition(() => { void loadNotifications(false); });
 
-    // 10-second real-time polling so notifications appear in the exact minute
+    // 10-second silent real-time polling so notifications appear in the exact minute without screen flicker
     const interval = setInterval(() => {
-      void loadNotifications();
+      void loadNotifications(true);
     }, 10000);
 
     return () => clearInterval(interval);
