@@ -406,7 +406,7 @@ export default function DocsPage() {
         <div className="flex-1 w-full max-w-8xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 items-start gap-8 py-10">
           
           {/* 1.1 DOCUMENTATION SIDEBAR INDEX */}
-          <aside className="lg:col-span-3 sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-4 scrollbar-none flex flex-col gap-6 text-left">
+          <aside className="lg:col-span-3 sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4 scrollbar-none flex flex-col gap-6 text-left">
             <div className="flex flex-col gap-1">
               <span className="text-[9px] font-mono uppercase tracking-widest text-[#F2C1A3] font-semibold">Documentation Index</span>
               <p className="text-[10px] text-[#8e94a0]">API schemas, SDK blocks, webhooks, and security specifications.</p>
@@ -443,7 +443,7 @@ export default function DocsPage() {
           </aside>
 
           {/* 1.2 MAIN TECHNICAL WRITTEN SPECIFICATIONS */}
-          <main className="lg:col-span-5 flex flex-col gap-20 text-left border-r border-white/[0.04] pr-8">
+          <main className="lg:col-span-5 flex flex-col gap-20 text-left border-r border-white/[0.04] pr-8 max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-none">
             
             {/* OVERVIEW SECTION */}
             <section id="Introduction" className="scroll-mt-28 flex flex-col gap-4">
@@ -650,7 +650,7 @@ export default function DocsPage() {
           </main>
 
           {/* 1.3 RIGHT SIDEBAR - THE STRIPE LIVE API EXPLORER */}
-          <aside className="lg:col-span-4 sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto scrollbar-none flex flex-col gap-6 text-left">
+          <aside className="lg:col-span-4 sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-none flex flex-col gap-6 text-left">
             <div className="p-5 rounded-3xl border border-white/10 bg-[#0e1017]/95 shadow-2xl flex flex-col gap-4">
               <div className="flex items-center justify-between border-b border-white/5 pb-2">
                 <div className="flex items-center gap-2">
