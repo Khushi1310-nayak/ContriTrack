@@ -197,16 +197,17 @@ export default function Dashboard() {
   // Relational database profile syncing state
   const [dbProfile, setDbProfile] = useState<UserProfileData | null>(null);
 
-  // Greeting computed dynamically without cascading render state side-effects
-  const greeting = (() => {
-    if (typeof window === "undefined") return "Good morning";
-    const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) return "Good morning";
-    if (hour >= 12 && hour < 17) return "Good afternoon";
-    return "Good evening";
-  })();
+  // Dynamic client time-of-day greeting state (Morning, Afternoon, Evening)
+  const [timeGreeting, setTimeGreeting] = useState<string>("Good morning");
 
-  const getGreeting = () => greeting;
+  React.useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) setTimeGreeting("Good morning");
+    else if (hour >= 12 && hour < 17) setTimeGreeting("Good afternoon");
+    else setTimeGreeting("Good evening");
+  }, []);
+
+  const getGreeting = () => timeGreeting;
 
   const userName = ((dbProfile?.displayName as string) || (dbProfile?.fullName as string) || (profile?.displayName as string) || (profile?.fullName as string) || (user?.displayName as string) || user?.email?.split("@")[0] || "User") as string;
   const userRole = ((dbProfile?.roleInContriTrack as string) || (dbProfile?.userType as string) || "Student") as string;
