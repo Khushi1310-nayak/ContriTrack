@@ -35,6 +35,7 @@ import {
   ApiKeyMetadata 
 } from "@/app/actions/api-key-actions";
 import { fetchUserWorkspaces } from "@/app/actions/team-actions";
+import { runSystemDiagnosticsAction } from "@/app/actions/github-actions";
 import { Workspace } from "@prisma/client";
 
 // Technical documentation categories & sections index
@@ -257,45 +258,48 @@ export default function DocsPage() {
     }
   };
 
-  // Run Animated Systems Diagnostics Check
-  const runDiagnostics = () => {
+  // Run Live System Diagnostics Check against PostgreSQL database & session
+  const runDiagnostics = async () => {
     setIsDiagnosticRunning(true);
-    setDiagnosticProgress(0);
+    setDiagnosticProgress(15);
     
-    const steps: Array<{ index: number; status: "loading" | "pass" | "fail"; detail: string }> = [
-      { index: 0, status: "pass", detail: user ? "Valid authentication session synchronized." : "Anonymised playground context active." },
-      { index: 1, status: "pass", detail: "PostgreSQL active with 12ms network latency." },
-      { index: 2, status: "pass", detail: "OAuth scopes verified. Repository hooks operational." },
-      { index: 3, status: "pass", detail: "Realtime WebSocket channels streaming telemetry updates." },
-      { index: 4, status: "pass", detail: "Quota buckets initialized. Zero active rate limit throttles." }
-    ];
+    // Set loading state initially
+    setDiagnosticLogs(prev => prev.map(log => ({ ...log, status: "loading" })));
 
-    let currentStep = 0;
-    const interval = setInterval(() => {
-      setDiagnosticProgress(prev => {
-        const next = prev + 20;
-        if (next >= 100) {
-          clearInterval(interval);
-          setIsDiagnosticRunning(false);
-        }
-        return next;
-      });
+    try {
+      setDiagnosticProgress(45);
+      const res = await runSystemDiagnosticsAction(user?.uid || null);
+      setDiagnosticProgress(85);
 
-      setDiagnosticLogs(prev => {
-        const updated = [...prev];
-        const step = steps[currentStep];
-        if (step) {
-          updated[step.index] = {
-            ...updated[step.index],
-            status: step.status,
-            detail: step.detail
-          };
-        }
-        currentStep++;
-        return updated;
-      });
-
-    }, 1000);
+      if (res.success && res.diagnostics) {
+        setDiagnosticLogs(prev =>
+          prev.map((log, idx) => {
+            const item = res.diagnostics[idx];
+            if (item) {
+              return {
+                ...log,
+                status: item.status as "loading" | "pass" | "fail",
+                detail: item.detail
+              };
+            }
+            return log;
+          })
+        );
+      }
+    } catch (error) {
+      console.error("Live System Diagnostics failed:", error);
+      const errMsg = error instanceof Error ? error.message : "System check failed";
+      setDiagnosticLogs(prev =>
+        prev.map(log => ({
+          ...log,
+          status: "fail",
+          detail: `Diagnostic execution error: ${errMsg}`
+        }))
+      );
+    } finally {
+      setDiagnosticProgress(100);
+      setIsDiagnosticRunning(false);
+    }
   };
 
   // Fuzzy search index logic
