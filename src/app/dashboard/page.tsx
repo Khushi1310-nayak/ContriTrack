@@ -340,6 +340,7 @@ export default function Dashboard() {
 
   // Dynamic Workspace Loader
   const loadWorkspaceData = React.useCallback(async () => {
+    if (!currentWorkspaceId) return;
     await Promise.resolve();
     setLoadingTasks(true);
     try {
@@ -380,6 +381,7 @@ export default function Dashboard() {
   }, [loadDbProfile]);
 
   const loadAnalyticsData = React.useCallback(async () => {
+    if (!currentWorkspaceId) return;
     await Promise.resolve();
     setLoadingAnalytics(true);
     try {
@@ -421,18 +423,47 @@ export default function Dashboard() {
   React.useEffect(() => {
     async function initWorkspaces() {
       if (!user?.uid) return;
-      setLoadingWorkspaces(true);
+
+      // 1. Try to hydrate from localStorage cache immediately for Returning Users
+      try {
+        const cached = localStorage.getItem(`contritrack_active_ws_${user.uid}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed.id && parsed.name && Array.isArray(parsed.workspaces) && parsed.workspaces.length > 0) {
+            setCurrentWorkspaceId((prev) => prev || parsed.id);
+            setCurrentWorkspace((prev) => prev || parsed.name);
+            setDbWorkspaces((prev) => (prev.length > 0 ? prev : parsed.workspaces));
+            setLoadingWorkspaces(false);
+          }
+        }
+      } catch (err) {
+        console.warn("LocalStorage workspace cache notice:", err);
+      }
+
       try {
         const res = await fetchUserWorkspaces(user.uid);
         if (res.success && res.workspaces) {
           setDbWorkspaces(res.workspaces);
           if (res.workspaces.length > 0) {
-            const defaultWs = res.workspaces[0];
-            setCurrentWorkspaceId(defaultWs.id);
-            setCurrentWorkspace(defaultWs.name);
+            const activeWs = res.workspaces.find((w) => w.id === currentWorkspaceId) || res.workspaces[0];
+            setCurrentWorkspaceId(activeWs.id);
+            setCurrentWorkspace(activeWs.name);
+            try {
+              localStorage.setItem(
+                `contritrack_active_ws_${user.uid}`,
+                JSON.stringify({ id: activeWs.id, name: activeWs.name, workspaces: res.workspaces })
+              );
+            } catch (lsErr) {
+              console.warn("LocalStorage save notice:", lsErr);
+            }
           } else {
             setCurrentWorkspaceId("");
             setCurrentWorkspace("");
+            try {
+              localStorage.removeItem(`contritrack_active_ws_${user.uid}`);
+            } catch (lsErr) {
+              console.warn("LocalStorage clear notice:", lsErr);
+            }
           }
         }
       } finally {
@@ -443,16 +474,16 @@ export default function Dashboard() {
   }, [user]);
 
   React.useEffect(() => {
-    if (user?.uid) {
+    if (user?.uid && currentWorkspaceId) {
       startTransition(() => { void loadWorkspaceData(); });
     }
-  }, [user, loadWorkspaceData]);
+  }, [user, currentWorkspaceId, loadWorkspaceData]);
 
   React.useEffect(() => {
-    if (user?.uid) {
+    if (user?.uid && currentWorkspaceId) {
       startTransition(() => { void loadAnalyticsData(); });
     }
-  }, [user, loadAnalyticsData]);
+  }, [user, currentWorkspaceId, loadAnalyticsData]);
 
 
 
