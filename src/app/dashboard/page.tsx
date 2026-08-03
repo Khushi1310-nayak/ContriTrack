@@ -485,7 +485,7 @@ export default function Dashboard() {
     setNewTaskAssigneeId("");
 
     // Create optimistic task card object
-    const tempId = `temp_task_${Date.now()}`;
+    const tempId = `temp_task_${crypto.randomUUID()}`;
     const optimisticTask: Task = {
       id: tempId,
       title,
@@ -518,7 +518,7 @@ export default function Dashboard() {
     // Create local notification
     setNotifications((prev) => [
       {
-        id: `n_${Date.now()}`,
+        id: `n_${crypto.randomUUID()}`,
         text: `Created task "${title}"`,
         time: "Just now",
         read: false,
@@ -2310,7 +2310,7 @@ export default function Dashboard() {
                           const updatedComments = [fullComment, ...(selectedTask.comments || [])];
                           const updatedActivities = [
                             {
-                              id: `act_${Date.now()}`,
+                              id: `act_${crypto.randomUUID()}`,
                               actionType: "comment",
                               metadata: `Added comment: "${commentInput.substring(0, 20)}..."`,
                               createdAt: new Date().toISOString(),
