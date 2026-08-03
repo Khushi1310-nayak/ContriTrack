@@ -216,6 +216,10 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [currentWorkspace, setCurrentWorkspace] = useState<string>("");
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string>("");
+  const currentWorkspaceIdRef = React.useRef(currentWorkspaceId);
+  React.useEffect(() => {
+    currentWorkspaceIdRef.current = currentWorkspaceId;
+  }, [currentWorkspaceId]);
   const [dbWorkspaces, setDbWorkspaces] = useState<Workspace[]>([]);
   const [loadingWorkspaces, setLoadingWorkspaces] = useState<boolean>(true);
   const [isWorkspaceDropdownOpen, setIsWorkspaceDropdownOpen] = useState(false);
@@ -445,7 +449,7 @@ export default function Dashboard() {
         if (res.success && res.workspaces) {
           setDbWorkspaces(res.workspaces);
           if (res.workspaces.length > 0) {
-            const activeWs = res.workspaces.find((w) => w.id === currentWorkspaceId) || res.workspaces[0];
+            const activeWs = res.workspaces.find((w) => w.id === currentWorkspaceIdRef.current) || res.workspaces[0];
             setCurrentWorkspaceId(activeWs.id);
             setCurrentWorkspace(activeWs.name);
             try {
