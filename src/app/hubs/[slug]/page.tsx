@@ -19,7 +19,12 @@ import {
   ExternalLink
 } from "lucide-react";
 import Link from "next/link";
-import { fetchAcademicHubBySlugAction, joinAcademicHubAction, linkWorkspaceToHubAction } from "@/app/actions/academic-hub-actions";
+import { 
+  fetchAcademicHubBySlugAction, 
+  joinAcademicHubAction, 
+  linkWorkspaceToHubAction,
+  AcademicHubDetails 
+} from "@/app/actions/academic-hub-actions";
 import { useAuth } from "@/context/AuthContext";
 import { fetchUserWorkspaces } from "@/app/actions/team-actions";
 
@@ -31,31 +36,18 @@ const ICON_MAP: Record<string, React.ElementType> = {
   ShieldCheck
 };
 
-interface LinkedProject {
+interface WorkspaceItem {
   id: string;
-  projectName: string;
-  description?: string | null;
-  workspace?: {
-    members?: Array<{ id: string }>;
-  } | null;
+  name: string;
 }
 
-interface HubDetailData {
-  id: string;
-  slug: string;
-  name: string;
-  type: string;
-  institution: string;
-  description: string;
-  icon: string;
-  bannerGradient: string;
-  memberCount: number;
-  projectCount: number;
-  totalCommits: number;
-  averageFairness: number;
-  isMember: boolean;
-  projects: LinkedProject[];
+interface UserWorkspacesResponse {
+  success: boolean;
+  workspaces?: WorkspaceItem[];
+  error?: string;
 }
+
+type TabType = "overview" | "projects" | "activity" | "milestones";
 
 export default function HubDetailPage() {
   const params = useParams();
@@ -63,12 +55,12 @@ export default function HubDetailPage() {
   const slug = (params?.slug as string) || "capstone";
   const { user } = useAuth();
 
-  const [hub, setHub] = useState<HubDetailData | null>(null);
+  const [hub, setHub] = useState<AcademicHubDetails | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "projects" | "activity" | "milestones">("overview");
+  const [activeTab, setActiveTab] = useState<TabType>("overview");
 
   // User Workspaces modal state for linking workspace
-  const [userWorkspaces, setUserWorkspaces] = useState<Array<{ id: string; name: string }>>([]);
+  const [userWorkspaces, setUserWorkspaces] = useState<WorkspaceItem[]>([]);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState<boolean>(false);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>("");
   const [projectNameInput, setProjectNameInput] = useState<string>("");
@@ -78,7 +70,7 @@ export default function HubDetailPage() {
   useEffect(() => {
     let isSubscribed = true;
 
-    fetchAcademicHubBySlugAction(slug, user?.uid).then((res: any) => {
+    fetchAcademicHubBySlugAction(slug, user?.uid).then((res) => {
       if (isSubscribed) {
         setHub(res);
         setIsLoading(false);
@@ -86,7 +78,7 @@ export default function HubDetailPage() {
     });
 
     if (user?.uid) {
-      fetchUserWorkspaces(user.uid).then((res: any) => {
+      fetchUserWorkspaces(user.uid).then((res: UserWorkspacesResponse) => {
         if (isSubscribed && res.success && res.workspaces) {
           setUserWorkspaces(res.workspaces);
           if (res.workspaces.length > 0) {
@@ -125,7 +117,7 @@ export default function HubDetailPage() {
     const res = await linkWorkspaceToHubAction(hub.id, selectedWorkspaceId, projectNameInput);
     if (res.success) {
       setIsLinkModalOpen(false);
-      fetchAcademicHubBySlugAction(slug, user?.uid).then((res: any) => setHub(res));
+      fetchAcademicHubBySlugAction(slug, user?.uid).then((res) => setHub(res));
     }
     setIsLinking(false);
   };
@@ -257,14 +249,14 @@ export default function HubDetailPage() {
       <section className="max-w-6xl mx-auto px-6 mb-8">
         <div className="flex items-center gap-2 border-b border-white/[0.08] pb-3">
           {[
-            { id: "overview", label: "Overview & Guidelines" },
-            { id: "projects", label: `Linked Projects (${hub.projectCount})` },
-            { id: "activity", label: "Commit Stream & Telemetry" },
-            { id: "milestones", label: "Milestones & Governance" }
+            { id: "overview" as const, label: "Overview & Guidelines" },
+            { id: "projects" as const, label: `Linked Projects (${hub.projectCount})` },
+            { id: "activity" as const, label: "Commit Stream & Telemetry" },
+            { id: "milestones" as const, label: "Milestones & Governance" }
           ].map((t) => (
             <button
               key={t.id}
-              onClick={() => setActiveTab(t.id as any)}
+              onClick={() => setActiveTab(t.id)}
               className={`px-4 py-2 rounded-xl text-xs font-mono transition-all cursor-pointer ${
                 activeTab === t.id
                   ? "bg-[#CD9FA0]/20 text-[#F8CCAA] border border-[#CD9FA0]/50 font-semibold"
@@ -332,7 +324,7 @@ export default function HubDetailPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {hub.projects.map((p: LinkedProject) => (
+                {hub.projects.map((p) => (
                   <div key={p.id} className="p-6 rounded-3xl border border-white/[0.08] bg-[#1b1c2b]/70 backdrop-blur-xl flex flex-col gap-3">
                     <div className="flex items-center justify-between">
                       <h4 className="text-base font-serif font-light text-white">{p.projectName}</h4>

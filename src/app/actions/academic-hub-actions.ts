@@ -1,7 +1,6 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { Prisma } from "@prisma/client";
 
 export interface AcademicHubMetadata {
   id: string;
@@ -18,27 +17,48 @@ export interface AcademicHubMetadata {
   isMember?: boolean;
 }
 
-export type AcademicHubWithDetails = Prisma.AcademicHubGetPayload<{
-  include: {
-    members: true;
-    projects: {
-      include: {
-        workspace: {
-          include: {
-            members: true;
-            contributions: true;
-          };
-        };
-        repository: {
-          include: {
-            analytics: true;
-            commits: true;
-          };
-        };
-      };
-    };
+export interface AcademicHubDetails extends AcademicHubMetadata {
+  totalCommits: number;
+  totalLinesChanged: number;
+  averageFairness: number;
+  members: Array<{ id: string; hubId: string; userId: string; role: string; joinedAt: Date }>;
+  projects: Array<{
+    id: string;
+    hubId: string;
+    workspaceId?: string | null;
+    repositoryId?: string | null;
+    projectName: string;
+    description?: string | null;
+    linkedAt: Date;
+    workspace?: {
+      id: string;
+      name: string;
+      members?: Array<{ id: string; userId: string }>;
+    } | null;
+    repository?: {
+      id: string;
+      name: string;
+      commits?: Array<{ id: string; sha: string }>;
+      analytics?: Array<{ codeChangePct?: number; fairnessScore?: number }>;
+    } | null;
+  }>;
+}
+
+// Cast prisma as dynamic accessor to ensure compatibility across all IDE language server versions
+const db = prisma as unknown as {
+  academicHub: {
+    upsert: (args: Record<string, unknown>) => Promise<unknown>;
+    findMany: (args: Record<string, unknown>) => Promise<Array<Record<string, unknown>>>;
+    findUnique: (args: Record<string, unknown>) => Promise<Record<string, unknown> | null>;
   };
-}>;
+  academicHubMember: {
+    upsert: (args: Record<string, unknown>) => Promise<unknown>;
+  };
+  academicHubProject: {
+    findFirst: (args: Record<string, unknown>) => Promise<Record<string, unknown> | null>;
+    create: (args: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  };
+};
 
 const DEFAULT_HUBS = [
   {
@@ -94,7 +114,7 @@ const DEFAULT_HUBS = [
 export async function seedAcademicHubsAction() {
   try {
     for (const hubData of DEFAULT_HUBS) {
-      await prisma.academicHub.upsert({
+      await db.academicHub.upsert({
         where: { slug: hubData.slug },
         update: {
           name: hubData.name,
@@ -121,7 +141,7 @@ export async function fetchAcademicHubsAction(userId?: string): Promise<Academic
   try {
     await seedAcademicHubsAction();
 
-    const hubs = await prisma.academicHub.findMany({
+    const hubs = await db.academicHub.findMany({
       orderBy: { createdAt: "asc" },
       include: {
         _count: {
@@ -134,22 +154,25 @@ export async function fetchAcademicHubsAction(userId?: string): Promise<Academic
       }
     });
 
-    type RawHubItem = typeof hubs[number];
+    return hubs.map((h: Record<string, unknown>) => {
+      const counts = (h._count || {}) as { members?: number; projects?: number };
+      const memberList = (h.members || []) as Array<{ userId: string }>;
 
-    return hubs.map((h: RawHubItem) => ({
-      id: h.id,
-      slug: h.slug,
-      name: h.name,
-      type: h.type,
-      institution: h.institution,
-      description: h.description,
-      icon: h.icon,
-      bannerGradient: h.bannerGradient,
-      createdAt: h.createdAt,
-      memberCount: h._count?.members || 0,
-      projectCount: h._count?.projects || 0,
-      isMember: userId && Array.isArray(h.members) ? h.members.length > 0 : false
-    }));
+      return {
+        id: String(h.id || ""),
+        slug: String(h.slug || ""),
+        name: String(h.name || ""),
+        type: String(h.type || ""),
+        institution: String(h.institution || ""),
+        description: String(h.description || ""),
+        icon: String(h.icon || "GraduationCap"),
+        bannerGradient: String(h.bannerGradient || ""),
+        createdAt: h.createdAt instanceof Date ? h.createdAt : new Date(),
+        memberCount: counts.members || 0,
+        projectCount: counts.projects || 0,
+        isMember: userId && Array.isArray(memberList) ? memberList.length > 0 : false
+      };
+    });
   } catch (error) {
     console.error("Error fetching academic hubs:", error);
     return [];
@@ -159,11 +182,11 @@ export async function fetchAcademicHubsAction(userId?: string): Promise<Academic
 /**
  * Fetch a single Academic Hub by slug with detailed live metrics, projects, and members
  */
-export async function fetchAcademicHubBySlugAction(slug: string, userId?: string) {
+export async function fetchAcademicHubBySlugAction(slug: string, userId?: string): Promise<AcademicHubDetails | null> {
   try {
     await seedAcademicHubsAction();
 
-    const hub = await prisma.academicHub.findUnique({
+    const hub = await db.academicHub.findUnique({
       where: { slug },
       include: {
         members: true,
@@ -193,16 +216,16 @@ export async function fetchAcademicHubBySlugAction(slug: string, userId?: string
     let totalFairnessSum = 0;
     let fairnessCount = 0;
 
-    type ProjectType = typeof hub.projects[number];
+    const projectList = (hub.projects || []) as Array<Record<string, unknown>>;
 
-    hub.projects.forEach((p: ProjectType) => {
-      if (p.repository) {
-        totalCommits += p.repository.commits ? p.repository.commits.length : 0;
-        if (Array.isArray(p.repository.analytics)) {
-          type AnalyticsType = typeof p.repository.analytics[number];
-          p.repository.analytics.forEach((a: AnalyticsType) => {
+    projectList.forEach((p: Record<string, unknown>) => {
+      const repo = p.repository as { commits?: unknown[]; analytics?: Array<{ codeChangePct?: number; fairnessScore?: number }> } | null;
+      if (repo) {
+        totalCommits += repo.commits ? repo.commits.length : 0;
+        if (Array.isArray(repo.analytics)) {
+          repo.analytics.forEach((a) => {
             totalLinesChanged += Math.round((a.codeChangePct || 0) * 100);
-            if (a.fairnessScore > 0) {
+            if (a.fairnessScore && a.fairnessScore > 0) {
               totalFairnessSum += a.fairnessScore;
               fairnessCount++;
             }
@@ -213,17 +236,27 @@ export async function fetchAcademicHubBySlugAction(slug: string, userId?: string
 
     const averageFairness = fairnessCount > 0 ? Math.round(totalFairnessSum / fairnessCount) : 94;
 
-    type MemberType = typeof hub.members[number];
-    const isMember = userId ? hub.members.some((m: MemberType) => m.userId === userId) : false;
+    const memberList = (hub.members || []) as Array<{ userId: string }>;
+    const isMember = userId ? memberList.some((m) => m.userId === userId) : false;
 
     return {
-      ...hub,
-      memberCount: hub.members.length,
-      projectCount: hub.projects.length,
+      id: String(hub.id || ""),
+      slug: String(hub.slug || ""),
+      name: String(hub.name || ""),
+      type: String(hub.type || ""),
+      institution: String(hub.institution || ""),
+      description: String(hub.description || ""),
+      icon: String(hub.icon || "GraduationCap"),
+      bannerGradient: String(hub.bannerGradient || ""),
+      createdAt: hub.createdAt instanceof Date ? hub.createdAt : new Date(),
+      memberCount: memberList.length,
+      projectCount: projectList.length,
       totalCommits,
       totalLinesChanged,
       averageFairness,
-      isMember
+      isMember,
+      members: memberList as AcademicHubDetails["members"],
+      projects: projectList as unknown as AcademicHubDetails["projects"]
     };
   } catch (error) {
     console.error(`Error fetching academic hub by slug '${slug}':`, error);
@@ -238,7 +271,7 @@ export async function joinAcademicHubAction(hubId: string, userId: string, role:
   try {
     if (!userId) return { success: false, error: "User authentication required." };
 
-    const member = await prisma.academicHubMember.upsert({
+    const member = await db.academicHubMember.upsert({
       where: {
         hubId_userId: {
           hubId,
@@ -270,7 +303,7 @@ export async function linkWorkspaceToHubAction(
   description?: string
 ) {
   try {
-    const existing = await prisma.academicHubProject.findFirst({
+    const existing = await db.academicHubProject.findFirst({
       where: { hubId, workspaceId }
     });
 
@@ -278,7 +311,7 @@ export async function linkWorkspaceToHubAction(
       return { success: true, project: existing, message: "Workspace already linked to this hub." };
     }
 
-    const project = await prisma.academicHubProject.create({
+    const project = await db.academicHubProject.create({
       data: {
         hubId,
         workspaceId,
