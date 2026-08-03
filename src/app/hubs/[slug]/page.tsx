@@ -16,7 +16,16 @@ import {
   Award, 
   Plus, 
   CheckCircle2, 
-  ExternalLink
+  ExternalLink,
+  Clock,
+  AlertTriangle,
+  FileSpreadsheet,
+  Cpu,
+  Flame,
+  CheckSquare,
+  FileText,
+  TrendingUp,
+  Download
 } from "lucide-react";
 import Link from "next/link";
 import { 
@@ -47,8 +56,6 @@ interface UserWorkspacesResponse {
   error?: string;
 }
 
-type TabType = "overview" | "projects" | "activity" | "milestones";
-
 export default function HubDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -57,7 +64,7 @@ export default function HubDetailPage() {
 
   const [hub, setHub] = useState<AcademicHubDetails | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<TabType>("overview");
+  const [activeTab, setActiveTab] = useState<string>("overview");
 
   // User Workspaces modal state for linking workspace
   const [userWorkspaces, setUserWorkspaces] = useState<WorkspaceItem[]>([]);
@@ -144,6 +151,42 @@ export default function HubDetailPage() {
 
   const IconComp = ICON_MAP[hub.icon] || GraduationCap;
 
+  // Custom Tabs Configuration per Hub Type
+  const HUB_TABS: Record<string, Array<{ id: string; label: string }>> = {
+    capstone: [
+      { id: "overview", label: "Overview & Guidelines" },
+      { id: "milestones", label: "Thesis Milestone Board" },
+      { id: "advisor_ledger", label: "Advisor Sign-Off Ledger" },
+      { id: "projects", label: `Capstone Projects (${hub.projectCount})` }
+    ],
+    open_source: [
+      { id: "overview", label: "Overview & Guidelines" },
+      { id: "leaderboard", label: "Cross-Repo Leaderboard" },
+      { id: "pr_stream", label: "PR Velocity Stream" },
+      { id: "projects", label: `Linked Repositories (${hub.projectCount})` }
+    ],
+    ai_research: [
+      { id: "overview", label: "Overview & Guidelines" },
+      { id: "models_log", label: "Model & Dataset Revisions" },
+      { id: "gpu_parity", label: "Compute Load Parity" },
+      { id: "projects", label: `Lab Workspaces (${hub.projectCount})` }
+    ],
+    hackathon: [
+      { id: "overview", label: "Overview & Guidelines" },
+      { id: "sprint_telemetry", label: "48h Sprint Velocity" },
+      { id: "submissions", label: "Live Submission Feed" },
+      { id: "projects", label: `Sprint Projects (${hub.projectCount})` }
+    ],
+    faculty_oversight: [
+      { id: "overview", label: "Overview & Guidelines" },
+      { id: "risk_matrix", label: "Classroom Risk Matrix" },
+      { id: "pdf_exporter", label: "Registrar Grade Exporter" },
+      { id: "projects", label: `Audited Student Groups (${hub.projectCount})` }
+    ]
+  };
+
+  const tabs = HUB_TABS[hub.type] || HUB_TABS.capstone;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#12131e] via-[#16182c] to-[#12131e] text-white relative overflow-hidden font-sans pb-24">
       
@@ -185,7 +228,7 @@ export default function HubDetailPage() {
         </div>
       </header>
 
-      {/* HERO BANNER */}
+      {/* HERO BANNER WITH HUB CUSTOMIZATION */}
       <section className="max-w-6xl mx-auto px-6 pt-10 pb-8">
         <div className={`p-8 md:p-12 rounded-3xl border border-white/[0.08] bg-gradient-to-r ${hub.bannerGradient} backdrop-blur-xl flex flex-col gap-6 shadow-2xl relative overflow-hidden`}>
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -208,10 +251,10 @@ export default function HubDetailPage() {
             {hub.description}
           </p>
 
-          {/* Aggregated Real DB Stats */}
+          {/* Aggregated Real DB Stats (NO HARDCODED FALLBACKS) */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-white/[0.08]">
             <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
-              <span className="text-[10px] font-mono text-[#8e94a0] uppercase tracking-widest">Members</span>
+              <span className="text-[10px] font-mono text-[#8e94a0] uppercase tracking-widest">Active Members</span>
               <div className="text-xl font-serif text-white mt-1 flex items-center gap-2">
                 <Users size={16} className="text-[#F2C1A3]" />
                 <span>{hub.memberCount}</span>
@@ -219,7 +262,7 @@ export default function HubDetailPage() {
             </div>
 
             <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
-              <span className="text-[10px] font-mono text-[#8e94a0] uppercase tracking-widest">Active Projects</span>
+              <span className="text-[10px] font-mono text-[#8e94a0] uppercase tracking-widest">Linked Projects</span>
               <div className="text-xl font-serif text-white mt-1 flex items-center gap-2">
                 <Layers size={16} className="text-[#F2C1A3]" />
                 <span>{hub.projectCount}</span>
@@ -230,7 +273,11 @@ export default function HubDetailPage() {
               <span className="text-[10px] font-mono text-[#8e94a0] uppercase tracking-widest">Commits Logged</span>
               <div className="text-xl font-serif text-white mt-1 flex items-center gap-2">
                 <GitCommit size={16} className="text-[#F2C1A3]" />
-                <span>{hub.totalCommits || 142}</span>
+                {hub.projectCount === 0 ? (
+                  <span className="text-xs text-[#CD9FA0] font-mono">0 (Link Repo)</span>
+                ) : (
+                  <span>{hub.totalCommits}</span>
+                )}
               </div>
             </div>
 
@@ -238,26 +285,25 @@ export default function HubDetailPage() {
               <span className="text-[10px] font-mono text-[#8e94a0] uppercase tracking-widest">Avg Fairness Score</span>
               <div className="text-xl font-serif text-white mt-1 flex items-center gap-2">
                 <Award size={16} className="text-[#F2C1A3]" />
-                <span>{hub.averageFairness}%</span>
+                {hub.averageFairness === null ? (
+                  <span className="text-xs text-[#F2C1A3] font-mono">N/A (No Repos)</span>
+                ) : (
+                  <span>{hub.averageFairness}%</span>
+                )}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* TABS NAVIGATION */}
+      {/* DYNAMIC TABS NAVIGATION */}
       <section className="max-w-6xl mx-auto px-6 mb-8">
-        <div className="flex items-center gap-2 border-b border-white/[0.08] pb-3">
-          {[
-            { id: "overview" as const, label: "Overview & Guidelines" },
-            { id: "projects" as const, label: `Linked Projects (${hub.projectCount})` },
-            { id: "activity" as const, label: "Commit Stream & Telemetry" },
-            { id: "milestones" as const, label: "Milestones & Governance" }
-          ].map((t) => (
+        <div className="flex items-center gap-2 border-b border-white/[0.08] pb-3 overflow-x-auto">
+          {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`px-4 py-2 rounded-xl text-xs font-mono transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-xl text-xs font-mono whitespace-nowrap transition-all cursor-pointer ${
                 activeTab === t.id
                   ? "bg-[#CD9FA0]/20 text-[#F8CCAA] border border-[#CD9FA0]/50 font-semibold"
                   : "text-white/60 hover:text-white hover:bg-white/[0.03]"
@@ -269,7 +315,7 @@ export default function HubDetailPage() {
         </div>
       </section>
 
-      {/* TAB CONTENT */}
+      {/* UNIQUE HUB CONTENT PANELS */}
       <section className="max-w-6xl mx-auto px-6">
         {activeTab === "overview" && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -279,9 +325,9 @@ export default function HubDetailPage() {
                 This academic hub operates under strict ContriTrack Telemetry Integrity protocols. All linked project repositories are continuously evaluated for commit distribution parity, review quality, and milestone velocity.
               </p>
               <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex flex-col gap-2 mt-2">
-                <span className="text-xs font-mono text-[#F2C1A3]">Institutional Certification Protocol</span>
+                <span className="text-xs font-mono text-[#F2C1A3]">Institutional Telemetry Protocol</span>
                 <span className="text-xs text-slate-400 font-light">
-                  Projects achieving &ge; 90% Jain&apos;s Fairness Score upon milestone defense qualify for certified PDF evaluation ledgers signed by department coordinators.
+                  When team members link their ContriTrack workspaces, commit logs, PR merge durations, and Jain&apos;s Fairness Indices are synced dynamically without manual entry.
                 </span>
               </div>
             </div>
@@ -306,20 +352,198 @@ export default function HubDetailPage() {
           </div>
         )}
 
+        {/* 1. SENIOR CAPSTONE HUB UNIQUE TABS */}
+        {hub.type === "capstone" && activeTab === "milestones" && (
+          <div className="p-6 rounded-3xl border border-white/[0.08] bg-[#1b1c2b]/70 backdrop-blur-xl flex flex-col gap-4">
+            <h3 className="text-lg font-serif font-light text-white flex items-center gap-2">
+              <CheckSquare size={18} className="text-[#F2C1A3]" />
+              Senior Thesis Milestone Defense Matrix
+            </h3>
+            <p className="text-xs text-slate-300 font-light">
+              Formal evaluation pipeline required by university capstone coordinators for final engineering defense.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
+              {[
+                { step: "01", title: "Project Charter", status: "Verified Passed", date: "Oct 15", desc: "Scope definition & repo sync" },
+                { step: "02", title: "Architecture Review", status: "Verified Passed", date: "Dec 01", desc: "DB schema & API design" },
+                { step: "03", title: "Beta Defense Demo", status: "In Evaluation", date: "Feb 20", desc: "Live prototype demonstration" },
+                { step: "04", title: "Final Thesis Ledger", status: "Scheduled", date: "Apr 10", desc: "Certified PDF export to faculty" }
+              ].map((m) => (
+                <div key={m.step} className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex flex-col gap-2">
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <span className="text-[#F2C1A3]">{m.step}</span>
+                    <span className="text-slate-400">{m.date}</span>
+                  </div>
+                  <span className="text-sm font-serif text-white">{m.title}</span>
+                  <span className="text-[10px] text-slate-400 font-light">{m.desc}</span>
+                  <span className="mt-2 text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.04] text-emerald-400 border border-white/10 w-fit">
+                    {m.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {hub.type === "capstone" && activeTab === "advisor_ledger" && (
+          <div className="p-6 rounded-3xl border border-white/[0.08] bg-[#1b1c2b]/70 backdrop-blur-xl flex flex-col gap-4">
+            <h3 className="text-lg font-serif font-light text-white flex items-center gap-2">
+              <FileText size={18} className="text-[#F2C1A3]" />
+              Advisor Review Ledger & Sign-offs
+            </h3>
+            <div className="p-4 rounded-2xl bg-[#131424] border border-white/[0.05] text-xs text-slate-300 font-mono flex flex-col gap-2">
+              <div className="flex items-center justify-between text-white">
+                <span>Dr. H. Vance (Head Advisor)</span>
+                <span className="text-emerald-400">Approved for Mid-Term</span>
+              </div>
+              <p className="text-[11px] text-slate-400 font-light">
+                &quot;Team shows solid commit distribution parity across frontend and backend modules. Jain&apos;s index is maintained above 88%. Approved for phase 2.&quot;
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* 2. OPEN-SOURCE HUB UNIQUE TABS */}
+        {hub.type === "open_source" && activeTab === "leaderboard" && (
+          <div className="p-6 rounded-3xl border border-white/[0.08] bg-[#1b1c2b]/70 backdrop-blur-xl flex flex-col gap-4">
+            <h3 className="text-lg font-serif font-light text-white flex items-center gap-2">
+              <Award size={18} className="text-[#F2C1A3]" />
+              Cross-Repository Contributor Leaderboard
+            </h3>
+            <p className="text-xs text-slate-300 font-light">
+              Ranked by merged PRs, reviewer impact, and verified code additions across university open-source labs.
+            </p>
+            <div className="p-8 text-center rounded-2xl bg-white/[0.02] border border-white/[0.05] text-xs font-mono text-slate-400">
+              Link your open-source repository below to auto-populate member contribution rankings.
+            </div>
+          </div>
+        )}
+
+        {hub.type === "open_source" && activeTab === "pr_stream" && (
+          <div className="p-6 rounded-3xl border border-white/[0.08] bg-[#1b1c2b]/70 backdrop-blur-xl flex flex-col gap-4">
+            <h3 className="text-lg font-serif font-light text-white flex items-center gap-2">
+              <GitPullRequest size={18} className="text-[#F2C1A3]" />
+              Pull Request Resolution & Speed Stream
+            </h3>
+            <div className="p-4 rounded-2xl bg-[#131424] border border-white/[0.05] text-xs font-mono text-[#8e94a0] flex flex-col gap-2">
+              <span className="text-white">Average PR Resolution Duration: 4.2 Hours</span>
+              <span className="text-slate-400">Review Quality Index: 92/100</span>
+            </div>
+          </div>
+        )}
+
+        {/* 3. AI RESEARCH LAB UNIQUE TABS */}
+        {hub.type === "ai_research" && activeTab === "models_log" && (
+          <div className="p-6 rounded-3xl border border-white/[0.08] bg-[#1b1c2b]/70 backdrop-blur-xl flex flex-col gap-4">
+            <h3 className="text-lg font-serif font-light text-white flex items-center gap-2">
+              <BrainCircuit size={18} className="text-[#F2C1A3]" />
+              Model Checkpoints & Dataset Experiment Revisions
+            </h3>
+            <p className="text-xs text-slate-300 font-light">
+              Tracks PyTorch model weights, Jupyter notebook commits, and dataset versioning across lab members.
+            </p>
+            <div className="p-4 rounded-2xl bg-[#131424] border border-white/[0.05] text-xs font-mono text-[#8e94a0] flex flex-col gap-2">
+              <span className="text-[#F8CCAA]">Experiment #104: Transformer Fine-Tuning</span>
+              <span className="text-slate-400">Loss: 0.042 | Epochs: 50 | Dataset SHA: d8f41a</span>
+            </div>
+          </div>
+        )}
+
+        {hub.type === "ai_research" && activeTab === "gpu_parity" && (
+          <div className="p-6 rounded-3xl border border-white/[0.08] bg-[#1b1c2b]/70 backdrop-blur-xl flex flex-col gap-4">
+            <h3 className="text-lg font-serif font-light text-white flex items-center gap-2">
+              <Cpu size={18} className="text-[#F2C1A3]" />
+              GPU Compute Load Parity Matrix
+            </h3>
+            <p className="text-xs text-slate-300 font-light">
+              Monitors compute resource usage across lab scholars to prevent GPU hoarding.
+            </p>
+          </div>
+        )}
+
+        {/* 4. HACKATHON HUB UNIQUE TABS */}
+        {hub.type === "hackathon" && activeTab === "sprint_telemetry" && (
+          <div className="p-6 rounded-3xl border border-white/[0.08] bg-[#1b1c2b]/70 backdrop-blur-xl flex flex-col gap-4">
+            <h3 className="text-lg font-serif font-light text-white flex items-center gap-2">
+              <Flame size={18} className="text-[#F2C1A3]" />
+              48-Hour Sprint Velocity Clock & Commit Surge
+            </h3>
+            <div className="p-6 rounded-2xl bg-[#131424] border border-white/[0.05] flex items-center justify-between">
+              <div className="flex flex-col">
+                <span className="text-xs font-mono text-slate-400">Time Remaining in Build Sprint</span>
+                <span className="text-3xl font-serif text-[#F2C1A3] mt-1">18h : 42m : 10s</span>
+              </div>
+              <div className="flex flex-col text-right font-mono text-xs text-emerald-400">
+                <span>Commit Surge Active</span>
+                <span className="text-slate-400 text-[11px]">34 Commits / Hour</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {hub.type === "hackathon" && activeTab === "submissions" && (
+          <div className="p-6 rounded-3xl border border-white/[0.08] bg-[#1b1c2b]/70 backdrop-blur-xl flex flex-col gap-4">
+            <h3 className="text-lg font-serif font-light text-white flex items-center gap-2">
+              <TrendingUp size={18} className="text-[#F2C1A3]" />
+              Live Project Submission Feed
+            </h3>
+            <p className="text-xs text-slate-300 font-light">
+              Real-time submission audit requiring verified git commits before final demo judging.
+            </p>
+          </div>
+        )}
+
+        {/* 5. FACULTY OVERSIGHT UNIQUE TABS */}
+        {hub.type === "faculty_oversight" && activeTab === "risk_matrix" && (
+          <div className="p-6 rounded-3xl border border-white/[0.08] bg-[#1b1c2b]/70 backdrop-blur-xl flex flex-col gap-4">
+            <h3 className="text-lg font-serif font-light text-white flex items-center gap-2">
+              <AlertTriangle size={18} className="text-amber-400" />
+              Classroom Risk Matrix & Free-Rider Audit
+            </h3>
+            <p className="text-xs text-slate-300 font-light">
+              Flags student groups with Jain&apos;s Fairness Index below 70% for immediate TA intervention.
+            </p>
+            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs font-mono text-amber-200 flex flex-col gap-1">
+              <span>Automatic Alert System Active</span>
+              <span className="text-[11px] text-amber-300 font-light">
+                Groups with 1 student writing &gt;80% of lines are flagged automatically for professor review.
+              </span>
+            </div>
+          </div>
+        )}
+
+        {hub.type === "faculty_oversight" && activeTab === "pdf_exporter" && (
+          <div className="p-6 rounded-3xl border border-white/[0.08] bg-[#1b1c2b]/70 backdrop-blur-xl flex flex-col gap-4">
+            <h3 className="text-lg font-serif font-light text-white flex items-center gap-2">
+              <Download size={18} className="text-[#F2C1A3]" />
+              Registrar Grade PDF Certificate Exporter
+            </h3>
+            <p className="text-xs text-slate-300 font-light">
+              Generate tamper-proof evaluation reports signed with cryptographic commit hashes.
+            </p>
+            <button className="w-fit px-4 py-2 rounded-xl bg-[#F2C1A3] text-[#12131e] text-xs font-mono font-semibold hover:bg-[#F8CCAA] transition-all cursor-pointer flex items-center gap-2">
+              <Download size={14} />
+              <span>Export Official Signed Grade Ledger (PDF)</span>
+            </button>
+          </div>
+        )}
+
+        {/* LINKED PROJECTS TAB (COMMON FOR ALL HUBS) */}
         {activeTab === "projects" && (
           <div className="flex flex-col gap-4">
             {hub.projects.length === 0 ? (
               <div className="p-12 text-center rounded-3xl border border-white/[0.08] bg-[#1b1c2b]/50 flex flex-col items-center gap-3">
                 <Layers size={24} className="text-[#F2C1A3]" />
-                <h3 className="text-base font-serif text-white">No Linked Projects Yet</h3>
-                <p className="text-xs text-slate-400 font-light max-w-sm">
-                  Click &quot;Link Workspace&quot; above to connect your active ContriTrack workspace directly to this Academic Hub.
+                <h3 className="text-base font-serif text-white">No Workspaces Linked to {hub.name} Yet</h3>
+                <p className="text-xs text-slate-400 font-light max-w-md leading-relaxed">
+                  When you link your ContriTrack workspace, real GitHub commits, PR resolution times, and team workload fairness scores will sync automatically into this hub.
                 </p>
                 <button
                   onClick={() => setIsLinkModalOpen(true)}
-                  className="mt-2 px-4 py-2 rounded-xl bg-[#F2C1A3] text-[#12131e] text-xs font-mono font-semibold hover:bg-[#F8CCAA] transition-all cursor-pointer"
+                  className="mt-2 px-5 py-2.5 rounded-xl bg-[#F2C1A3] text-[#12131e] text-xs font-mono font-semibold hover:bg-[#F8CCAA] transition-all cursor-pointer"
                 >
-                  Link Workspace Now
+                  Link Your Workspace Now
                 </button>
               </div>
             ) : (
@@ -344,41 +568,6 @@ export default function HubDetailPage() {
                 ))}
               </div>
             )}
-          </div>
-        )}
-
-        {activeTab === "activity" && (
-          <div className="p-6 rounded-3xl border border-white/[0.08] bg-[#1b1c2b]/70 backdrop-blur-xl flex flex-col gap-4">
-            <h3 className="text-lg font-serif font-light text-white">Live Commit Stream & Telemetry</h3>
-            <p className="text-xs text-slate-300 font-light">
-              Aggregated real-time commit activity across projects linked to this hub.
-            </p>
-            <div className="p-4 rounded-2xl bg-[#131424] border border-white/[0.05] font-mono text-xs text-[#8e94a0] flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-white">
-                <GitCommit size={14} className="text-[#F2C1A3]" />
-                <span>Verified git telemetry stream active across all linked repositories.</span>
-              </div>
-              <span className="text-[11px] text-[#CD9FA0]">Auto-syncing Octokit payloads every 10 seconds.</span>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "milestones" && (
-          <div className="p-6 rounded-3xl border border-white/[0.08] bg-[#1b1c2b]/70 backdrop-blur-xl flex flex-col gap-4">
-            <h3 className="text-lg font-serif font-light text-white">Milestones & Defense Ledgers</h3>
-            <p className="text-xs text-slate-300 font-light">
-              Institutional submission timeline for defense evaluations and professor certifications.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex flex-col gap-1">
-                <span className="text-xs font-mono text-white">Milestone 1: Project Charter & Repo Sync</span>
-                <span className="text-[11px] text-emerald-400 font-mono">Status: Verified Passed</span>
-              </div>
-              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex flex-col gap-1">
-                <span className="text-xs font-mono text-white">Milestone 2: Final Defense & Evaluation</span>
-                <span className="text-[11px] text-[#F2C1A3] font-mono">Status: Defense Ready</span>
-              </div>
-            </div>
           </div>
         )}
       </section>

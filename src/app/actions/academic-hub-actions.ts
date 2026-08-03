@@ -20,7 +20,7 @@ export interface AcademicHubMetadata {
 export interface AcademicHubDetails extends AcademicHubMetadata {
   totalCommits: number;
   totalLinesChanged: number;
-  averageFairness: number;
+  averageFairness: number | null;
   members: Array<{ id: string; hubId: string; userId: string; role: string; joinedAt: Date }>;
   projects: Array<{
     id: string;
@@ -38,7 +38,7 @@ export interface AcademicHubDetails extends AcademicHubMetadata {
     repository?: {
       id: string;
       name: string;
-      commits?: Array<{ id: string; sha: string }>;
+      commits?: Array<{ id: string; sha: string; message: string; authorName: string; authoredAt: Date }>;
       analytics?: Array<{ codeChangePct?: number; fairnessScore?: number }>;
     } | null;
   }>;
@@ -234,7 +234,8 @@ export async function fetchAcademicHubBySlugAction(slug: string, userId?: string
       }
     });
 
-    const averageFairness = fairnessCount > 0 ? Math.round(totalFairnessSum / fairnessCount) : 94;
+    // GENUINE METRIC CALCULATION: If no repos are linked, averageFairness is null (not 94!)
+    const averageFairness = fairnessCount > 0 ? Math.round(totalFairnessSum / fairnessCount) : null;
 
     const memberList = (hub.members || []) as Array<{ userId: string }>;
     const isMember = userId ? memberList.some((m) => m.userId === userId) : false;
