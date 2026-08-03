@@ -39,6 +39,7 @@ export interface LinkedRepo {
   analytics: Analytics[];
   lastSyncStatus: string;
   lastSyncMessage: string | null;
+  rateLimit?: number;
 }
 
 interface GitHubWaveTrackerProps {
@@ -105,6 +106,7 @@ export function GitHubWaveTracker({
   const averageParity = totalRepos > 0 
     ? Math.round(repositories.reduce((acc, r) => acc + (r.analytics[0]?.fairness || 100), 0) / totalRepos) 
     : 100;
+  const latestRateRemaining = repositories.find((r) => r.rateLimit !== undefined)?.rateLimit ?? 4950;
 
   return (
     <div className="flex flex-col gap-6 text-left max-w-4xl w-full">
@@ -143,7 +145,7 @@ export function GitHubWaveTracker({
         <div className="p-5 rounded-3xl border border-white/5 bg-[#141523]/45 flex items-center justify-between gap-4">
           <div className="flex flex-col gap-1">
             <span className="text-[#857C91] text-[9px] font-mono uppercase tracking-wider">Git API Rates</span>
-            <span className="text-3xl font-serif text-white font-light">4,950</span>
+            <span className="text-3xl font-serif text-white font-light">{latestRateRemaining.toLocaleString()}</span>
             <span className="text-[9px] text-emerald-400 font-mono uppercase mt-1">/ 5,000 remaining</span>
           </div>
           <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/5 text-[#CD9FA0]">

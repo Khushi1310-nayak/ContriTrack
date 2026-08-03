@@ -227,7 +227,8 @@ export async function fetchLinkedRepositories(userId: string) {
           activeDays: a.activeDays
         })),
         lastSyncStatus: lastSyncLog ? lastSyncLog.status : "idle",
-        lastSyncMessage: lastSyncLog ? lastSyncLog.message : "Sync pending initialize."
+        lastSyncMessage: lastSyncLog ? lastSyncLog.message : "Sync pending initialize.",
+        rateLimit: lastSyncLog?.rateLimit ?? 4950
       };
     });
 
