@@ -16,10 +16,7 @@ import {
   Award, 
   Plus, 
   CheckCircle2, 
-  Clock, 
-  ExternalLink,
-  Activity,
-  FileCheck
+  ExternalLink
 } from "lucide-react";
 import Link from "next/link";
 import { fetchAcademicHubBySlugAction, joinAcademicHubAction, linkWorkspaceToHubAction } from "@/app/actions/academic-hub-actions";
@@ -34,18 +31,44 @@ const ICON_MAP: Record<string, React.ElementType> = {
   ShieldCheck
 };
 
+interface LinkedProject {
+  id: string;
+  projectName: string;
+  description?: string | null;
+  workspace?: {
+    members?: Array<{ id: string }>;
+  } | null;
+}
+
+interface HubDetailData {
+  id: string;
+  slug: string;
+  name: string;
+  type: string;
+  institution: string;
+  description: string;
+  icon: string;
+  bannerGradient: string;
+  memberCount: number;
+  projectCount: number;
+  totalCommits: number;
+  averageFairness: number;
+  isMember: boolean;
+  projects: LinkedProject[];
+}
+
 export default function HubDetailPage() {
   const params = useParams();
   const router = useRouter();
   const slug = (params?.slug as string) || "capstone";
   const { user } = useAuth();
 
-  const [hub, setHub] = useState<any>(null);
+  const [hub, setHub] = useState<HubDetailData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<"overview" | "projects" | "activity" | "milestones">("overview");
 
   // User Workspaces modal state for linking workspace
-  const [userWorkspaces, setUserWorkspaces] = useState<any[]>([]);
+  const [userWorkspaces, setUserWorkspaces] = useState<Array<{ id: string; name: string }>>([]);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState<boolean>(false);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>("");
   const [projectNameInput, setProjectNameInput] = useState<string>("");
@@ -53,15 +76,18 @@ export default function HubDetailPage() {
   const [joining, setJoining] = useState<boolean>(false);
 
   useEffect(() => {
-    setIsLoading(true);
-    fetchAcademicHubBySlugAction(slug, user?.uid).then((res) => {
-      setHub(res);
-      setIsLoading(false);
+    let isSubscribed = true;
+
+    fetchAcademicHubBySlugAction(slug, user?.uid).then((res: any) => {
+      if (isSubscribed) {
+        setHub(res);
+        setIsLoading(false);
+      }
     });
 
     if (user?.uid) {
       fetchUserWorkspaces(user.uid).then((res: any) => {
-        if (res.success && res.workspaces) {
+        if (isSubscribed && res.success && res.workspaces) {
           setUserWorkspaces(res.workspaces);
           if (res.workspaces.length > 0) {
             setSelectedWorkspaceId(res.workspaces[0].id);
@@ -70,33 +96,36 @@ export default function HubDetailPage() {
         }
       });
     }
+
+    return () => {
+      isSubscribed = false;
+    };
   }, [slug, user]);
 
   const handleJoinHub = async () => {
-    if (!user?.uid) {
+    if (!user?.uid || !hub) {
       router.push("/auth");
       return;
     }
     setJoining(true);
     const res = await joinAcademicHubAction(hub.id, user.uid, "STUDENT");
     if (res.success) {
-      setHub((prev: any) => ({
+      setHub((prev) => prev ? ({
         ...prev,
         isMember: true,
         memberCount: prev.memberCount + 1
-      }));
+      }) : null);
     }
     setJoining(false);
   };
 
   const handleLinkWorkspace = async () => {
-    if (!selectedWorkspaceId || !projectNameInput.trim()) return;
+    if (!selectedWorkspaceId || !projectNameInput.trim() || !hub) return;
     setIsLinking(true);
     const res = await linkWorkspaceToHubAction(hub.id, selectedWorkspaceId, projectNameInput);
     if (res.success) {
       setIsLinkModalOpen(false);
-      // Refresh hub details
-      fetchAcademicHubBySlugAction(slug, user?.uid).then(setHub);
+      fetchAcademicHubBySlugAction(slug, user?.uid).then((res: any) => setHub(res));
     }
     setIsLinking(false);
   };
@@ -260,7 +289,7 @@ export default function HubDetailPage() {
               <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex flex-col gap-2 mt-2">
                 <span className="text-xs font-mono text-[#F2C1A3]">Institutional Certification Protocol</span>
                 <span className="text-xs text-slate-400 font-light">
-                  Projects achieving &ge; 90% Jain's Fairness Score upon milestone defense qualify for certified PDF evaluation ledgers signed by department coordinators.
+                  Projects achieving &ge; 90% Jain&apos;s Fairness Score upon milestone defense qualify for certified PDF evaluation ledgers signed by department coordinators.
                 </span>
               </div>
             </div>
@@ -292,7 +321,7 @@ export default function HubDetailPage() {
                 <Layers size={24} className="text-[#F2C1A3]" />
                 <h3 className="text-base font-serif text-white">No Linked Projects Yet</h3>
                 <p className="text-xs text-slate-400 font-light max-w-sm">
-                  Click "Link Workspace" above to connect your active ContriTrack workspace directly to this Academic Hub.
+                  Click &quot;Link Workspace&quot; above to connect your active ContriTrack workspace directly to this Academic Hub.
                 </p>
                 <button
                   onClick={() => setIsLinkModalOpen(true)}
@@ -303,7 +332,7 @@ export default function HubDetailPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {hub.projects.map((p: any) => (
+                {hub.projects.map((p: LinkedProject) => (
                   <div key={p.id} className="p-6 rounded-3xl border border-white/[0.08] bg-[#1b1c2b]/70 backdrop-blur-xl flex flex-col gap-3">
                     <div className="flex items-center justify-between">
                       <h4 className="text-base font-serif font-light text-white">{p.projectName}</h4>
@@ -312,7 +341,7 @@ export default function HubDetailPage() {
                       </span>
                     </div>
                     {p.description && <p className="text-xs text-slate-300 font-light">{p.description}</p>}
-                    <div className="pt-3 border-top border-white/[0.05] flex items-center justify-between text-xs font-mono text-[#8e94a0]">
+                    <div className="pt-3 border-t border-white/[0.05] flex items-center justify-between text-xs font-mono text-[#8e94a0]">
                       <span>Members: {p.workspace?.members?.length || 1}</span>
                       <Link href="/dashboard" className="text-[#F2C1A3] hover:underline flex items-center gap-1">
                         <span>Open Workspace</span>

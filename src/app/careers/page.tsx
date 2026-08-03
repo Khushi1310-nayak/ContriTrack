@@ -7,15 +7,12 @@ import {
   MapPin, 
   Clock, 
   Briefcase, 
-  DollarSign, 
   Sparkles, 
   ArrowUpRight, 
   Users, 
   Layers, 
-  Terminal,
-  Activity,
-  Zap,
-  Globe,
+  Zap, 
+  Globe, 
   Info
 } from "lucide-react";
 import Link from "next/link";

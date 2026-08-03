@@ -12,9 +12,7 @@ import {
   Users, 
   Layers, 
   ArrowRight, 
-  Sparkles, 
-  Globe, 
-  CheckCircle2
+  Sparkles
 } from "lucide-react";
 import Link from "next/link";
 import { fetchAcademicHubsAction, AcademicHubMetadata } from "@/app/actions/academic-hub-actions";
@@ -36,11 +34,18 @@ export default function HubsDirectoryPage() {
   const [selectedType, setSelectedType] = useState<string>("All");
 
   useEffect(() => {
-    setIsLoading(true);
+    let isSubscribed = true;
+
     fetchAcademicHubsAction(user?.uid).then((res) => {
-      setHubs(res);
-      setIsLoading(false);
+      if (isSubscribed) {
+        setHubs(res);
+        setIsLoading(false);
+      }
     });
+
+    return () => {
+      isSubscribed = false;
+    };
   }, [user]);
 
   const filteredHubs = useMemo(() => {

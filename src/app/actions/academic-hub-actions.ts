@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 
 export interface AcademicHubMetadata {
   id: string;
@@ -16,6 +17,28 @@ export interface AcademicHubMetadata {
   projectCount: number;
   isMember?: boolean;
 }
+
+export type AcademicHubWithDetails = Prisma.AcademicHubGetPayload<{
+  include: {
+    members: true;
+    projects: {
+      include: {
+        workspace: {
+          include: {
+            members: true;
+            contributions: true;
+          };
+        };
+        repository: {
+          include: {
+            analytics: true;
+            commits: true;
+          };
+        };
+      };
+    };
+  };
+}>;
 
 const DEFAULT_HUBS = [
   {
@@ -111,7 +134,9 @@ export async function fetchAcademicHubsAction(userId?: string): Promise<Academic
       }
     });
 
-    return hubs.map((h: any) => ({
+    type RawHubItem = typeof hubs[number];
+
+    return hubs.map((h: RawHubItem) => ({
       id: h.id,
       slug: h.slug,
       name: h.name,
@@ -168,11 +193,14 @@ export async function fetchAcademicHubBySlugAction(slug: string, userId?: string
     let totalFairnessSum = 0;
     let fairnessCount = 0;
 
-    hub.projects.forEach((p: any) => {
+    type ProjectType = typeof hub.projects[number];
+
+    hub.projects.forEach((p: ProjectType) => {
       if (p.repository) {
         totalCommits += p.repository.commits ? p.repository.commits.length : 0;
         if (Array.isArray(p.repository.analytics)) {
-          p.repository.analytics.forEach((a: any) => {
+          type AnalyticsType = typeof p.repository.analytics[number];
+          p.repository.analytics.forEach((a: AnalyticsType) => {
             totalLinesChanged += Math.round((a.codeChangePct || 0) * 100);
             if (a.fairnessScore > 0) {
               totalFairnessSum += a.fairnessScore;
@@ -185,7 +213,8 @@ export async function fetchAcademicHubBySlugAction(slug: string, userId?: string
 
     const averageFairness = fairnessCount > 0 ? Math.round(totalFairnessSum / fairnessCount) : 94;
 
-    const isMember = userId ? hub.members.some((m: any) => m.userId === userId) : false;
+    type MemberType = typeof hub.members[number];
+    const isMember = userId ? hub.members.some((m: MemberType) => m.userId === userId) : false;
 
     return {
       ...hub,
