@@ -11,7 +11,8 @@ import {
   Loader2,
   Calendar,
   Layers,
-  Github
+  Github,
+  Volume2
 } from "lucide-react";
 import { 
   fetchNotifications, 
@@ -305,6 +306,14 @@ export default function NotificationsPanel({ workspaceId, user }: NotificationsP
         </div>
 
         <div className="flex items-center gap-3">
+          <button 
+            onClick={() => playLuxuryChime()}
+            className="px-3 py-2 rounded-xl bg-white/5 hover:bg-[#F2C1A3]/20 border border-white/10 text-xs font-mono text-[#F2C1A3] cursor-pointer flex items-center gap-1.5 transition"
+            title="Test Chime Sound Alert"
+          >
+            <Volume2 size={13} />
+            <span>Test Chime 🔔</span>
+          </button>
           <button 
             onClick={handleMarkAllReadLocal}
             className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-mono text-[#F2C1A3] cursor-pointer"

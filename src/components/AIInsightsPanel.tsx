@@ -170,14 +170,13 @@ export default function AIInsightsPanel({ user, workspaceId }: AIInsightsPanelPr
   const recsFeed: string[] = forecast?.aiRecommendations ? JSON.parse(forecast.aiRecommendations) : [];
 
   // Greet personal user depending on time of day
-  const [timeGreeting, setTimeGreeting] = useState<string>("Good morning");
-
-  useEffect(() => {
+  const [timeGreeting] = useState<string>(() => {
+    if (typeof window === "undefined") return "Good evening";
     const hours = new Date().getHours();
-    if (hours >= 5 && hours < 12) setTimeGreeting("Good morning");
-    else if (hours >= 12 && hours < 18) setTimeGreeting("Good afternoon");
-    else setTimeGreeting("Good evening");
-  }, []);
+    if (hours >= 5 && hours < 12) return "Good morning";
+    if (hours >= 12 && hours < 18) return "Good afternoon";
+    return "Good evening";
+  });
 
   const getGreetingTime = () => timeGreeting;
 

@@ -197,15 +197,14 @@ export default function Dashboard() {
   // Relational database profile syncing state
   const [dbProfile, setDbProfile] = useState<UserProfileData | null>(null);
 
-  // Dynamic client time-of-day greeting state (Morning, Afternoon, Evening)
-  const [timeGreeting, setTimeGreeting] = useState<string>("Good morning");
-
-  React.useEffect(() => {
+  // Dynamic client time-of-day greeting state (Morning, Afternoon, Evening) computed via lazy initializer
+  const [timeGreeting] = useState<string>(() => {
+    if (typeof window === "undefined") return "Good evening";
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) setTimeGreeting("Good morning");
-    else if (hour >= 12 && hour < 17) setTimeGreeting("Good afternoon");
-    else setTimeGreeting("Good evening");
-  }, []);
+    if (hour >= 5 && hour < 12) return "Good morning";
+    if (hour >= 12 && hour < 17) return "Good afternoon";
+    return "Good evening";
+  });
 
   const getGreeting = () => timeGreeting;
 
