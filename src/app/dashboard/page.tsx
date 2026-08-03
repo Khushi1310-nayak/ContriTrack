@@ -460,45 +460,94 @@ export default function Dashboard() {
     e.preventDefault();
     if (!newTaskTitle.trim() || !user?.uid) return;
 
-    const result = await createWorkspaceTask({
-      title: newTaskTitle,
-      description: newTaskDescription,
-      priority: newTaskPriority,
-      status: "todo", // Default starting status
-      labels: newTaskLabels,
-      dueDate: newTaskDueDate || null,
-      estimatedHours: newTaskEstimatedHours,
-      repositoryId: newTaskRepositoryId || null,
+    // Capture values before resetting form
+    const title = newTaskTitle.trim();
+    const description = newTaskDescription;
+    const priority = newTaskPriority;
+    const labels = newTaskLabels;
+    const dueDate = newTaskDueDate || null;
+    const estimatedHours = newTaskEstimatedHours;
+    const repositoryId = newTaskRepositoryId || null;
+    const assigneeId = newTaskAssigneeId || null;
+
+    const selectedAssignee = collaborators.find((c) => c.id === assigneeId);
+    const selectedRepo = repositories.find((r) => r.id === repositoryId);
+
+    // Instantly collapse modal & reset form states for zero-latency UX
+    setShowAddTaskModal(false);
+    setNewTaskTitle("");
+    setNewTaskDescription("");
+    setNewTaskPriority("medium");
+    setNewTaskLabels("");
+    setNewTaskDueDate("");
+    setNewTaskEstimatedHours(0);
+    setNewTaskRepositoryId("");
+    setNewTaskAssigneeId("");
+
+    // Create optimistic task card object
+    const tempId = `temp_task_${Date.now()}`;
+    const optimisticTask: Task = {
+      id: tempId,
+      title,
+      description,
+      priority,
+      status: "todo",
+      labels,
+      dueDate,
+      estimatedHours,
+      githubIssueUrl: null,
+      linkedPullRequest: null,
+      linkedCommitHash: null,
+      repositoryId,
       workspaceId: currentWorkspaceId,
       creatorId: user.uid,
-      assigneeId: newTaskAssigneeId || null,
+      assigneeId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      completedAt: null,
+      assignee: selectedAssignee ? { id: selectedAssignee.id, fullName: selectedAssignee.fullName, email: selectedAssignee.email } : null,
+      repository: selectedRepo ? { id: selectedRepo.id, name: selectedRepo.name, owner: selectedRepo.owner } : null,
+      comments: [],
+      activities: [],
+      telemetry: [],
+    };
+
+    // Instantly add task card to UI board
+    setTasks((prev) => [optimisticTask, ...prev]);
+
+    // Create local notification
+    setNotifications((prev) => [
+      {
+        id: `n_${Date.now()}`,
+        text: `Created task "${title}"`,
+        time: "Just now",
+        read: false,
+        category: "task"
+      },
+      ...prev
+    ]);
+
+    // Asynchronous background server deployment
+    const result = await createWorkspaceTask({
+      title,
+      description,
+      priority,
+      status: "todo",
+      labels,
+      dueDate,
+      estimatedHours,
+      repositoryId,
+      workspaceId: currentWorkspaceId,
+      creatorId: user.uid,
+      assigneeId,
     });
 
     if (result.success && result.task) {
-      setTasks((prev) => [result.task as Task, ...prev]);
-      // Reset form states
-      setNewTaskTitle("");
-      setNewTaskDescription("");
-      setNewTaskPriority("medium");
-      setNewTaskLabels("");
-      setNewTaskDueDate("");
-      setNewTaskEstimatedHours(0);
-      setNewTaskRepositoryId("");
-      setNewTaskAssigneeId("");
-      setShowAddTaskModal(false);
-
-      // Create a local notification
-      setNotifications((prev) => [
-        {
-          id: `n_${Date.now()}`,
-          text: `Created task "${newTaskTitle}"`,
-          time: "Just now",
-          read: false,
-          category: "task"
-        },
-        ...prev
-      ]);
+      // Replace optimistic temp ID with server DB task object
+      setTasks((prev) => prev.map((t) => (t.id === tempId ? (result.task as Task) : t)));
     } else {
+      // Rollback on server error
+      setTasks((prev) => prev.filter((t) => t.id !== tempId));
       alert("Failed to create task card on database.");
     }
   };
