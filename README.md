@@ -157,35 +157,31 @@ This project demonstrates several production-grade engineering concepts:
 
 ## 🏠 Overview Dashboard Screenshot
 
-<img width="100%" alt="Overview Dashboard" src="https://drive.google.com/uc?export=view&id=1MifXrKFyauD5WwHPzeTKYoPYyQmz_ent" />
+<img width="1920" height="928" alt="Screenshot (3505)" src="https://github.com/user-attachments/assets/a379be3d-13cf-4934-8983-5eceb066a2ea" />
 
 ## 📊 Analytics Dashboard Screenshot
 
-<img width="100%" alt="Analytics Dashboard" src="https://drive.google.com/uc?export=view&id=18xzncaojF6gKn5JIDuJRYq2a5cR6atN5" />
+<img width="1920" height="934" alt="Screenshot (3508)" src="https://github.com/user-attachments/assets/36eb3b2d-91a9-423b-b688-fa74ef92ef95" />
 
 ## 🤖 AI Insights Screenshot
 
-<img width="100%" alt="AI Insights" src="https://drive.google.com/uc?export=view&id=1YgUjoiqrjNyOAaSKNtogZ5LrCAVtiYnA" />
+<img width="1920" height="939" alt="Screenshot (3511)" src="https://github.com/user-attachments/assets/1d1b8eba-49e1-4297-a3a7-40e9457ddbfe" />
 
 ## 👥 Teams Management Screenshot
 
-<img width="100%" alt="Teams Management" src="https://drive.google.com/uc?export=view&id=1q-1IFyoojYzeQbjjIF1JmFD9yNZS1kQl" />
+<img width="1920" height="922" alt="Screenshot (3510)" src="https://github.com/user-attachments/assets/bd76693a-a9e7-438b-8caa-fc77a839a205" />
 
 ## 📅 Meetings Workspace Screenshot
 
-<img width="100%" alt="Meetings Workspace" src="https://drive.google.com/uc?export=view&id=1kDYZx7fSqtfeQxf7n8Qj82GA6C8v8bxl" />
-
-## 📄 Reports System Screenshot
-
-<img width="100%" alt="Reports System" src="https://drive.google.com/uc?export=view&id=1NIvHbQN7QA0BLtohJjOPeWRN9IufureH" />
+<img width="1920" height="933" alt="Screenshot (3509)" src="https://github.com/user-attachments/assets/15a7e3ae-e8bf-4cbb-99b9-66c8c1827ba1" />
 
 ## ⚙️ Settings & Security Screenshot
 
-<img width="100%" alt="Settings & Security" src="https://drive.google.com/uc?export=view&id=1wS43XUyJWfzIS9s7TJXQB0goUkoK9gYk" />
+<img width="1920" height="937" alt="Screenshot (3512)" src="https://github.com/user-attachments/assets/128c1408-f397-42d8-9068-2809f5bfc30f" />
 
 ## 🧠 GitHub Purging & Telemetry Screenshot
 
-<img width="100%" alt="GitHub Purging" src="https://drive.google.com/uc?export=view&id=1YTRyneX_yF3Aanu9SrAIzFc_wdjDqU9f" />
+<img width="1920" height="936" alt="Screenshot (3507)" src="https://github.com/user-attachments/assets/058d5b50-2da8-43da-8439-cc888471568e" />
 
 ---
 
