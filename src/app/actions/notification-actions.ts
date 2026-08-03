@@ -181,6 +181,49 @@ if (vapidPublicKey && vapidPrivateKey) {
 }
 
 /**
+ * Resolves all candidate user IDs (Firebase UID, PostgreSQL UUID, and email) for notification queries
+ */
+async function resolveUserCandidateIds(userId: string): Promise<string[]> {
+  const ids: string[] = [userId];
+
+  try {
+    const profile = await prisma.userProfile.findFirst({
+      where: {
+        OR: [{ userId }, { email: userId }]
+      },
+      select: { userId: true, email: true }
+    });
+
+    if (profile) {
+      if (profile.userId) ids.push(profile.userId);
+      if (profile.email) ids.push(profile.email);
+
+      const userByEmail = await prisma.user.findUnique({
+        where: { email: profile.email },
+        select: { id: true }
+      });
+      if (userByEmail) ids.push(userByEmail.id);
+    }
+
+    const directUser = await prisma.user.findFirst({
+      where: {
+        OR: [{ id: userId }, { email: userId }]
+      },
+      select: { id: true, email: true }
+    });
+
+    if (directUser) {
+      ids.push(directUser.id);
+      ids.push(directUser.email);
+    }
+  } catch (err) {
+    console.error("Error resolving user candidate IDs:", err);
+  }
+
+  return Array.from(new Set(ids)).filter(Boolean);
+}
+
+/**
  * Fetch persistent notifications for an authenticated user with filtering
  */
 export async function fetchNotifications(
@@ -194,7 +237,10 @@ export async function fetchNotifications(
   }
 ) {
   try {
-    const where: Prisma.NotificationWhereInput = { receiverId: userId };
+    const candidateIds = await resolveUserCandidateIds(userId);
+    const where: Prisma.NotificationWhereInput = {
+      receiverId: { in: candidateIds }
+    };
 
     if (filters?.unreadOnly) {
       where.isRead = false;
@@ -248,8 +294,9 @@ export async function markNotificationRead(id: string) {
  */
 export async function markAllNotificationsRead(userId: string) {
   try {
+    const candidateIds = await resolveUserCandidateIds(userId);
     await prisma.notification.updateMany({
-      where: { receiverId: userId, isRead: false },
+      where: { receiverId: { in: candidateIds }, isRead: false },
       data: { isRead: true }
     });
     return { success: true };
@@ -279,13 +326,14 @@ export async function deleteNotification(id: string) {
  */
 export async function deleteAllNotifications(userId: string, workspaceId?: string) {
   try {
-    const where: Prisma.NotificationWhereInput = { receiverId: userId };
+    const candidateIds = await resolveUserCandidateIds(userId);
+    const where: Prisma.NotificationWhereInput = {
+      receiverId: { in: candidateIds }
+    };
     if (workspaceId) {
       where.workspaceId = workspaceId;
     }
-    await prisma.notification.deleteMany({
-      where
-    });
+    await prisma.notification.deleteMany({ where });
     return { success: true };
   } catch (error) {
     console.error("Error in deleteAllNotifications server action:", error);

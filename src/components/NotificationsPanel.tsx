@@ -106,9 +106,16 @@ export default function NotificationsPanel({ workspaceId, user }: NotificationsP
   }, [user, unreadOnly, priorityFilter, typeFilter, workspaceId, workspaceFilter]);
 
   useEffect(() => {
-    if (user?.uid) {
-      startTransition(() => { void loadNotifications(); });
-    }
+    if (!user?.uid) return;
+    
+    startTransition(() => { void loadNotifications(); });
+
+    // 10-second real-time polling so notifications appear in the exact minute
+    const interval = setInterval(() => {
+      void loadNotifications();
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, [user, loadNotifications]);
 
   // Handle push subscription requests
