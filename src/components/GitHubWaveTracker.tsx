@@ -196,6 +196,7 @@ export function GitHubWaveTracker({
                 <div className="flex items-center gap-4 mt-3">
                   <div className="flex -space-x-2">
                     {repo.members.slice(0, 4).map((m, i) => (
+                      /* eslint-disable-next-line @next/next/no-img-element */
                       <img 
                         key={i} 
                         src={m.avatar || "https://avatars.githubusercontent.com/u/583231?v=4"} 
