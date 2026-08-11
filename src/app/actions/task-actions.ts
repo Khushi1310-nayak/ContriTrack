@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { getOctokit } from "@/lib/github-service";
 import { createNotification, parseAndNotifyMentions } from "@/app/actions/notification-actions";
 
@@ -77,11 +78,24 @@ export async function createWorkspaceTask(input: CreateTaskInput) {
       }
     }
 
-    // 2. Validate assigneeId exists in PostgreSQL
+    // 2. Validate assigneeId exists in PostgreSQL and is authorized in target workspace
     if (assigneeId) {
       const assigneeExists = await prisma.user.findUnique({ where: { id: assigneeId } });
       if (!assigneeExists) {
         assigneeId = null;
+      } else if (workspaceId && workspaceId.trim() !== "") {
+        const isMember = await prisma.workspaceMember.findFirst({
+          where: { workspaceId, userId: assigneeId }
+        });
+        const ws = await prisma.workspace.findUnique({ where: { id: workspaceId }, select: { ownerId: true } });
+        const isOwner = ws?.ownerId === assigneeId;
+
+        if (!isMember && !isOwner) {
+          const workspaceHasMembers = await prisma.workspaceMember.count({ where: { workspaceId } });
+          if (workspaceHasMembers > 0) {
+            assigneeId = null;
+          }
+        }
       }
     }
 
@@ -396,14 +410,45 @@ export async function addTaskComment(taskId: string, userId: string, content: st
 }
 
 /**
- * Fetch all available platform users to facilitate assignee mapping
+ * Fetch all available users authorized in the given workspace to facilitate assignee mapping
  */
-export async function fetchWorkspaceUsers() {
+export async function fetchWorkspaceUsers(workspaceId?: string) {
   try {
+    let whereClause: Prisma.UserWhereInput = {};
+
+    if (workspaceId && workspaceId.trim() !== "") {
+      const workspace = await prisma.workspace.findUnique({
+        where: { id: workspaceId },
+        include: { members: true }
+      });
+
+      if (workspace) {
+        const memberUserIds = workspace.members.map(m => m.userId);
+        if (workspace.ownerId) {
+          memberUserIds.push(workspace.ownerId);
+        }
+        whereClause = {
+          id: { in: Array.from(new Set(memberUserIds.filter(Boolean))) }
+        };
+      }
+    }
+
     const users = await prisma.user.findMany({
+      where: whereClause,
       orderBy: { fullName: "asc" },
     });
-    return { success: true, users };
+
+    // Deduplicate by lowercased email / ID to prevent duplicate user entries in dropdowns
+    const uniqueUsersMap = new Map<string, typeof users[0]>();
+    for (const u of users) {
+      const key = (u.email || u.id).toLowerCase();
+      if (!uniqueUsersMap.has(key)) {
+        uniqueUsersMap.set(key, u);
+      }
+    }
+    const uniqueUsers = Array.from(uniqueUsersMap.values());
+
+    return { success: true, users: uniqueUsers };
   } catch (error) {
     console.error("Failed to fetch users:", error);
     return { success: false, error: "Failed to load collaborators." };
@@ -413,11 +458,31 @@ export async function fetchWorkspaceUsers() {
 /**
  * Fetch all active repositories linked in the workspace
  */
-export async function fetchWorkspaceRepositories() {
+export async function fetchWorkspaceRepositories(workspaceId?: string) {
   try {
-    const repos = await prisma.gitHubRepository.findMany({
+    let whereClause: Prisma.GitHubRepositoryWhereInput = {};
+
+    if (workspaceId && workspaceId.trim() !== "") {
+      whereClause = {
+        OR: [
+          { tasks: { some: { workspaceId } } },
+          { academicHubProjects: { some: { hubId: workspaceId } } }
+        ]
+      };
+    }
+
+    let repos = await prisma.gitHubRepository.findMany({
+      where: whereClause,
       orderBy: { name: "asc" },
     });
+
+    // If workspace-specific repo query returns none, fallback to all connected repositories gracefully
+    if (repos.length === 0) {
+      repos = await prisma.gitHubRepository.findMany({
+        orderBy: { name: "asc" },
+      });
+    }
+
     return { success: true, repositories: repos };
   } catch (error) {
     console.error("Failed to fetch repositories:", error);

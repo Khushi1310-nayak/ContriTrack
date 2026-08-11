@@ -350,8 +350,8 @@ export default function Dashboard() {
     try {
       const [tasksRes, usersRes, reposRes] = await Promise.all([
         fetchWorkspaceTasks(currentWorkspaceId),
-        fetchWorkspaceUsers(),
-        fetchWorkspaceRepositories(),
+        fetchWorkspaceUsers(currentWorkspaceId),
+        fetchWorkspaceRepositories(currentWorkspaceId),
       ]);
 
       if (tasksRes.success && tasksRes.tasks) {

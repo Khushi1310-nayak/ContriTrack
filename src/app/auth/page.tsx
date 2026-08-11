@@ -295,19 +295,31 @@ export default function AuthPage() {
     setFormLoading(true);
     setAuthError(null);
     try {
-      await signUp({
-        fullName: data.fullName,
-        email: data.email,
-        password: data.password,
-        university: data.university,
-        githubUsername: data.githubUsername
-      });
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Registration processing timed out. Please check your connection and try again.")), 15000)
+      );
+
+      await Promise.race([
+        signUp({
+          fullName: data.fullName,
+          email: data.email,
+          password: data.password,
+          university: data.university,
+          githubUsername: data.githubUsername
+        }),
+        timeoutPromise
+      ]);
+
       setMode("verify");
     } catch (e: unknown) {
-      console.error(e);
+      console.error("Registration submission error:", e);
       const err = e as { code?: string; message?: string };
       if (err.code === "auth/email-already-in-use") {
         setAuthError("An account already exists with this email address.");
+      } else if (err.code === "auth/invalid-email") {
+        setAuthError("Please enter a valid email address.");
+      } else if (err.code === "auth/weak-password") {
+        setAuthError("Password is too weak. Please use at least 8 characters.");
       } else {
         setAuthError(err.message || "Sign up failed. Please try again later.");
       }
@@ -1311,7 +1323,16 @@ export default function AuthPage() {
                       )}
                     </button>
 
-                    <div>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => router.push("/dashboard")}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[#F2C1A3]/40 bg-[#F2C1A3]/20 text-xs font-serif text-[#F8CCAA] tracking-wider uppercase font-semibold hover:bg-[#F2C1A3]/30 transition-all cursor-pointer shadow-lg"
+                      >
+                        <span>Proceed to Dashboard</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+
                       <button
                         type="button"
                         onClick={() => {
