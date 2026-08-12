@@ -269,7 +269,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           await fetch("/api/cron/process-reminders").catch(() => {});
           await fetch("/api/cron/purge-expired-accounts").catch(() => {});
-        } catch (_err) {
+        } catch {
           // Silent fallback for cron tasks
         }
       };
