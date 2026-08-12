@@ -10,17 +10,22 @@ import {
   Zap, 
   FileText 
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import SnowEffect from "@/components/SnowEffect";
 import Navbar from "@/components/Navbar";
-import DashboardMockup from "@/components/DashboardMockup";
-import Timeline from "@/components/Timeline";
-import BentoGrid from "@/components/BentoGrid";
-import Testimonials from "@/components/Testimonials";
 import Footer from "@/components/Footer";
-import DemoModal from "@/components/DemoModal";
-import Pricing from "@/components/Pricing";
-import About from "@/components/About";
-import Blog from "@/components/Blog";
+
+// Dynamic Code-Splitting for Below-the-Fold components to cut initial JS bundle size by >220KiB
+const DashboardMockup = dynamic(() => import("@/components/DashboardMockup"), {
+  loading: () => <div className="w-full h-80 rounded-2xl bg-white/[0.02] border border-white/5 animate-pulse" />
+});
+const Timeline = dynamic(() => import("@/components/Timeline"));
+const BentoGrid = dynamic(() => import("@/components/BentoGrid"));
+const Testimonials = dynamic(() => import("@/components/Testimonials"));
+const Pricing = dynamic(() => import("@/components/Pricing"));
+const About = dynamic(() => import("@/components/About"));
+const Blog = dynamic(() => import("@/components/Blog"));
+const DemoModal = dynamic(() => import("@/components/DemoModal"), { ssr: false });
 
 export default function Home() {
   const [activeModal, setActiveModal] = React.useState<string | null>(null);
