@@ -264,14 +264,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
       }
 
-      // Initialize periodic meeting reminder and expired account purge processing via API
-      fetch("/api/cron/process-reminders").catch(() => {});
-      fetch("/api/cron/purge-expired-accounts").catch(() => {});
-      const intervalId = setInterval(() => {
-        fetch("/api/cron/process-reminders").catch(() => {});
-        fetch("/api/cron/purge-expired-accounts").catch(() => {});
-      }, 60000);
+      // Initialize periodic meeting reminder processing gracefully
+      const runCronTriggers = async () => {
+        try {
+          await fetch("/api/cron/process-reminders").catch(() => {});
+          await fetch("/api/cron/purge-expired-accounts").catch(() => {});
+        } catch (_err) {
+          // Silent fallback for cron tasks
+        }
+      };
 
+      runCronTriggers();
+      const intervalId = setInterval(runCronTriggers, 300000); // 5 min interval
       return () => clearInterval(intervalId);
     }
   }, []);

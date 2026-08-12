@@ -9,7 +9,6 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ["lucide-react", "framer-motion", "@heroicons/react", "recharts"],
-    optimizeCss: true,
   },
 };
 
