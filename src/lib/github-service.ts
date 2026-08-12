@@ -10,6 +10,44 @@ export function getOctokit(accessToken: string): Octokit {
   });
 }
 
+/**
+ * Executes an async operation with exponential backoff retries to handle transient GitHub API rate limits,
+ * network disconnects, or 502/503 server glitches seamlessly.
+ */
+export async function withExponentialRetry<T>(
+  fn: () => Promise<T>,
+  options?: {
+    maxRetries?: number;
+    initialDelayMs?: number;
+    backoffFactor?: number;
+  }
+): Promise<T> {
+  const maxRetries = options?.maxRetries ?? 3;
+  let delay = options?.initialDelayMs ?? 300;
+  const backoff = options?.backoffFactor ?? 2;
+
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err: unknown) {
+      lastError = err;
+      const status = (err as { status?: number })?.status;
+      const isTransient = status === 429 || status === 500 || status === 502 || status === 503 || status === 504;
+
+      if (attempt === maxRetries || (!isTransient && status !== undefined)) {
+        throw err;
+      }
+
+      console.warn(`GitHub API request attempt ${attempt} failed (status ${status || "network_drop"}). Retrying in ${delay}ms...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      delay *= backoff;
+    }
+  }
+
+  throw lastError;
+}
+
 // Get user accounts and list available repositories
 export async function getUserRepositories(userId: string) {
   const account = await prisma.gitHubAccount.findUnique({
@@ -69,10 +107,12 @@ export async function getUserRepositories(userId: string) {
 
   try {
     const octokit = getOctokit(token);
-    const response = await octokit.rest.repos.listForAuthenticatedUser({
-      sort: "updated",
-      per_page: 50,
-    });
+    const response = await withExponentialRetry(() =>
+      octokit.rest.repos.listForAuthenticatedUser({
+        sort: "updated",
+        per_page: 50,
+      })
+    );
 
     return response.data.map((repo) => ({
       id: String(repo.id),
@@ -277,11 +317,13 @@ export async function syncRepositoryTelemetry(repoId: string, userId: string) {
   try {
     const octokit = getOctokit(token);
 
-    // 1. Fetch Repository Details
-    const repoDetails = await octokit.rest.repos.get({
-      owner: repository.owner,
-      repo: repository.name,
-    });
+    // 1. Fetch Repository Details with Exponential Retry
+    const repoDetails = await withExponentialRetry(() =>
+      octokit.rest.repos.get({
+        owner: repository.owner,
+        repo: repository.name,
+      })
+    );
 
     // Update general fields
     await prisma.gitHubRepository.update({
@@ -297,12 +339,14 @@ export async function syncRepositoryTelemetry(repoId: string, userId: string) {
       }
     });
 
-    // 2. Fetch branches count
-    const branches = await octokit.rest.repos.listBranches({
-      owner: repository.owner,
-      repo: repository.name,
-      per_page: 100,
-    });
+    // 2. Fetch branches count with Exponential Retry
+    const branches = await withExponentialRetry(() =>
+      octokit.rest.repos.listBranches({
+        owner: repository.owner,
+        repo: repository.name,
+        per_page: 100,
+      })
+    );
 
     await prisma.gitHubRepository.update({
       where: { id: repoId },
@@ -311,12 +355,14 @@ export async function syncRepositoryTelemetry(repoId: string, userId: string) {
       }
     });
 
-    // 3. Sync Collaborators
-    const collaborators = await octokit.rest.repos.listCollaborators({
-      owner: repository.owner,
-      repo: repository.name,
-      per_page: 50,
-    });
+    // 3. Sync Collaborators with Exponential Retry
+    const collaborators = await withExponentialRetry(() =>
+      octokit.rest.repos.listCollaborators({
+        owner: repository.owner,
+        repo: repository.name,
+        per_page: 50,
+      })
+    );
 
     for (const collab of collaborators.data) {
       await prisma.repositoryMember.upsert({
