@@ -19,7 +19,7 @@ export const options = {
 
 const BASE_URL = __ENV.TARGET_URL || 'http://localhost:3000';
 
-export default function () {
+export default function runLoadTestScenario() {
   // 1. Audit Landing Page Latency
   const resHome = http.get(`${BASE_URL}/`);
   check(resHome, {
