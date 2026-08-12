@@ -130,7 +130,7 @@ export default function Home() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
-                className="flex flex-wrap items-center gap-x-8 gap-y-3 mt-6 border-t border-white/5 pt-6 text-[#857C91] text-xs font-light"
+                className="flex flex-wrap items-center gap-x-8 gap-y-3 mt-6 border-t border-white/5 pt-6 text-[#A39BB0] text-xs font-light"
               >
                 <div className="flex items-center gap-2 hover:text-white transition duration-200">
                   <Github size={14} className="text-[#F2C1A3]" />

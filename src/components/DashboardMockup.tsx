@@ -69,9 +69,9 @@ export default function DashboardMockup() {
             <span className="w-[3px] h-3 bg-[#F8CCAA] rounded-full animate-bounce delay-400ms"></span>
           </div>
           <div>
-            <h4 className="text-white font-medium text-sm leading-tight flex items-center gap-1.5">
+            <h3 className="text-white font-medium text-sm leading-tight flex items-center gap-1.5">
               Dashboard
-            </h4>
+            </h3>
             <p className="text-[#857C91] text-xs font-light">Overview of your project</p>
           </div>
         </div>
