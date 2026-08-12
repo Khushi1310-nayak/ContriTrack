@@ -19,7 +19,7 @@ export default function Footer({ activeModal, setActiveModal }: FooterProps) {
           <div className="flex flex-col gap-4 text-left">
             <div className="flex items-center gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/brand/logo-horizontal.svg" alt="ContriTrack Logo" className="h-6 w-auto" />
+              <img src="/brand/logo-horizontal.svg" alt="ContriTrack Logo" width={160} height={24} className="h-6 w-auto" />
             </div>
             <p className="text-[#857C91] text-xs font-light leading-relaxed max-w-[200px]">
               Making group collaboration accountable, fair, and evidence-backed for modern college teams.

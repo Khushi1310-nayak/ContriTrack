@@ -426,7 +426,7 @@ export default function AuthPage() {
           {/* Logo Segment */}
           <div className="relative flex items-center gap-3 z-10">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/logo-horizontal.svg" alt="ContriTrack Logo" className="h-7 w-auto" />
+            <img src="/brand/logo-horizontal.svg" alt="ContriTrack Logo" width={180} height={28} className="h-7 w-auto" />
           </div>
 
           {/* Hologram / Dashboard Visual mockup */}

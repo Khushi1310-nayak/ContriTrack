@@ -103,7 +103,8 @@ export default function Navbar({ hide = false }: NavbarProps) {
             className="flex items-center gap-2 group"
           >
             {/* Enterprise Logo */}
-            <img src="/brand/logo-horizontal.svg" alt="ContriTrack Logo" className="h-6 w-auto" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/logo-horizontal.svg" alt="ContriTrack Logo" width={160} height={24} className="h-6 w-auto" />
           </a>
 
           {/* Desktop Nav Items */}

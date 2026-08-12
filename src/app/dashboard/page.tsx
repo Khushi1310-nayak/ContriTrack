@@ -872,7 +872,7 @@ export default function Dashboard() {
             {/* SaaS branding row */}
             <div className="flex items-center gap-2.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/brand/logo-horizontal.svg" alt="ContriTrack Logo" className="h-7 w-auto" />
+              <img src="/brand/logo-horizontal.svg" alt="ContriTrack Logo" width={180} height={28} className="h-7 w-auto" />
             </div>
 
             {/* Premium Workspace Selector Switcher */}
@@ -1063,7 +1063,7 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/brand/logo-horizontal.svg" alt="ContriTrack Logo" className="h-7 w-auto" />
+                    <img src="/brand/logo-horizontal.svg" alt="ContriTrack Logo" width={180} height={28} className="h-7 w-auto" />
                   </div>
                   <button 
                     onClick={() => setIsMobileMenuOpen(false)} 
