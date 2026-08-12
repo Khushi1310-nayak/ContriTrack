@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const res = await purgeExpiredArchivedAccountsAction();
-    return NextResponse.json({ success: true, ...res, executedAt: new Date().toISOString() });
+    return NextResponse.json({ ...res, executedAt: new Date().toISOString() });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || String(error) }, { status: 500 });
   }
