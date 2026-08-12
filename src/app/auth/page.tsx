@@ -314,8 +314,8 @@ export default function AuthPage() {
     } catch (e: unknown) {
       console.error("Registration submission error:", e);
       const err = e as { code?: string; message?: string };
-      if (err.code === "auth/email-already-in-use") {
-        setAuthError("An account already exists with this email address.");
+      if (err.code === "auth/email-already-in-use" || (err.message && err.message.includes("email-already-in-use"))) {
+        setAuthError("An account already exists with this email address. Please click 'Log In' above to access your account.");
       } else if (err.code === "auth/invalid-email") {
         setAuthError("Please enter a valid email address.");
       } else if (err.code === "auth/weak-password") {
