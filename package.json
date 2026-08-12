@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:load": "k6 run tests/load-test.js",
+    "test:load": "node tests/node-load-runner.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {
