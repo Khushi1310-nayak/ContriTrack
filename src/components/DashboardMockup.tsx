@@ -161,7 +161,7 @@ export default function DashboardMockup() {
                   dataKey="Aanya" 
                   stroke="#F2C1A3" 
                   strokeWidth={2} 
-                  dot={{ r: 2 }}
+                  dot={false}
                   activeDot={{ r: 4 }}
                 />
                 <Line 
@@ -169,21 +169,21 @@ export default function DashboardMockup() {
                   dataKey="Rohan" 
                   stroke="#F8CCAA" 
                   strokeWidth={1.5} 
-                  dot={{ r: 1 }}
+                  dot={false}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="Ishita" 
                   stroke="#CD9FA0" 
                   strokeWidth={1.5} 
-                  dot={{ r: 1 }}
+                  dot={false}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="Kunal" 
                   stroke="#857C91" 
                   strokeWidth={1.5} 
-                  dot={{ r: 1 }}
+                  dot={false}
                 />
               </LineChart>
             </ResponsiveContainer>
