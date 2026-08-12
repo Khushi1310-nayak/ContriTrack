@@ -1312,3 +1312,29 @@ export async function verifyEmailOTP(email: string, code: string) {
     return { success: false, error: err.message || "Failed to verify OTP." };
   }
 }
+
+/**
+ * Automated Cron Action: Permanently purge accounts whose 30-day grace period has passed (recoverableUntil < now)
+ */
+export async function purgeExpiredArchivedAccountsAction() {
+  try {
+    const expiredArchives = await prisma.deletedAccountArchive.findMany({
+      where: {
+        recoverableUntil: {
+          lte: new Date()
+        }
+      }
+    });
+
+    let count = 0;
+    for (const archive of expiredArchives) {
+      await startFreshAction(archive.userEmail);
+      count++;
+    }
+
+    return { success: true, count };
+  } catch (error) {
+    console.error("Error purging expired archived accounts:", error);
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+}

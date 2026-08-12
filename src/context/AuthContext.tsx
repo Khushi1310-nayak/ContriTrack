@@ -264,10 +264,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
       }
 
-      // Initialize periodic meeting reminder processing via API to avoid static route 405 errors on Vercel
+      // Initialize periodic meeting reminder and expired account purge processing via API
       fetch("/api/cron/process-reminders").catch(() => {});
+      fetch("/api/cron/purge-expired-accounts").catch(() => {});
       const intervalId = setInterval(() => {
         fetch("/api/cron/process-reminders").catch(() => {});
+        fetch("/api/cron/purge-expired-accounts").catch(() => {});
       }, 60000);
 
       return () => clearInterval(intervalId);
