@@ -48,6 +48,10 @@ export default function RootLayout({
       className={`${playfair.variable} ${inter.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body className="min-h-full flex flex-col font-sans bg-[#1b1c2b] text-white selection:bg-[#F2C1A3] selection:text-[#1b1c2b] overflow-x-hidden" suppressHydrationWarning>
         <AuthProvider>
           <NextTopLoader color="#F2C1A3" showSpinner={false} height={3} />

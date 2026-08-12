@@ -82,17 +82,12 @@ export default function Home() {
               </motion.div>
 
               {/* Headline */}
-              <motion.h1
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.05 }}
-                className="text-4xl md:text-5xl lg:text-6xl font-normal text-white tracking-tight leading-[1.1] font-serif min-h-[120px] md:min-h-[160px]"
-              >
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-normal text-white tracking-tight leading-[1.1] font-serif min-h-[120px] md:min-h-[160px]">
                 Because group projects deserve{" "}
                 <span className="text-[#F2C1A3] font-serif italic text-glow-peach block mt-2 sm:inline sm:mt-0">
                   accountability.
                 </span>
-              </motion.h1>
+              </h1>
 
               {/* Subheading */}
               <motion.p
