@@ -297,13 +297,13 @@ export default function Timeline() {
                             <span>last 7 days</span>
                           </div>
                           <div className="grid grid-cols-10 gap-1 justify-center">
-                            {[...Array(20)].map((_, gridIdx) => {
+                            {[...Array(10)].map((_, gridIdx) => {
                               const fillClass = 
-                                gridIdx % 4 === 0 ? "bg-[#F8CCAA]" : 
-                                gridIdx % 3 === 0 ? "bg-[#CD9FA0]" : 
-                                "bg-[#525871]/10";
+                                gridIdx % 3 === 0 ? "bg-[#F8CCAA]" : 
+                                gridIdx % 2 === 0 ? "bg-[#CD9FA0]" : 
+                                "bg-[#525871]/20";
                               return (
-                                <div key={gridIdx} className={`w-2 h-2 rounded-[1.5px] ${fillClass}`} />
+                                <div key={gridIdx} className={`w-2.5 h-2.5 rounded-[1.5px] ${fillClass}`} />
                               );
                             })}
                           </div>

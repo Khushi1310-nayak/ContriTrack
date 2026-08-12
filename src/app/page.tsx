@@ -65,16 +65,16 @@ export default function Home() {
             </svg>
           </div>
 
-          <div className="max-w-7xl mx-auto px-6 w-full relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="max-w-7xl mx-auto px-6 w-full relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center min-h-[580px]">
             
             {/* Left Side Content */}
             <div className="lg:col-span-6 text-left flex flex-col gap-6">
               
               {/* Badge */}
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4 }}
                 className="inline-flex items-center self-start gap-1.5 px-3.5 py-1.5 rounded-full bg-white/[0.03] border border-white/10 text-xs font-light text-[#F2C1A3]"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-[#F2C1A3] animate-pulse"></span>
@@ -83,10 +83,10 @@ export default function Home() {
 
               {/* Headline */}
               <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.1 }}
-                className="text-4xl md:text-5xl lg:text-6xl font-normal text-white tracking-tight leading-[1.1] font-serif"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.05 }}
+                className="text-4xl md:text-5xl lg:text-6xl font-normal text-white tracking-tight leading-[1.1] font-serif min-h-[120px] md:min-h-[160px]"
               >
                 Because group projects deserve{" "}
                 <span className="text-[#F2C1A3] font-serif italic text-glow-peach block mt-2 sm:inline sm:mt-0">
@@ -96,20 +96,20 @@ export default function Home() {
 
               {/* Subheading */}
               <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.2 }}
-                className="text-[#857C91] text-base md:text-lg font-light leading-relaxed max-w-xl"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="text-[#857C91] text-base md:text-lg font-light leading-relaxed max-w-xl min-h-[56px]"
               >
                 ContriTrack helps teams track contributions, manage tasks, log meetings, and generate proof of work — all in one place.
               </motion.p>
 
               {/* CTA Buttons */}
               <motion.div
-                initial={{ opacity: 0, y: 25 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.3 }}
-                className="flex flex-wrap items-center gap-4 mt-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.15 }}
+                className="flex flex-wrap items-center gap-4 mt-2 min-h-[48px]"
               >
                 <a
                   href="/auth?mode=signup"
