@@ -173,7 +173,7 @@ export default function About() {
         ].map((stat, sIdx) => (
           <div key={sIdx} className="flex flex-col gap-1 md:gap-2 text-center md:text-left md:pl-4 md:border-l md:first:border-l-0 border-white/5">
             <AnimatedCounter value={stat.value} suffix={stat.suffix} />
-            <span className="text-[#857C91] text-[10px] md:text-xs font-mono uppercase tracking-wider">
+            <span className="text-[#B5ACBE] text-[10px] md:text-xs font-mono uppercase tracking-wider font-medium">
               {stat.label}
             </span>
           </div>

@@ -263,7 +263,7 @@ export default function DashboardMockup() {
           </div>
           <div>
             <span className="text-[#CD9FA0] text-[10px] uppercase tracking-wider font-semibold block mb-0.5">Upcoming Deadline</span>
-            <h5 className="text-white font-medium text-xs">Final Year Project Report</h5>
+            <h4 className="text-white font-medium text-xs">Final Year Project Report</h4>
             <p className="text-[#857C91] text-[10px] font-light">Due in 5 days</p>
           </div>
         </div>
