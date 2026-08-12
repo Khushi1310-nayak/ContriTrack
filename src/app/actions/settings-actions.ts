@@ -14,12 +14,12 @@ function getTransporter() {
   if (!user || !pass) {
     console.warn("SMTP credentials not configured in .env. Falling back to mock console transport.");
     return {
-      sendMail: async (options: any) => {
+      sendMail: async (options: nodemailer.SendMailOptions) => {
         console.log("=== MOCK EMAIL DISPATCH ===");
         console.log(`From: ${options.from}`);
         console.log(`To: ${options.to}`);
         console.log(`Subject: ${options.subject}`);
-        console.log("HTML Content preview:", options.html?.substring(0, 250));
+        console.log("HTML Content preview:", typeof options.html === "string" ? options.html.substring(0, 250) : "[Non-string HTML Content]");
         console.log("===========================");
         return { messageId: "mock-message-id-" + Date.now() };
       }
@@ -107,7 +107,7 @@ export async function syncUserProfileWithPostgres(
   }
 ) {
   try {
-    let profile: any = null;
+    let profile: unknown = null;
 
     // Check if there is an archived account under this exact email
     const archive = await prisma.deletedAccountArchive.findUnique({
@@ -183,10 +183,19 @@ export async function syncUserProfileWithPostgres(
       where: { userId: searchUserId }
     });
 
-    let sessions: Array<any> = [];
+    interface ActiveSessionRecord {
+      id: string;
+      device: string;
+      browser: string;
+      ip: string;
+      lastActive: string;
+      current: boolean;
+    }
+
+    let sessions: ActiveSessionRecord[] = [];
     let isSuspicious = false;
 
-    const newSession = {
+    const newSession: ActiveSessionRecord = {
       id: "sess_" + Math.random().toString(36).substring(2, 11),
       device: data.device || "desktop",
       browser: data.browser || "Chrome",
@@ -197,14 +206,14 @@ export async function syncUserProfileWithPostgres(
 
     if (existingSecurity && existingSecurity.activeSessions) {
       try {
-        const parsed = JSON.parse(existingSecurity.activeSessions) as Array<any>;
+        const parsed = JSON.parse(existingSecurity.activeSessions) as ActiveSessionRecord[];
         const mapped = parsed.map(s => ({ ...s, current: false }));
         const lastSession = parsed.find(s => s.current) || parsed[0];
         if (lastSession && lastSession.ip !== newSession.ip) {
           isSuspicious = true;
         }
         sessions = [newSession, ...mapped].slice(0, 5);
-      } catch (err) {
+      } catch {
         sessions = [newSession];
       }
     } else {
@@ -1219,9 +1228,9 @@ export async function finalizeSecuritySettings(userId: string, verifiedPhone: st
     await recordUserActivityLog(userId, "password_changed", { device: "System" });
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("finalizeSecuritySettings error:", error);
-    return { success: false, error: error.message || "Failed to finalize security settings." };
+    return { success: false, error: error instanceof Error ? error.message : "Failed to finalize security settings." };
   }
 }
 
@@ -1271,9 +1280,9 @@ export async function generateEmailOTP(email: string) {
     await recordUserActivityLog(dbUserId, "otp_requested", { device: "Email" });
 
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("generateEmailOTP error:", err);
-    return { success: false, error: err.message || "Failed to generate OTP." };
+    return { success: false, error: err instanceof Error ? err.message : "Failed to generate OTP." };
   }
 }
 
@@ -1307,9 +1316,9 @@ export async function verifyEmailOTP(email: string, code: string) {
 
     await prisma.oTPSession.delete({ where: { userId: dbUserId } });
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("verifyEmailOTP error:", err);
-    return { success: false, error: err.message || "Failed to verify OTP." };
+    return { success: false, error: err instanceof Error ? err.message : "Failed to verify OTP." };
   }
 }
 
