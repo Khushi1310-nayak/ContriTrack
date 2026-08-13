@@ -255,7 +255,7 @@ export async function fetchNotifications(
       where.workspaceId = filters.workspaceId;
     }
 
-    let notifications = await prisma.notification.findMany({
+    const notifications = await prisma.notification.findMany({
       where,
       orderBy: { createdAt: "desc" },
       take: filters?.limit || 50,
@@ -265,51 +265,6 @@ export async function fetchNotifications(
         }
       }
     });
-
-    if (notifications.length === 0 && !filters?.unreadOnly && (!filters?.priority || filters.priority === "all") && (!filters?.type || filters.type === "all")) {
-      try {
-        const targetWorkspaceId = filters?.workspaceId || "system_global";
-        await prisma.notification.createMany({
-          data: [
-            {
-              workspaceId: targetWorkspaceId,
-              receiverId: userId,
-              senderId: "system",
-              type: "system",
-              title: "🚀 Welcome to ContriTrack Telemetry Observatory!",
-              message: "Your GitHub commit telemetry, Jain's fairness index alerts, team mentions, and review notifications will appear here in real-time.",
-              priority: "high",
-              actionUrl: "/dashboard",
-              isRead: false
-            },
-            {
-              workspaceId: targetWorkspaceId,
-              receiverId: userId,
-              senderId: "system",
-              type: "system",
-              title: "📊 Jain's Team Parity Monitor Active",
-              message: "ContriTrack is continuously monitoring repository commit parity. Teams maintaining Jain's Index above 85% qualify for certified performance reports.",
-              priority: "medium",
-              actionUrl: "/hubs",
-              isRead: false
-            }
-          ]
-        });
-
-        notifications = await prisma.notification.findMany({
-          where,
-          orderBy: { createdAt: "desc" },
-          take: filters?.limit || 50,
-          include: {
-            replies: {
-              orderBy: { createdAt: "asc" }
-            }
-          }
-        });
-      } catch (seedErr) {
-        console.warn("Auto-seeding welcome notifications note:", seedErr);
-      }
-    }
 
     return { success: true, notifications };
   } catch (error) {

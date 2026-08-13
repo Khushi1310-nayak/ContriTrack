@@ -653,35 +653,48 @@ export default function Dashboard() {
 
   // 2. Meeting Scheduler System State (Database Persistence via MeetingsPanel)
 
-  // 3. Notification State Center
-  const [notifications, setNotifications] = useState<Notification[]>([
-    { id: "n1", text: "Sneha completed task 'UI/UX Improvements'", time: "2m ago", read: false, category: "task" },
-    { id: "n2", text: "Aryan created a pull request '#42 Fix: Auth Bug'", time: "10m ago", read: false, category: "github" },
-    { id: "n3", text: "Ishita commented on a task 'Add API rate limiting'", time: "25m ago", read: false, category: "task" },
-    { id: "n4", text: "Rohan pushed 3 commits to repository", time: "1h ago", read: true, category: "github" },
-    { id: "n5", text: "Kabir joined the meeting 'Sprint Planning'", time: "2h ago", read: true, category: "meeting" }
-  ]);
+  // 3. Notification State Center & Real-Time Alert Pipeline
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [activeToast, setActiveToast] = useState<{ title: string; message: string } | null>(null);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  const syncRealtimeNotifications = React.useCallback(async () => {
+    if (!user?.uid) return;
+    const res = await fetchNotifications(user.uid);
+    if (res.success && res.notifications) {
+      const mapped = res.notifications.map((n: PrismaNotification) => ({
+        id: n.id,
+        text: `${n.title}: ${n.message}`,
+        time: new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        read: n.isRead,
+        category: n.type === "github" ? "github" : n.type === "meeting" ? "meeting" : "task"
+      }));
+
+      setNotifications((prev) => {
+        const prevUnread = prev.filter((n) => !n.read).length;
+        const freshUnread = mapped.filter((n: { read: boolean }) => !n.read).length;
+        if (mapped.length > 0 && freshUnread > prevUnread) {
+          const latest = res.notifications[0];
+          setActiveToast({
+            title: latest.title || "New Message Received",
+            message: latest.message || "You have a new unread notification."
+          });
+          setTimeout(() => setActiveToast(null), 5000);
+        }
+        return mapped as unknown as Notification[];
+      });
+    }
+  }, [user]);
 
   React.useEffect(() => {
-    async function syncRealtimeNotifications() {
-      if (!user?.uid) return;
-      const res = await fetchNotifications(user.uid);
-      if (res.success && res.notifications) {
-        const mapped = res.notifications.map((n: PrismaNotification) => ({
-          id: n.id,
-          text: `${n.title}: ${n.message}`,
-          time: new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          read: n.isRead,
-          category: n.type === "github" ? "github" : n.type === "meeting" ? "meeting" : "task"
-        }));
-        setNotifications(mapped as unknown as Notification[]);
-      }
-    }
+    if (!user?.uid) return;
     startTransition(() => { void syncRealtimeNotifications(); });
-  }, [user]);
+    const interval = setInterval(() => {
+      void syncRealtimeNotifications();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [user, syncRealtimeNotifications]);
 
 
 
@@ -1174,6 +1187,18 @@ export default function Dashboard() {
                   className="px-4 py-2 rounded-full bg-white/[0.02] border border-white/10 hover:border-white/20 text-white text-xs font-light tracking-wide transition duration-300 flex items-center gap-1.5 cursor-pointer"
                 >
                   Invite
+                </button>
+                <button 
+                  onClick={() => setActiveTab("notifications")}
+                  className="relative p-2.5 rounded-full bg-white/[0.02] border border-white/10 hover:border-white/20 text-[#857C91] hover:text-white transition duration-300 flex items-center justify-center cursor-pointer focus:outline-none"
+                  title="View Notifications"
+                >
+                  <Bell size={14} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[9px] font-bold font-mono flex items-center justify-center animate-pulse shadow-md">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
                 </button>
               </div>
 
@@ -2573,6 +2598,39 @@ export default function Dashboard() {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* REAL-TIME NOTIFICATION TOAST ALERT OVERLAY */}
+      <AnimatePresence>
+        {activeToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-6 right-6 z-50 p-4 rounded-2xl bg-[#141523]/90 border border-[#F2C1A3]/30 backdrop-blur-xl shadow-2xl flex items-center gap-3 max-w-sm cursor-pointer"
+            onClick={() => {
+              setActiveTab("notifications");
+              setActiveToast(null);
+            }}
+          >
+            <div className="p-2.5 rounded-xl bg-[#F2C1A3]/10 text-[#F2C1A3] border border-[#F2C1A3]/20">
+              <Bell size={18} />
+            </div>
+            <div className="flex flex-col text-left flex-1 min-w-0">
+              <span className="text-xs font-semibold text-white truncate font-serif">{activeToast.title}</span>
+              <span className="text-[10px] text-[#857C91] truncate mt-0.5">{activeToast.message}</span>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveToast(null);
+              }}
+              className="p-1 rounded-full hover:bg-white/10 text-[#857C91] hover:text-white transition"
+            >
+              <X size={12} />
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
 
