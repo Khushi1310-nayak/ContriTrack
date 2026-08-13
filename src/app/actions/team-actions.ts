@@ -27,17 +27,6 @@ export async function rotateInviteCodeIfExpired(workspace: Workspace): Promise<W
           inviteCodeUpdatedAt: new Date()
         }
       });
-
-      // Log rotation event as a system workspace log
-      await prisma.teamActivity.create({
-        data: {
-          workspaceId: workspace.id,
-          userId: workspace.ownerId,
-          userFullName: "System",
-          activityType: "role_change",
-          metadata: "Invite code rotated automatically after 5 minutes."
-        }
-      });
       return updated;
     } catch (e) {
       console.error("Failed to automatically rotate invite code:", e);
@@ -477,7 +466,13 @@ export async function updateUserPresence(
 export async function fetchWorkspaceActivities(workspaceId: string) {
   try {
     const activities = await prisma.teamActivity.findMany({
-      where: { workspaceId },
+      where: {
+        workspaceId,
+        NOT: [
+          { metadata: { contains: "Invite code rotated" } },
+          { activityType: "invite_rotation" }
+        ]
+      },
       orderBy: { createdAt: "desc" },
       take: 20
     });
