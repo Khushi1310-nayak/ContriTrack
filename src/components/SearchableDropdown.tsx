@@ -41,16 +41,19 @@ export default function SearchableDropdown({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Reset focus index when search query or open status changes
-  useEffect(() => {
-    setFocusedIndex(-1);
-  }, [searchQuery, isOpen]);
-
-  // Sync search query when open
-  useEffect(() => {
+  // Reset state during render when open state changes to prevent cascading renders
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) {
       setSearchQuery("");
-      // Delay focus slightly for smoother transition
+      setFocusedIndex(-1);
+    }
+  }
+
+  // Focus search input when opened
+  useEffect(() => {
+    if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen]);
@@ -220,7 +223,7 @@ export default function SearchableDropdown({
                 >
                   <Plus size={12} className="text-[#F2C1A3] shrink-0" />
                   <span className="truncate">
-                    Use custom: <span className="font-mono font-medium text-white">"{searchQuery.trim()}"</span>
+                    Use custom: <span className="font-mono font-medium text-white">&quot;{searchQuery.trim()}&quot;</span>
                   </span>
                 </button>
               )}

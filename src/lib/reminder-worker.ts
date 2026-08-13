@@ -2,7 +2,7 @@ import { prisma } from "./db";
 import { createNotification } from "@/app/actions/notification-actions";
 
 export function getMeetingDateTime(scheduledDate: string, startTime: string, timezone: string): Date {
-  let timeStr = startTime.trim();
+  const timeStr = startTime.trim();
   let hours = 0;
   let minutes = 0;
 
@@ -59,7 +59,7 @@ function getTimezoneOffset(timeZone: string, date: Date): number {
     const dateUTC = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
     
     return (localUTC - dateUTC) / 60 / 1000;
-  } catch (err) {
+  } catch {
     if (timeZone.toLowerCase().includes("kolkata") || timeZone.toLowerCase().includes("india") || timeZone.toLowerCase() === "ist") {
       return 330; 
     }

@@ -5,7 +5,7 @@ export interface SyncTask {
   id: string;
   url: string;
   method: string;
-  body: any;
+  body: unknown;
   timestamp: number;
 }
 
@@ -22,7 +22,7 @@ export class OfflineSyncEngine {
     }
   }
 
-  static queueAction(url: string, method: string, body: any) {
+  static queueAction(url: string, method: string, body: unknown) {
     if (typeof window === "undefined") return;
     const q = this.getQueue();
     q.push({
