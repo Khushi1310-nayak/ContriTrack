@@ -315,8 +315,8 @@ export default function Timeline() {
                 {/* 1. LEFT COLUMN (Text on even, Visual on odd) */}
                 <div className={`col-span-1 md:col-span-5 flex flex-col justify-center ${
                   isEven 
-                    ? "md:order-1 md:pr-14 text-left md:text-right items-start md:items-end" 
-                    : "md:order-1 md:pr-14 items-center justify-center"
+                    ? "md:order-1 md:pr-10 text-left md:text-right items-start md:items-end" 
+                    : "md:order-1 md:pr-4 items-start md:items-end justify-center"
                 }`}>
                   {isEven ? (
                     <div className="flex flex-col gap-3 text-left md:text-right items-start md:items-end">
@@ -365,7 +365,7 @@ export default function Timeline() {
                       whileInView={{ opacity: 1, x: 0, scale: 1 }}
                       viewport={{ once: true }}
                       transition={{ type: "spring", damping: 20 }}
-                      className="w-full max-w-md aspect-[16/10] rounded-xl border border-white/5 bg-[#171825]/45 hover:bg-[#1a1b2d]/65 shadow-2xl p-4 md:p-5 flex flex-col justify-center overflow-hidden relative group/mock"
+                      className="w-full max-w-md aspect-[16/10] rounded-xl border border-white/5 bg-[#171825]/45 hover:bg-[#1a1b2d]/65 shadow-2xl p-4 md:p-5 flex flex-col justify-center overflow-hidden relative group/mock ml-auto"
                     >
                       <div className="absolute inset-0 opacity-0 group-hover/mock:opacity-100 transition-opacity duration-700 pointer-events-none bg-gradient-to-br from-white/[0.005] to-white/[0.01]" />
                       <div className={`absolute -top-16 -right-16 h-36 w-36 rounded-full opacity-[0.03] group-hover/mock:opacity-[0.08] transition-opacity duration-700 blur-2xl pointer-events-none ${colors.bg}`} />
@@ -400,8 +400,8 @@ export default function Timeline() {
                 {/* 3. RIGHT COLUMN (Visual on even, Text on odd) */}
                 <div className={`col-span-1 md:col-span-5 flex flex-col justify-center ${
                   isEven 
-                    ? "md:order-3 md:pl-14 items-center justify-center" 
-                    : "md:order-3 md:pl-14 text-left items-start"
+                    ? "md:order-3 md:pl-4 items-start justify-center" 
+                    : "md:order-3 md:pl-10 text-left items-start"
                 }`}>
                   {isEven ? (
                     <motion.div 
@@ -409,7 +409,7 @@ export default function Timeline() {
                       whileInView={{ opacity: 1, x: 0, scale: 1 }}
                       viewport={{ once: true }}
                       transition={{ type: "spring", damping: 20 }}
-                      className="w-full max-w-md aspect-[16/10] rounded-xl border border-white/5 bg-[#171825]/45 hover:bg-[#1a1b2d]/65 shadow-2xl p-4 md:p-5 flex flex-col justify-center overflow-hidden relative group/mock"
+                      className="w-full max-w-md aspect-[16/10] rounded-xl border border-white/5 bg-[#171825]/45 hover:bg-[#1a1b2d]/65 shadow-2xl p-4 md:p-5 flex flex-col justify-center overflow-hidden relative group/mock mr-auto"
                     >
                       <div className="absolute inset-0 opacity-0 group-hover/mock:opacity-100 transition-opacity duration-700 pointer-events-none bg-gradient-to-br from-white/[0.005] to-white/[0.01]" />
                       <div className={`absolute -top-16 -right-16 h-36 w-36 rounded-full opacity-[0.03] group-hover/mock:opacity-[0.08] transition-opacity duration-700 blur-2xl pointer-events-none ${colors.bg}`} />
