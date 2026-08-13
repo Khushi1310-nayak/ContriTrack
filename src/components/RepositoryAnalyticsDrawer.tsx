@@ -93,37 +93,18 @@ export function RepositoryAnalyticsDrawer({
   useEffect(() => {
     let isMounted = true;
     if (isOpen && repoId) {
-      const initLoadAndAutoSync = async () => {
-        await Promise.resolve();
-        if (!isMounted) return;
-
-        // 1. Instant rendering with cached database telemetry
+      const initInstantLoad = async () => {
         setLoading(true);
+        setSyncing(false);
+        setError("");
         await loadDetails();
-
-        // 2. Immediately trigger background auto-sync for fresh GitHub issues, PR merges, workflow runs & commits
-        if (!isMounted) return;
-        setSyncing(true);
-        try {
-          const res = await triggerRepositorySync(repoId, userId);
-          if (isMounted && res.success) {
-            await loadDetails();
-            onSyncTriggered();
-          }
-        } catch (err) {
-          console.warn("Background telemetry auto-sync notice:", err);
-        } finally {
-          if (isMounted) {
-            setSyncing(false);
-          }
-        }
       };
-      void initLoadAndAutoSync();
+      void initInstantLoad();
     }
     return () => {
       isMounted = false;
     };
-  }, [isOpen, repoId, userId, loadDetails, onSyncTriggered]);
+  }, [isOpen, repoId, loadDetails]);
 
   const handleManualSync = async () => {
     setSyncing(true);

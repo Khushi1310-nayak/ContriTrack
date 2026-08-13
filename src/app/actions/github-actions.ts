@@ -360,12 +360,24 @@ export async function deleteRepository(repoId: string) {
     });
 
     if (!repo) {
-      return { success: false, error: "Repository not found." };
+      return { success: true };
     }
 
-    await prisma.gitHubRepository.delete({
-      where: { id: repoId }
-    });
+    // Safely delete all nested child models in a single atomic transaction to avoid foreign key errors
+    await prisma.$transaction([
+      prisma.task.updateMany({
+        where: { repositoryId: repoId },
+        data: { repositoryId: null }
+      }),
+      prisma.repositoryMember.deleteMany({ where: { repoId } }),
+      prisma.commit.deleteMany({ where: { repoId } }),
+      prisma.pullRequest.deleteMany({ where: { repoId } }),
+      prisma.issue.deleteMany({ where: { repoId } }),
+      prisma.contributionAnalytics.deleteMany({ where: { repoId } }),
+      prisma.contributionMetric.deleteMany({ where: { repositoryId: repoId } }),
+      prisma.repositorySyncLog.deleteMany({ where: { repoId } }),
+      prisma.gitHubRepository.delete({ where: { id: repoId } })
+    ]);
 
     return { success: true };
   } catch (error: unknown) {

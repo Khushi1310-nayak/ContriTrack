@@ -55,8 +55,13 @@ export function GitHubWaveTracker({
   onSyncCompleted,
   onSelectRepo
 }: GitHubWaveTrackerProps) {
+  const [localRepos, setLocalRepos] = useState<LinkedRepo[]>(repositories);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [syncError, setSyncError] = useState("");
+
+  React.useEffect(() => {
+    setLocalRepos(repositories);
+  }, [repositories]);
 
   const handleTriggerSync = async (e: React.MouseEvent, repoId: string) => {
     e.stopPropagation(); // Avoid triggering open drawer
@@ -79,34 +84,35 @@ export function GitHubWaveTracker({
 
   const handleDeleteRepo = async (e: React.MouseEvent, repoId: string, repoName: string) => {
     e.stopPropagation(); // Avoid triggering open drawer
-    if (!confirm(`Are you sure you want to completely delete "${repoName}" from TeamTrace and permanently purge all associated telemetry logs (commits, pull requests, issues, and analytics) from the database? This action is irreversible.`)) {
+    if (!confirm(`Are you sure you want to completely delete "${repoName}" from ContriTrack and permanently purge all associated telemetry logs? This action is irreversible.`)) {
       return;
     }
 
-    setSyncingId(repoId);
+    // INSTANT OPTIMISTIC UI REMOVAL: Remove immediately from screen with 0 delay
+    setLocalRepos((prev) => prev.filter((r) => r.id !== repoId));
     setSyncError("");
+
     try {
       const res = await deleteRepository(repoId);
       if (res.success) {
-        alert(`Successfully purged and unlinked "${repoName}"!`);
         onSyncCompleted();
       } else {
         setSyncError(res.error || "Failed to fully delete repository.");
+        setLocalRepos(repositories); // Revert on failure
       }
     } catch (err) {
       const error = err as Error;
       setSyncError(error.message || "Failed to trigger repository deletion.");
-    } finally {
-      setSyncingId(null);
+      setLocalRepos(repositories); // Revert on failure
     }
   };
 
   // Compute aggregate system telemetry metrics
-  const totalRepos = repositories.length;
+  const totalRepos = localRepos.length;
   const averageParity = totalRepos > 0 
-    ? Math.round(repositories.reduce((acc, r) => acc + (r.analytics[0]?.fairness || 100), 0) / totalRepos) 
+    ? Math.round(localRepos.reduce((acc, r) => acc + (r.analytics[0]?.fairness || 100), 0) / totalRepos) 
     : 100;
-  const latestRateRemaining = repositories.find((r) => r.rateLimit !== undefined)?.rateLimit ?? 4950;
+  const latestRateRemaining = localRepos.find((r) => r.rateLimit !== undefined)?.rateLimit ?? 4950;
 
   return (
     <div className="flex flex-col gap-6 text-left max-w-4xl w-full">
@@ -164,7 +170,7 @@ export function GitHubWaveTracker({
 
       {/* Repositories Card Grid */}
       <div className="flex flex-col gap-4">
-        {repositories.map((repo) => (
+        {localRepos.map((repo) => (
           <motion.div
             key={repo.id}
             onClick={() => onSelectRepo(repo)}
@@ -263,7 +269,7 @@ export function GitHubWaveTracker({
           </motion.div>
         ))}
 
-        {repositories.length === 0 && (
+        {localRepos.length === 0 && (
           <div className="py-12 border border-dashed border-white/5 rounded-3xl text-center flex flex-col items-center justify-center p-6 gap-3 bg-white/[0.01]">
             <Layers className="w-8 h-8 text-[#857C91]/65" />
             <span className="text-xs text-[#857C91] font-light">No connected GitHub repositories found in this workspace.</span>
