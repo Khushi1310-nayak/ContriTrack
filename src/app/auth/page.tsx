@@ -254,12 +254,12 @@ export default function AuthPage() {
     return () => clearInterval(pollInterval);
   }, [mode, checkEmailVerifiedStatus]);
 
-  // Navigate to Success state if already verified upon landing
+  // Navigate to Dashboard if already verified upon landing
   useEffect(() => {
     if (user && user.emailVerified && mode !== "success") {
-      router.push("/dashboard"); // Redirect directly to team dashboard workspace
+      window.location.href = "/dashboard";
     }
-  }, [user, mode, router]);
+  }, [user, mode]);
 
   // Trigger login workflow
   const onLoginSubmit = async (data: LoginInput) => {
@@ -273,7 +273,7 @@ export default function AuthPage() {
       if (currentUser && !currentUser.emailVerified) {
         setMode("verify");
       } else {
-        setMode("backup");
+        window.location.href = "/dashboard";
       }
     } catch (e: unknown) {
       console.error(e);

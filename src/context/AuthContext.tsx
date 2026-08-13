@@ -234,18 +234,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Listen to Authentication session changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
+      setLoading(false);
+
       if (firebaseUser) {
-        try {
-          await syncProfile(firebaseUser);
-        } catch (err) {
-          console.error("Firestore sync deferred at start", err);
-        }
+        void syncProfile(firebaseUser).catch((err) => {
+          console.warn("Background profile sync notice:", err);
+        });
       } else {
         setProfile(null);
       }
-      setLoading(false);
     });
 
     return unsubscribe;
