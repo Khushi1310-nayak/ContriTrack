@@ -257,7 +257,7 @@ export default function AuthPage() {
   // Navigate to Dashboard if already verified upon landing
   useEffect(() => {
     if (user && user.emailVerified && mode !== "success") {
-      window.location.href = "/dashboard";
+      window.location.assign("/dashboard");
     }
   }, [user, mode]);
 
@@ -273,7 +273,10 @@ export default function AuthPage() {
       if (currentUser && !currentUser.emailVerified) {
         setMode("verify");
       } else {
-        window.location.href = "/dashboard";
+        setMode("success");
+        setTimeout(() => {
+          window.location.assign("/dashboard");
+        }, 100);
       }
     } catch (e: unknown) {
       console.error(e);
