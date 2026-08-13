@@ -91,7 +91,6 @@ export function RepositoryAnalyticsDrawer({
   }, [repoId]);
 
   useEffect(() => {
-    let isMounted = true;
     if (isOpen && repoId) {
       const initInstantLoad = async () => {
         setLoading(true);
@@ -101,9 +100,6 @@ export function RepositoryAnalyticsDrawer({
       };
       void initInstantLoad();
     }
-    return () => {
-      isMounted = false;
-    };
   }, [isOpen, repoId, loadDetails]);
 
   const handleManualSync = async () => {

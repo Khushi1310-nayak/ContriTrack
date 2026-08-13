@@ -55,13 +55,16 @@ export function GitHubWaveTracker({
   onSyncCompleted,
   onSelectRepo
 }: GitHubWaveTrackerProps) {
+  const [prevRepositories, setPrevRepositories] = useState(repositories);
   const [localRepos, setLocalRepos] = useState<LinkedRepo[]>(repositories);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [syncError, setSyncError] = useState("");
 
-  React.useEffect(() => {
+  // Sync state during render if props change to prevent cascading render warnings
+  if (repositories !== prevRepositories) {
+    setPrevRepositories(repositories);
     setLocalRepos(repositories);
-  }, [repositories]);
+  }
 
   const handleTriggerSync = async (e: React.MouseEvent, repoId: string) => {
     e.stopPropagation(); // Avoid triggering open drawer
