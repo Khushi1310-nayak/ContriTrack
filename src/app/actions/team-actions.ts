@@ -49,7 +49,7 @@ export async function fetchUserWorkspaces(userId: string) {
     const rawWorkspaces = memberships.map((m: { workspace: Workspace }) => m.workspace);
 
     // Apply dynamic 5-minute lazy-rotation check & update
-    let workspaces = await Promise.all(
+    const workspaces = await Promise.all(
       rawWorkspaces.map(async (ws) => {
         return await rotateInviteCodeIfExpired(ws);
       })
