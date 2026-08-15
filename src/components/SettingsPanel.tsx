@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { 
   fetchUserProfileAndSecurity,
+  syncUserProfileWithPostgres,
   updateUserProfile,
   updateUserSecurity,
   fetchUserActivityLogs,
@@ -160,9 +161,17 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
     if (!userId) return;
     setLoading(true);
     try {
-      const res = await fetchUserProfileAndSecurity(userId);
+      let res = await fetchUserProfileAndSecurity(userId);
+      if ((!res.success || !res.profile) && user?.email) {
+        await syncUserProfileWithPostgres(userId, {
+          fullName: user.displayName || "User",
+          email: user.email
+        });
+        res = await fetchUserProfileAndSecurity(userId);
+      }
+
       if (res.success && res.profile) {
-        setFullName(res.profile.fullName || "");
+        setFullName(res.profile.fullName || user?.displayName || "");
         setDisplayName(res.profile.displayName || "");
         setBio(res.profile.bio || "");
         setUniversity(res.profile.university || "");

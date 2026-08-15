@@ -268,20 +268,47 @@ export async function syncUserProfileWithPostgres(
  */
 export async function fetchUserProfileAndSecurity(userId: string) {
   try {
-    const profile = await prisma.userProfile.findUnique({
+    let profile = await prisma.userProfile.findUnique({
       where: { userId }
     });
 
-    const security = await prisma.userSecurity.findUnique({
+    let security = await prisma.userSecurity.findUnique({
       where: { userId }
     });
 
-    // If they do not exist yet, attempt to synchronize empty registers
+    // If profile is missing by userId, attempt auto-healing lookup by base user model or email
     if (!profile && userId) {
-      return {
-        success: false,
-        error: "User identity does not exist in live PostgreSQL. Run synchronization first."
-      };
+      const baseUser = await prisma.user.findUnique({ where: { id: userId } });
+      if (baseUser) {
+        profile = await prisma.userProfile.upsert({
+          where: { email: baseUser.email },
+          update: { userId },
+          create: {
+            userId,
+            fullName: baseUser.fullName || "User",
+            displayName: baseUser.displayName || "",
+            email: baseUser.email,
+            university: baseUser.university || "",
+            degree: "",
+            userType: "Student",
+            roleInContriTrack: "Student",
+            bio: "",
+            githubUsername: baseUser.githubUsername || "",
+            linkedinUrl: ""
+          }
+        });
+      }
+    }
+
+    if (!security && userId) {
+      security = await prisma.userSecurity.upsert({
+        where: { userId },
+        update: {},
+        create: {
+          userId,
+          twoFactorEnabled: false
+        }
+      });
     }
 
     return { success: true, profile, security };
@@ -296,53 +323,125 @@ export async function fetchUserProfileAndSecurity(userId: string) {
  */
 export async function updateUserProfile(userId: string, data: ProfileInput) {
   try {
-    const updated = await prisma.userProfile.update({
-      where: { userId },
-      data: {
-        fullName: data.fullName,
-        displayName: data.displayName,
-        phoneNumber: data.phoneNumber,
-        university: data.university,
-        degree: data.degree,
-        userType: data.userType,
-        roleInContriTrack: data.roleInContriTrack,
-        bio: data.bio,
-        avatarUrl: data.avatarUrl,
-        githubUsername: data.githubUsername,
-        linkedinUrl: data.linkedinUrl
+    // 1. Fetch existing profile or base user to get email for safe upserting
+    let userEmail = "";
+    const existingProfile = await prisma.userProfile.findUnique({ where: { userId } });
+    if (existingProfile) {
+      userEmail = existingProfile.email;
+    } else {
+      const baseUser = await prisma.user.findUnique({ where: { id: userId } });
+      if (baseUser) {
+        userEmail = baseUser.email;
       }
-    });
+    }
 
-    // Sync updates to the base User model using email to prevent ID mismatch from Firebase re-registrations
-    await prisma.user.update({
-      where: { email: updated.email },
-      data: {
-        fullName: data.fullName,
-        displayName: data.displayName,
-        university: data.university || null,
-        githubUsername: data.githubUsername || null
-      }
-    });
+    // 2. Perform safe upsert using email or userId to guarantee zero P2025 errors
+    const updated = userEmail
+      ? await prisma.userProfile.upsert({
+          where: { email: userEmail },
+          update: {
+            userId,
+            fullName: data.fullName,
+            displayName: data.displayName,
+            phoneNumber: data.phoneNumber,
+            university: data.university,
+            degree: data.degree,
+            userType: data.userType,
+            roleInContriTrack: data.roleInContriTrack,
+            bio: data.bio,
+            avatarUrl: data.avatarUrl,
+            githubUsername: data.githubUsername,
+            linkedinUrl: data.linkedinUrl
+          },
+          create: {
+            userId,
+            email: userEmail,
+            fullName: data.fullName,
+            displayName: data.displayName || "",
+            phoneNumber: data.phoneNumber || null,
+            university: data.university || null,
+            degree: data.degree || null,
+            userType: data.userType || "Student",
+            roleInContriTrack: data.roleInContriTrack || "Student",
+            bio: data.bio || null,
+            avatarUrl: data.avatarUrl || null,
+            githubUsername: data.githubUsername || null,
+            linkedinUrl: data.linkedinUrl || null
+          }
+        })
+      : await prisma.userProfile.upsert({
+          where: { userId },
+          update: {
+            fullName: data.fullName,
+            displayName: data.displayName,
+            phoneNumber: data.phoneNumber,
+            university: data.university,
+            degree: data.degree,
+            userType: data.userType,
+            roleInContriTrack: data.roleInContriTrack,
+            bio: data.bio,
+            avatarUrl: data.avatarUrl,
+            githubUsername: data.githubUsername,
+            linkedinUrl: data.linkedinUrl
+          },
+          create: {
+            userId,
+            email: `user_${userId.substring(0, 8)}@contritrack.app`,
+            fullName: data.fullName,
+            displayName: data.displayName || "",
+            phoneNumber: data.phoneNumber || null,
+            university: data.university || null,
+            degree: data.degree || null,
+            userType: data.userType || "Student",
+            roleInContriTrack: data.roleInContriTrack || "Student",
+            bio: data.bio || null,
+            avatarUrl: data.avatarUrl || null,
+            githubUsername: data.githubUsername || null,
+            linkedinUrl: data.linkedinUrl || null
+          }
+        });
 
-    // Sync updates to all WorkspaceMember records for this user to avoid stale member metadata
+    // Sync updates to base User model
+    if (updated.email) {
+      await prisma.user.upsert({
+        where: { email: updated.email },
+        update: {
+          fullName: data.fullName,
+          displayName: data.displayName,
+          university: data.university || null,
+          githubUsername: data.githubUsername || null
+        },
+        create: {
+          id: userId,
+          fullName: data.fullName,
+          displayName: data.displayName || "",
+          email: updated.email,
+          university: data.university || null,
+          githubUsername: data.githubUsername || null,
+          status: "ACTIVE"
+        }
+      }).catch(() => {});
+    }
+
+    // Sync updates to all WorkspaceMember records for this user
     await prisma.workspaceMember.updateMany({
       where: { userId },
       data: {
         githubUsername: data.githubUsername || null,
         avatarUrl: data.avatarUrl || null
       }
-    });
+    }).catch(() => {});
 
-    // Sync updates to all NotificationReply records sent by this user to keep names current
+    // Sync updates to NotificationReply records
     await prisma.notificationReply.updateMany({
       where: { senderId: userId },
       data: {
         senderName: data.fullName
       }
-    });
+    }).catch(() => {});
 
     // Audit logs
-    await recordUserActivityLog(userId, "settings_update");
+    await recordUserActivityLog(userId, "settings_update").catch(() => {});
 
     return { success: true, profile: updated };
   } catch (error) {
@@ -464,9 +563,9 @@ export async function restoreUserDataBackup(userId: string, backupId: string) {
 
     // 2. Re-establish profile settings in PostgreSQL
     if (payload.profile) {
-      await prisma.userProfile.update({
+      await prisma.userProfile.upsert({
         where: { userId },
-        data: {
+        update: {
           fullName: payload.profile.fullName || "",
           displayName: payload.profile.displayName || null,
           phoneNumber: payload.profile.phoneNumber || null,
@@ -474,6 +573,21 @@ export async function restoreUserDataBackup(userId: string, backupId: string) {
           degree: payload.profile.degree || null,
           userType: payload.profile.userType || null,
           roleInContriTrack: payload.profile.roleInContriTrack || null,
+          bio: payload.profile.bio || null,
+          avatarUrl: payload.profile.avatarUrl || null,
+          githubUsername: payload.profile.githubUsername || null,
+          linkedinUrl: payload.profile.linkedinUrl || null
+        },
+        create: {
+          userId,
+          email: payload.profile.email || `user_${userId.substring(0, 8)}@contritrack.app`,
+          fullName: payload.profile.fullName || "User",
+          displayName: payload.profile.displayName || "",
+          phoneNumber: payload.profile.phoneNumber || null,
+          university: payload.profile.university || null,
+          degree: payload.profile.degree || null,
+          userType: payload.profile.userType || "Student",
+          roleInContriTrack: payload.profile.roleInContriTrack || "Student",
           bio: payload.profile.bio || null,
           avatarUrl: payload.profile.avatarUrl || null,
           githubUsername: payload.profile.githubUsername || null,
