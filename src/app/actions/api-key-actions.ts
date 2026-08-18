@@ -213,7 +213,17 @@ export async function validateApiKey(
 
     // Permission validations
     const permissions: string[] = Array.isArray(key.permissions) ? key.permissions : [];
-    if (!permissions.includes(requiredPermission) && !permissions.includes("admin")) {
+    const hasPermission = 
+      permissions.includes("admin") ||
+      permissions.includes(requiredPermission) ||
+      permissions.some(p => 
+        p === requiredPermission || 
+        p.startsWith(requiredPermission + ":") || 
+        (requiredPermission === "read" && p.startsWith("read")) ||
+        (requiredPermission === "write" && p.startsWith("write"))
+      );
+
+    if (!hasPermission) {
       return { valid: false, error: `Unauthorized. Key requires permission: ${requiredPermission}` };
     }
 
