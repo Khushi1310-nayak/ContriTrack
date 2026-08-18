@@ -36,7 +36,7 @@ To prevent duplicate work, **please do not start coding until a maintainer has o
 
 ## 💻 Local Development Setup
 
-ContriTrack is built with **Next.js 16**, **TypeScript**, **Tailwind CSS v4**, **Prisma**, **Supabase**, **Firebase**, and **OpenRouter**. Follow these steps to run the app locally.
+ContriTrack is built with **Next.js 15**, **TypeScript**, **Tailwind CSS**, **Prisma**, **Supabase**, **Firebase**, and **OpenRouter**. Follow these steps to run the app locally.
 
 ### Prerequisites
 - Node.js (v20+ recommended)
