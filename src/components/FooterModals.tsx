@@ -57,8 +57,8 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  // Accordion state for Terms of Service
-  const [activeAccordion, setActiveAccordion] = useState<number | null>(0);
+  // Accordion state for Terms of Service (keyed by item ID)
+  const [activeAccordion, setActiveAccordion] = useState<string | null>("fair-use");
   const [privacyCategory, setPrivacyCategory] = useState<string>("all");
   const [termsCategory, setTermsCategory] = useState<string>("all");
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState<boolean>(false);
@@ -71,8 +71,8 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
     router.push("/auth?mode=signup");
   };
 
-  const toggleAccordion = (idx: number) => {
-    setActiveAccordion(activeAccordion === idx ? null : idx);
+  const toggleAccordion = (id: string) => {
+    setActiveAccordion(activeAccordion === id ? null : id);
   };
 
   const renderModalContent = () => {
@@ -679,9 +679,9 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
           : privacyCards.filter(c => c.category === privacyCategory);
 
         return (
-          <div className="flex flex-col gap-6 text-left">
-            {/* Header */}
-            <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-5 text-left">
+            {/* Header with right padding to prevent collision with absolute close button */}
+            <div className="flex flex-col gap-2 pr-10 md:pr-12">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -689,15 +689,15 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
                     Cryptographic Privacy & GDPR Compliance
                   </span>
                 </div>
-                <span className="text-[9px] font-mono px-2.5 py-0.5 rounded-full bg-white/[0.04] border border-white/10 text-[#8e94a0]">
+                <span className="text-[9.5px] font-mono font-medium px-2.5 py-0.5 rounded-full bg-[#F2C1A3]/10 border border-[#F2C1A3]/25 text-[#F2C1A3]">
                   v1.3.0 Verified • August 2026
                 </span>
               </div>
 
-              <h2 className="text-2xl md:text-4xl font-light text-white font-serif tracking-tight leading-tight">
+              <h2 className="text-2xl md:text-3xl font-light text-white font-serif tracking-tight leading-tight">
                 Privacy & Data <span className="text-[#F2C1A3] italic">Sovereignty</span>
               </h2>
-              <p className="text-[#8e94a0] text-xs md:text-sm font-light leading-relaxed">
+              <p className="text-slate-300 text-xs md:text-[13px] font-normal leading-relaxed">
                 Academic data integrity and trust are the foundations of ContriTrack. We implement structural protocols, forensic erasure pipelines, and zero-training AI guardrails to keep your work securely yours.
               </p>
             </div>
@@ -716,7 +716,7 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
                   className={`px-3 py-1.5 rounded-xl text-[10px] font-mono transition tracking-wider uppercase cursor-pointer shrink-0 ${
                     privacyCategory === tab.id
                       ? "bg-[#F2C1A3] text-[#12131e] font-bold shadow-lg shadow-[#F2C1A3]/20"
-                      : "bg-white/[0.02] text-[#8e94a0] hover:text-white hover:bg-white/[0.05] border border-white/5"
+                      : "bg-white/[0.03] text-[#8e94a0] hover:text-white hover:bg-white/[0.06] border border-white/5"
                   }`}
                 >
                   {tab.label}
@@ -727,7 +727,7 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
             {/* Privacy Feature Grid */}
             <motion.div 
               layout
-              className="grid grid-cols-1 md:grid-cols-2 gap-3.5 max-h-[50vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent hover:scrollbar-thumb-[#F2C1A3]/30"
+              className="grid grid-cols-1 md:grid-cols-2 gap-3.5 max-h-[52vh] overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-white/15 scrollbar-track-transparent hover:scrollbar-thumb-[#F2C1A3]/30"
             >
               {filteredCards.map((card) => {
                 const Icon = card.icon;
@@ -739,22 +739,22 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
                     exit={{ opacity: 0, y: 8 }}
                     transition={{ duration: 0.2 }}
                     key={card.id}
-                    className={`p-4 rounded-2xl bg-white/[0.015] border border-white/10 ${card.borderGlow} transition-all duration-300 flex flex-col gap-2.5 group cursor-default shadow-sm hover:shadow-[0_0_25px_rgba(242,193,163,0.06)]`}
+                    className={`p-4 rounded-2xl bg-white/[0.02] border border-white/10 ${card.borderGlow} transition-all duration-300 flex flex-col gap-2.5 group cursor-default shadow-sm hover:shadow-[0_0_25px_rgba(242,193,163,0.06)]`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="p-2 rounded-xl bg-black/40 border border-white/10 text-white shrink-0 group-hover:scale-105 transition-transform duration-300">
+                      <div className="p-2 rounded-xl bg-black/50 border border-white/10 text-white shrink-0 group-hover:scale-105 transition-transform duration-300">
                         <Icon size={15} className={card.color} />
                       </div>
-                      <span className="text-[8px] font-mono px-2 py-0.5 rounded-md bg-white/[0.03] border border-white/10 text-[#8e94a0] font-medium group-hover:text-white transition">
+                      <span className="text-[8.5px] font-mono px-2 py-0.5 rounded-md bg-[#F2C1A3]/10 border border-[#F2C1A3]/20 text-[#F2C1A3] font-semibold">
                         {card.badge}
                       </span>
                     </div>
 
                     <div className="flex flex-col gap-1">
-                      <span className="text-white text-xs font-semibold tracking-tight group-hover:text-[#F2C1A3] transition">
+                      <span className="text-white text-xs md:text-[13px] font-semibold tracking-tight group-hover:text-[#F2C1A3] transition">
                         {card.title}
                       </span>
-                      <span className="text-[#8e94a0] text-[11px] font-light leading-relaxed">
+                      <span className="text-slate-300 text-[11.5px] md:text-xs font-normal leading-relaxed">
                         {card.desc}
                       </span>
                     </div>
@@ -764,14 +764,14 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
             </motion.div>
 
             {/* Footer Summary */}
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-3 border-t border-white/5 text-xs text-[#8e94a0] font-light">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-3 border-t border-white/5 text-xs text-slate-300 font-normal">
               <div className="flex items-center gap-2">
-                <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
-                <span className="text-[11px]">Your code, credentials, and telemetry always belong to you.</span>
+                <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+                <span className="text-[11px] text-slate-300">Your code, credentials, and telemetry always belong to you.</span>
               </div>
               <button 
                 onClick={onClose}
-                className="w-full sm:w-auto px-6 py-2 rounded-full bg-gradient-to-r from-[#F2C1A3] to-[#F8CCAA] hover:opacity-90 text-[#12131e] text-xs font-bold uppercase tracking-wider transition duration-300 shadow-md cursor-pointer"
+                className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-gradient-to-r from-[#F2C1A3] to-[#F8CCAA] hover:opacity-90 text-[#12131e] text-xs font-bold uppercase tracking-wider transition duration-300 shadow-md cursor-pointer"
               >
                 Acknowledge & Close
               </button>
@@ -831,9 +831,9 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
           : termsItems.filter(t => t.category === termsCategory);
 
         return (
-          <div className="flex flex-col gap-6 text-left">
-            {/* Header */}
-            <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-5 text-left">
+            {/* Header with right padding to prevent collision with absolute close button */}
+            <div className="flex flex-col gap-2 pr-10 md:pr-12">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-[#F8CCAA] animate-pulse" />
@@ -841,15 +841,15 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
                     Platform Governance & Usage Terms
                   </span>
                 </div>
-                <span className="text-[9px] font-mono px-2.5 py-0.5 rounded-full bg-white/[0.04] border border-white/10 text-[#8e94a0]">
+                <span className="text-[9.5px] font-mono font-medium px-2.5 py-0.5 rounded-full bg-[#F8CCAA]/10 border border-[#F8CCAA]/25 text-[#F8CCAA]">
                   Effective: August 2026
                 </span>
               </div>
 
-              <h2 className="text-2xl md:text-4xl font-light text-white font-serif tracking-tight leading-tight">
+              <h2 className="text-2xl md:text-3xl font-light text-white font-serif tracking-tight leading-tight">
                 Terms of <span className="text-[#F8CCAA] italic">Service</span> & Governance
               </h2>
-              <p className="text-[#8e94a0] text-xs md:text-sm font-light leading-relaxed">
+              <p className="text-slate-300 text-xs md:text-[13px] font-normal leading-relaxed">
                 Please review our platform operating guidelines to maintain an honest, high-trust, and transparent academic productivity ecosystem.
               </p>
             </div>
@@ -868,7 +868,7 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
                   className={`px-3 py-1.5 rounded-xl text-[10px] font-mono transition tracking-wider uppercase cursor-pointer shrink-0 ${
                     termsCategory === tab.id
                       ? "bg-[#F8CCAA] text-[#12131e] font-bold shadow-lg shadow-[#F8CCAA]/20"
-                      : "bg-white/[0.02] text-[#8e94a0] hover:text-white hover:bg-white/[0.05] border border-white/5"
+                      : "bg-white/[0.03] text-[#8e94a0] hover:text-white hover:bg-white/[0.06] border border-white/5"
                   }`}
                 >
                   {tab.label}
@@ -877,36 +877,36 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
             </div>
 
             {/* Interactive Accordion List */}
-            <div className="flex flex-col gap-2.5 max-h-[50vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent hover:scrollbar-thumb-[#F8CCAA]/30">
-              {filteredTerms.map((item, idx) => {
-                const isOpen = activeAccordion === idx;
+            <div className="flex flex-col gap-3 max-h-[52vh] overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-white/15 scrollbar-track-transparent hover:scrollbar-thumb-[#F8CCAA]/30">
+              {filteredTerms.map((item) => {
+                const isOpen = activeAccordion === item.id;
                 return (
-                  <motion.div 
-                    layout
+                  <div 
                     key={item.id}
                     className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
                       isOpen 
-                        ? "bg-[#0e1017] border-[#F8CCAA]/30 shadow-[0_0_20px_rgba(248,204,170,0.05)]" 
-                        : "bg-white/[0.015] border-white/10 hover:border-white/20"
+                        ? "bg-[#0e1017] border-[#F8CCAA]/40 shadow-[0_4px_25px_rgba(0,0,0,0.6)]" 
+                        : "bg-white/[0.02] border-white/10 hover:border-white/20"
                     }`}
                   >
                     <button
-                      onClick={() => toggleAccordion(idx)}
-                      className="w-full px-4 py-3.5 flex items-center justify-between text-left transition duration-300 cursor-pointer group"
+                      type="button"
+                      onClick={() => toggleAccordion(item.id)}
+                      className="w-full px-4.5 py-3.5 flex items-center justify-between text-left transition duration-300 cursor-pointer group"
                     >
                       <div className="flex items-center gap-2.5 truncate pr-2">
-                        <span className="text-white text-xs font-semibold group-hover:text-[#F8CCAA] transition truncate">
+                        <span className="text-white text-xs md:text-[13px] font-semibold group-hover:text-[#F8CCAA] transition">
                           {item.title}
                         </span>
-                        <span className="text-[8px] font-mono px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/10 text-[#8e94a0] shrink-0 hidden sm:inline">
+                        <span className="text-[9px] font-mono font-semibold px-2 py-0.5 rounded-md bg-[#F8CCAA]/10 border border-[#F8CCAA]/25 text-[#F8CCAA] shrink-0 hidden sm:inline">
                           {item.badge}
                         </span>
                       </div>
-                      <div className="p-1 rounded-lg bg-white/[0.03] text-white shrink-0 group-hover:bg-[#F8CCAA]/15 transition">
+                      <div className="p-1.5 rounded-lg bg-white/[0.04] text-white shrink-0 group-hover:bg-[#F8CCAA]/20 transition">
                         {isOpen ? (
-                          <ChevronUp size={13} className="text-[#F8CCAA]" />
+                          <ChevronUp size={14} className="text-[#F8CCAA]" />
                         ) : (
-                          <ChevronDown size={13} className="text-[#8e94a0] group-hover:text-white" />
+                          <ChevronDown size={14} className="text-slate-400 group-hover:text-white" />
                         )}
                       </div>
                     </button>
@@ -919,22 +919,22 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
                           exit={{ height: 0, opacity: 0 }}
                           transition={{ duration: 0.25, ease: "easeInOut" }}
                         >
-                          <div className="px-4 pb-4 pt-1 text-[11.5px] text-[#8e94a0] leading-relaxed font-light border-t border-white/[0.04]">
+                          <div className="px-4.5 pb-4.5 pt-2 text-xs md:text-[13px] text-slate-200 leading-relaxed font-normal border-t border-white/[0.06]">
                             {item.content}
                           </div>
                         </motion.div>
                       )}
                     </AnimatePresence>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
 
             {/* Footer Action Bar */}
             <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-3 border-t border-white/5">
-              <div className="flex items-center gap-2 text-[11px] text-[#8e94a0] font-light">
-                <ShieldCheck size={14} className="text-[#F8CCAA] shrink-0" />
-                <span>By continuing, you agree to maintain honest academic accountability.</span>
+              <div className="flex items-center gap-2 text-xs text-slate-300 font-normal">
+                <ShieldCheck size={15} className="text-[#F8CCAA] shrink-0" />
+                <span className="text-[11px] text-slate-300">By continuing, you agree to maintain honest academic accountability.</span>
               </div>
               
               <button 
@@ -945,7 +945,7 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
                     setHasAcceptedTerms(false);
                   }, 600);
                 }}
-                className={`w-full sm:w-auto px-6 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`w-full sm:w-auto px-6 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer flex items-center justify-center gap-1.5 ${
                   hasAcceptedTerms 
                     ? "bg-emerald-500 text-black shadow-emerald-500/20 scale-95" 
                     : "bg-gradient-to-r from-[#F8CCAA] to-[#F2C1A3] hover:opacity-90 text-[#12131e]"
@@ -953,7 +953,7 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
               >
                 {hasAcceptedTerms ? (
                   <>
-                    <Check size={13} className="text-black" />
+                    <Check size={14} className="text-black" />
                     <span>Terms Accepted</span>
                   </>
                 ) : (
