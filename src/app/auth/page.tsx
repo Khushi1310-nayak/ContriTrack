@@ -37,7 +37,7 @@ import {
   ForgotPasswordInput 
 } from "@/lib/validations";
 
-type AuthMode = "login" | "signup" | "forgot" | "verify" | "success" | "backup";
+type AuthMode = "login" | "signup" | "forgot" | "verify" | "success" | "backup" | "forgot_sent";
 
 export default function AuthPage() {
   const { 
@@ -337,7 +337,7 @@ export default function AuthPage() {
     setAuthError(null);
     try {
       await resetPassword(data.email);
-      setMode("success");
+      setMode("forgot_sent");
     } catch (e: unknown) {
       console.error(e);
       const err = e as { code?: string; message?: string };
@@ -702,6 +702,22 @@ export default function AuthPage() {
                   </h3>
                   <p className="text-sm font-sans text-[#857C91] tracking-wide">
                     We will send recovery instructions to your email
+                  </p>
+                </motion.div>
+              )}
+              {mode === "forgot_sent" && (
+                <motion.div
+                  key="forgot-sent-title"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <h3 className="text-2xl font-serif text-[#F8CCAA] tracking-wide mb-1">
+                    Reset Link Dispatched
+                  </h3>
+                  <p className="text-sm font-sans text-[#857C91] tracking-wide">
+                    Check your inbox to establish a new password
                   </p>
                 </motion.div>
               )}
@@ -1269,6 +1285,47 @@ export default function AuthPage() {
                     </button>
                   </div>
                 </motion.form>
+              )}
+
+              {/* ==============================
+                  FORGOT PASSWORD SENT PANEL
+                  ============================== */}
+              {mode === "forgot_sent" && (
+                <motion.div
+                  key="forgot-sent-panel"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.4 }}
+                  className="space-y-8 text-center py-6"
+                >
+                  <div className="relative flex items-center justify-center py-6">
+                    <div className="absolute w-24 h-24 rounded-full bg-[#CD9FA0]/15 blur-xl animate-pulse" />
+                    <div className="w-20 h-20 rounded-2xl border border-[#CD9FA0]/30 bg-gradient-to-br from-[#525871]/40 to-[#161725]/85 flex items-center justify-center shadow-2xl backdrop-blur-md">
+                      <Mail className="w-8 h-8 text-[#F2C1A3]" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 max-w-sm mx-auto">
+                    <h4 className="text-lg font-serif text-[#F8CCAA] tracking-wide">
+                      Password Reset Instructions Sent
+                    </h4>
+                    <p className="text-xs font-sans text-[#857C91] leading-relaxed tracking-wide">
+                      We have transmitted a secure password reset link to your email. Please check your inbox (and spam folder) to reset your credentials.
+                    </p>
+                  </div>
+
+                  <div className="pt-4">
+                    <button
+                      type="button"
+                      onClick={() => switchMode("login")}
+                      className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-serif text-xs tracking-wider uppercase font-semibold text-white bg-gradient-to-r from-[#CD9FA0] via-[#F2C1A3] to-[#F8CCAA] shadow-xl shadow-[#CD9FA0]/10 hover:opacity-95 transition-all"
+                    >
+                      <span>Return to Log In</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </motion.div>
               )}
 
               {/* ==============================

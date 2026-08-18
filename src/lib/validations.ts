@@ -11,7 +11,7 @@ export const SignUpSchema = z.object({
   fullName: z
     .string()
     .min(3, "Full name must be at least 3 characters.")
-    .regex(/^[a-zA-Z\s]*$/, "Full name cannot contain special characters or digits."),
+    .regex(/^[a-zA-Z\u00C0-\u024F\s'\-\.]*$/, "Full name contains invalid characters."),
   email: z.string().email("Please enter a valid email address."),
   university: z.string().min(1, "University name is required."),
   githubUsername: z.string().min(1, "GitHub username is required."),

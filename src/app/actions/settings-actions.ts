@@ -125,28 +125,57 @@ export async function syncUserProfileWithPostgres(
       };
     }
 
-    // Ensure the base User record exists and has status = "ACTIVE"
-    await prisma.user.upsert({
-      where: { email: data.email },
-      update: {
-        fullName: data.fullName,
-        displayName: data.displayName || undefined,
-        university: data.university || undefined,
-        githubUsername: data.githubUsername || undefined,
-        status: "ACTIVE",
-        deletedAt: null,
-        restorableUntil: null
-      },
-      create: {
-        id: userId,
-        fullName: data.fullName,
-        displayName: data.displayName || "",
-        email: data.email,
-        university: data.university || "",
-        githubUsername: data.githubUsername || "",
-        status: "ACTIVE"
-      }
+    // Ensure the base User record exists and matches the active Firebase UID
+    const existingUser = await prisma.user.findUnique({
+      where: { email: data.email }
     });
+
+    if (existingUser) {
+      if (existingUser.id !== userId) {
+        // Account was re-registered or re-created with a new Firebase UID: delete orphaned/stale record first
+        try {
+          await prisma.user.delete({ where: { id: existingUser.id } });
+        } catch {
+          // If cascade delete is handled
+        }
+        await prisma.user.create({
+          data: {
+            id: userId,
+            fullName: data.fullName,
+            displayName: data.displayName || "",
+            email: data.email,
+            university: data.university || "",
+            githubUsername: data.githubUsername || "",
+            status: "ACTIVE"
+          }
+        });
+      } else {
+        await prisma.user.update({
+          where: { id: userId },
+          data: {
+            fullName: data.fullName,
+            displayName: data.displayName || undefined,
+            university: data.university || undefined,
+            githubUsername: data.githubUsername || undefined,
+            status: "ACTIVE",
+            deletedAt: null,
+            restorableUntil: null
+          }
+        });
+      }
+    } else {
+      await prisma.user.create({
+        data: {
+          id: userId,
+          fullName: data.fullName,
+          displayName: data.displayName || "",
+          email: data.email,
+          university: data.university || "",
+          githubUsername: data.githubUsername || "",
+          status: "ACTIVE"
+        }
+      });
+    }
 
     // Find if the user already had a profile under this email (e.g., from another Auth provider)
     const existingProfile = await prisma.userProfile.findUnique({ where: { email: data.email } });
