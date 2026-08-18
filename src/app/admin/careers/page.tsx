@@ -210,7 +210,12 @@ export default function AdminCareersPage() {
   const isAuthorized = useMemo(() => {
     if (devBypass) return true;
     if (!profile) return false;
-    return profile.email === "khushinayak127@gmail.com";
+    const adminEmails = [
+      "khushinayak127@gmail.com",
+      "manisanayak456@gmail.com",
+      process.env.NEXT_PUBLIC_ADMIN_EMAIL
+    ].filter(Boolean);
+    return adminEmails.includes(profile.email) || profile.roleInContriTrack === "Administrator" || profile.userType === "Administrator";
   }, [profile, devBypass]);
 
   // Extract unique roles dynamically from database and applications
@@ -484,7 +489,7 @@ Report generated: ${new Date().toLocaleString()}
               Admin Recruitment Auth
             </h2>
             <p className="text-xs text-[#8e94a0] leading-relaxed mt-2">
-              The ATS platform is locked to coordinators matching credentials: <code className="text-white">khushinayak127@gmail.com</code>.
+              The ATS recruitment platform is restricted to ContriTrack administrators.
             </p>
           </div>
 
