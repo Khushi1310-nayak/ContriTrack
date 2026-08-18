@@ -19,11 +19,13 @@ import {
   ChevronUp, 
   Key, 
   Database, 
-  Sparkles 
+  Sparkles,
+  Trash2,
+  ShieldCheck,
+  CheckCircle2
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ContactModal from "./ContactModal";
-import { ShieldCheck } from "lucide-react";
 import ApiModalContent from "./ApiModalContent";
 
 interface FooterModalsProps {
@@ -56,7 +58,10 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
   }, [onClose]);
 
   // Accordion state for Terms of Service
-  const [activeAccordion, setActiveAccordion] = useState<number | null>(null);
+  const [activeAccordion, setActiveAccordion] = useState<number | null>(0);
+  const [privacyCategory, setPrivacyCategory] = useState<string>("all");
+  const [termsCategory, setTermsCategory] = useState<string>("all");
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState<boolean>(false);
 
   const router = useRouter();
   const [isContactOpen, setIsContactOpen] = useState(false);
@@ -605,127 +610,305 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
           </div>
         );
 
-      case "privacy":
-        return (
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-2">
-              <span className="text-xs uppercase tracking-widest text-[#F2C1A3] font-light">Security</span>
-              <h2 className="text-2xl md:text-4xl font-light text-white font-serif tracking-tight leading-tight">
-                Privacy <span className="text-[#F2C1A3] italic">First</span> Philosophy
-              </h2>
-            </div>
-            
-            <p className="text-[#857C91] text-sm font-light text-left leading-relaxed">
-              Academic data integrity and trust are the foundations of ContriTrack. We implement structural protocols to keep your work securely yours.
-            </p>
+      case "privacy": {
+        const privacyCards = [
+          {
+            id: "gdpr-erasure",
+            category: "gdpr",
+            icon: Trash2,
+            badge: "GDPR Right to be Forgotten",
+            title: "Forensic 20-Table Cascade Deletion",
+            desc: "When an account is deleted by a user or administrator, ContriTrack permanently executes an atomic multi-table purge across all 20 relational database entities (Profiles, Workspaces, Deliverables, Telemetry Logs, AI Insights, API Keys) and purges the Firebase Auth UID. Zero hidden trace retention.",
+            color: "text-[#F2C1A3]",
+            borderGlow: "hover:border-[#F2C1A3]/40"
+          },
+          {
+            id: "api-security",
+            category: "security",
+            icon: Key,
+            badge: "Cryptographic Storage",
+            title: "SHA-256 Developer Token Hashing",
+            desc: "Live developer bearer credentials (ct_live_...) are irreversibly hashed using salted SHA-256 before storage in PostgreSQL. Raw secret keys are never visible to administrators, never written to server logs, and cannot be decrypted.",
+            color: "text-[#F8CCAA]",
+            borderGlow: "hover:border-[#F8CCAA]/40"
+          },
+          {
+            id: "ai-privacy",
+            category: "ai",
+            icon: Sparkles,
+            badge: "Zero AI Model Training",
+            title: "AI Collaboration Guardrails",
+            desc: "OpenRouter AI integration processes high-level velocity numbers and stress metrics only. Private GitHub repositories, confidential file trees, and student source codes are strictly excluded from LLM context and never used to train public AI models.",
+            color: "text-[#CD9FA0]",
+            borderGlow: "hover:border-[#CD9FA0]/40"
+          },
+          {
+            id: "data-vault",
+            category: "gdpr",
+            icon: Database,
+            badge: "Data Portability",
+            title: "Encrypted JSON Settings Vault Export",
+            desc: "Academic and project ownership belongs exclusively to the student. Users can generate an encrypted, self-contained JSON data archive directly from the Settings Vault containing all tasks, telemetry scores, and meeting records.",
+            color: "text-emerald-400",
+            borderGlow: "hover:border-emerald-500/40"
+          },
+          {
+            id: "email-privacy",
+            category: "security",
+            icon: Lock,
+            badge: "Transactional Integrity",
+            title: "Nodemailer SMTP & Zero Ad Tracking",
+            desc: "Email addresses are used strictly for transactional security operations: two-factor authentication (2FA) OTP codes, account recovery, and workspace invitations. We never share user identities with third-party advertisers.",
+            color: "text-[#857C91]",
+            borderGlow: "hover:border-[#857C91]/40"
+          },
+          {
+            id: "rls-security",
+            category: "security",
+            icon: Shield,
+            badge: "PostgreSQL RLS",
+            title: "Row-Level Multi-Tenant Isolation",
+            desc: "Every database operation enforces cryptographic tenant isolation boundaries via PostgreSQL Row-Level Security (RLS) policies and HTTPS TLS 1.3 encryption across all client-server communications.",
+            color: "text-[#F2C1A3]",
+            borderGlow: "hover:border-[#F2C1A3]/40"
+          }
+        ];
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        const filteredCards = privacyCategory === "all" 
+          ? privacyCards 
+          : privacyCards.filter(c => c.category === privacyCategory);
+
+        return (
+          <div className="flex flex-col gap-6 text-left">
+            {/* Header */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#F2C1A3] font-semibold">
+                    Cryptographic Privacy & GDPR Compliance
+                  </span>
+                </div>
+                <span className="text-[9px] font-mono px-2.5 py-0.5 rounded-full bg-white/[0.04] border border-white/10 text-[#8e94a0]">
+                  v1.3.0 Verified • August 2026
+                </span>
+              </div>
+
+              <h2 className="text-2xl md:text-4xl font-light text-white font-serif tracking-tight leading-tight">
+                Privacy & Data <span className="text-[#F2C1A3] italic">Sovereignty</span>
+              </h2>
+              <p className="text-[#8e94a0] text-xs md:text-sm font-light leading-relaxed">
+                Academic data integrity and trust are the foundations of ContriTrack. We implement structural protocols, forensic erasure pipelines, and zero-training AI guardrails to keep your work securely yours.
+              </p>
+            </div>
+
+            {/* Category Filter Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none border-b border-white/5">
               {[
-                {
-                  icon: Shield,
-                  title: "Data Protection",
-                  desc: "All network communication is strictly encrypted over HTTPS using secure TLS protocols."
-                },
-                {
-                  icon: Lock,
-                  title: "GitHub OAuth Security",
-                  desc: "We only request read-only access to verify contribution hooks. Your source code files are never cloned or written."
-                },
-                {
-                  icon: Key,
-                  title: "Local Encryption",
-                  desc: "All session keys and credentials are encrypted on the browser layer with strict security standards."
-                },
-                {
-                  icon: Database,
-                  title: "User Ownership",
-                  desc: "We store metadata calculations only. We never sell your personal information or university work. Your data belongs to you."
-                }
-              ].map((card, idx) => {
+                { id: "all", label: "All Directives" },
+                { id: "gdpr", label: "GDPR & Forensic Erasure" },
+                { id: "security", label: "API Keys & Encryption" },
+                { id: "ai", label: "AI Model Guardrails" }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setPrivacyCategory(tab.id)}
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-mono transition tracking-wider uppercase cursor-pointer shrink-0 ${
+                    privacyCategory === tab.id
+                      ? "bg-[#F2C1A3] text-[#12131e] font-bold shadow-lg shadow-[#F2C1A3]/20"
+                      : "bg-white/[0.02] text-[#8e94a0] hover:text-white hover:bg-white/[0.05] border border-white/5"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Privacy Feature Grid */}
+            <motion.div 
+              layout
+              className="grid grid-cols-1 md:grid-cols-2 gap-3.5 max-h-[50vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent hover:scrollbar-thumb-[#F2C1A3]/30"
+            >
+              {filteredCards.map((card) => {
                 const Icon = card.icon;
                 return (
-                  <div 
-                    key={idx}
-                    className="p-5 rounded-2xl bg-white/[0.01] border border-white/5 hover:border-white/10 transition duration-300 flex items-start gap-4 text-left cursor-default"
+                  <motion.div 
+                    layout
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.2 }}
+                    key={card.id}
+                    className={`p-4 rounded-2xl bg-white/[0.015] border border-white/10 ${card.borderGlow} transition-all duration-300 flex flex-col gap-2.5 group cursor-default shadow-sm hover:shadow-[0_0_25px_rgba(242,193,163,0.06)]`}
                   >
-                    <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/10 text-[#F2C1A3] shrink-0">
-                      <Icon size={16} />
+                    <div className="flex items-center justify-between">
+                      <div className="p-2 rounded-xl bg-black/40 border border-white/10 text-white shrink-0 group-hover:scale-105 transition-transform duration-300">
+                        <Icon size={15} className={card.color} />
+                      </div>
+                      <span className="text-[8px] font-mono px-2 py-0.5 rounded-md bg-white/[0.03] border border-white/10 text-[#8e94a0] font-medium group-hover:text-white transition">
+                        {card.badge}
+                      </span>
                     </div>
+
                     <div className="flex flex-col gap-1">
-                      <span className="text-white text-xs font-semibold">{card.title}</span>
-                      <span className="text-[#857C91] text-xs font-light leading-relaxed">{card.desc}</span>
+                      <span className="text-white text-xs font-semibold tracking-tight group-hover:text-[#F2C1A3] transition">
+                        {card.title}
+                      </span>
+                      <span className="text-[#8e94a0] text-[11px] font-light leading-relaxed">
+                        {card.desc}
+                      </span>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
 
-            <div className="flex justify-between items-center mt-6 pt-4 border-t border-white/5 text-xs text-[#857C91] font-light">
-              <span>Your academic data always belongs to you.</span>
+            {/* Footer Summary */}
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-3 border-t border-white/5 text-xs text-[#8e94a0] font-light">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
+                <span className="text-[11px]">Your code, credentials, and telemetry always belong to you.</span>
+              </div>
               <button 
                 onClick={onClose}
-                className="px-6 py-2.5 rounded-full bg-[#F2C1A3] hover:bg-[#fad8bb] text-[#12131e] text-xs font-medium tracking-wide transition duration-300"
+                className="w-full sm:w-auto px-6 py-2 rounded-full bg-gradient-to-r from-[#F2C1A3] to-[#F8CCAA] hover:opacity-90 text-[#12131e] text-xs font-bold uppercase tracking-wider transition duration-300 shadow-md cursor-pointer"
               >
-                Close View
+                Acknowledge & Close
               </button>
             </div>
           </div>
         );
+      }
 
-      case "terms":
+      case "terms": {
+        const termsItems = [
+          {
+            id: "fair-use",
+            category: "usage",
+            badge: "Academic Integrity",
+            title: "1. Telemetry Integrity & Anti-Spoofing Policy",
+            content: "ContriTrack is engineered to facilitate honest, accountable collaboration in university engineering teams. Any intentional manipulation of metrics (such as scripted commit spoofing, automated dummy tasks, or tampering with Jain's Fairness calculations) constitutes a violation of academic honor codes and results in immediate access revocation."
+          },
+          {
+            id: "api-policy",
+            category: "api",
+            badge: "60 Req/Min per Key",
+            title: "2. Developer REST API & Rate Limiting Guidelines",
+            content: "External integrations using Bearer tokens (ct_live_...) are strictly bound to a 60 requests/minute rate limiter per token. API credentials are confidential and non-transferable. Attempting to bypass rate limiting, perform unauthorized token harvesting, or overload database endpoints will trigger automatic cryptographic key suspension."
+          },
+          {
+            id: "hubs-policy",
+            category: "governance",
+            badge: "Public Observatories",
+            title: "3. Academic Hubs Observatory Participation (/hubs)",
+            content: "Workspaces that link to institutional hubs (e.g., Senior Capstone, AI Research Labs, Open-Source Innovation) consent to public aggregation of project milestones, repository issue resolution speeds, and cross-team fairness benchmarks for educational evaluation and faculty oversight."
+          },
+          {
+            id: "recovery-policy",
+            category: "usage",
+            badge: "30-Day Recovery",
+            title: "4. 30-Day Soft-Deletion Grace Period & Restoration",
+            content: "When a user or workspace is scheduled for deletion, an atomic 30-day soft-deletion grace period is granted during which identity restoration is possible. Following the expiration of 30 days, irreversible 20-table forensic destruction is permanently executed with zero data recovery possibility."
+          },
+          {
+            id: "roles-policy",
+            category: "governance",
+            badge: "Workspace Hierarchy",
+            title: "5. Multi-Tenant Role Hierarchy & Security Governance",
+            content: "Workspace Owners and Maintainers are responsible for maintaining team roster integrity, managing 5-minute rolling cryptographic invite codes, and governing repository link bindings. Maintainers agree not to invite unauthorized external parties into private student workspaces."
+          },
+          {
+            id: "sla-policy",
+            category: "governance",
+            badge: "99.9% Target Uptime",
+            title: "6. Platform Infrastructure SLA & High Availability",
+            content: "ContriTrack targets 99.9% service availability across Next.js 15 App Router, Supabase PostgreSQL, and Firebase Auth infrastructure. Scheduled maintenance windows will be communicated via in-app notification banners during low-traffic university periods."
+          }
+        ];
+
+        const filteredTerms = termsCategory === "all"
+          ? termsItems
+          : termsItems.filter(t => t.category === termsCategory);
+
         return (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 text-left">
+            {/* Header */}
             <div className="flex flex-col gap-2">
-              <span className="text-xs uppercase tracking-widest text-[#F8CCAA] font-light">Agreement</span>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#F8CCAA] animate-pulse" />
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#F8CCAA] font-semibold">
+                    Platform Governance & Usage Terms
+                  </span>
+                </div>
+                <span className="text-[9px] font-mono px-2.5 py-0.5 rounded-full bg-white/[0.04] border border-white/10 text-[#8e94a0]">
+                  Effective: August 2026
+                </span>
+              </div>
+
               <h2 className="text-2xl md:text-4xl font-light text-white font-serif tracking-tight leading-tight">
-                Terms & <span className="text-[#F8CCAA] italic">Usage</span> Guidelines
+                Terms of <span className="text-[#F8CCAA] italic">Service</span> & Governance
               </h2>
+              <p className="text-[#8e94a0] text-xs md:text-sm font-light leading-relaxed">
+                Please review our platform operating guidelines to maintain an honest, high-trust, and transparent academic productivity ecosystem.
+              </p>
             </div>
 
-            <p className="text-[#857C91] text-sm font-light text-left leading-relaxed">
-              Please review our basic platform rules to keep the academic accountability ecosystem transparent, clean, and fair.
-            </p>
-
-            {/* Accordion List */}
-            <div className="flex flex-col gap-3 mt-4 text-left">
+            {/* Category Filter Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none border-b border-white/5">
               {[
-                {
-                  title: "1. Fair Platform Usage",
-                  content: "ContriTrack is built to facilitate honest, collaborative work. Manipulation or spoofing of stats (such as automated script commits or fake tasks) is strictly prohibited and can result in account termination."
-                },
-                {
-                  title: "2. User Responsibilities",
-                  content: "Users are responsible for maintaining the privacy of their workspaces and ensuring group invitation links are not leaked to external parties."
-                },
-                {
-                  title: "3. GitHub Integration Limitations",
-                  content: "GitHub sync relies on the GitHub public API. Any downtime or service disruption on GitHub's end may temporarily affect telemetry sync speeds."
-                },
-                {
-                  title: "4. Data Handling",
-                  content: "We process raw telemetry logs for coding commits solely to calculate analytical contributions. We store metadata only."
-                },
-                {
-                  title: "5. Platform Availability",
-                  content: "We strive to maintain 99.9% uptime, but reserve the right to perform scheduled system upgrades during low-traffic periods."
-                }
-              ].map((item, idx) => {
+                { id: "all", label: "All Clauses" },
+                { id: "usage", label: "Academic Conduct" },
+                { id: "api", label: "Developer API" },
+                { id: "governance", label: "Hubs & Governance" }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setTermsCategory(tab.id)}
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-mono transition tracking-wider uppercase cursor-pointer shrink-0 ${
+                    termsCategory === tab.id
+                      ? "bg-[#F8CCAA] text-[#12131e] font-bold shadow-lg shadow-[#F8CCAA]/20"
+                      : "bg-white/[0.02] text-[#8e94a0] hover:text-white hover:bg-white/[0.05] border border-white/5"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Interactive Accordion List */}
+            <div className="flex flex-col gap-2.5 max-h-[50vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent hover:scrollbar-thumb-[#F8CCAA]/30">
+              {filteredTerms.map((item, idx) => {
                 const isOpen = activeAccordion === idx;
                 return (
-                  <div 
-                    key={idx}
-                    className="rounded-2xl border border-white/5 overflow-hidden transition-all duration-300"
+                  <motion.div 
+                    layout
+                    key={item.id}
+                    className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
+                      isOpen 
+                        ? "bg-[#0e1017] border-[#F8CCAA]/30 shadow-[0_0_20px_rgba(248,204,170,0.05)]" 
+                        : "bg-white/[0.015] border-white/10 hover:border-white/20"
+                    }`}
                   >
                     <button
                       onClick={() => toggleAccordion(idx)}
-                      className="w-full px-5 py-4 bg-white/[0.01] hover:bg-white/[0.02] flex items-center justify-between text-white text-xs font-medium transition duration-300"
+                      className="w-full px-4 py-3.5 flex items-center justify-between text-left transition duration-300 cursor-pointer group"
                     >
-                      <span>{item.title}</span>
-                      {isOpen ? (
-                        <ChevronUp size={14} className="text-[#F8CCAA]" />
-                      ) : (
-                        <ChevronDown size={14} className="text-[#857C91]" />
-                      )}
+                      <div className="flex items-center gap-2.5 truncate pr-2">
+                        <span className="text-white text-xs font-semibold group-hover:text-[#F8CCAA] transition truncate">
+                          {item.title}
+                        </span>
+                        <span className="text-[8px] font-mono px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/10 text-[#8e94a0] shrink-0 hidden sm:inline">
+                          {item.badge}
+                        </span>
+                      </div>
+                      <div className="p-1 rounded-lg bg-white/[0.03] text-white shrink-0 group-hover:bg-[#F8CCAA]/15 transition">
+                        {isOpen ? (
+                          <ChevronUp size={13} className="text-[#F8CCAA]" />
+                        ) : (
+                          <ChevronDown size={13} className="text-[#8e94a0] group-hover:text-white" />
+                        )}
+                      </div>
                     </button>
 
                     <AnimatePresence initial={false}>
@@ -734,29 +917,53 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.3, ease: "easeInOut" }}
+                          transition={{ duration: 0.25, ease: "easeInOut" }}
                         >
-                          <div className="px-5 pb-5 pt-1 text-xs text-[#857C91] leading-relaxed font-light border-t border-white/[0.02]">
+                          <div className="px-4 pb-4 pt-1 text-[11.5px] text-[#8e94a0] leading-relaxed font-light border-t border-white/[0.04]">
                             {item.content}
                           </div>
                         </motion.div>
                       )}
                     </AnimatePresence>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
 
-            <div className="flex justify-end mt-4">
+            {/* Footer Action Bar */}
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-3 border-t border-white/5">
+              <div className="flex items-center gap-2 text-[11px] text-[#8e94a0] font-light">
+                <ShieldCheck size={14} className="text-[#F8CCAA] shrink-0" />
+                <span>By continuing, you agree to maintain honest academic accountability.</span>
+              </div>
+              
               <button 
-                onClick={onClose}
-                className="px-6 py-2.5 rounded-full bg-[#F8CCAA] hover:bg-[#fad8bb] text-[#12131e] text-xs font-medium tracking-wide transition duration-300 shadow-lg"
+                onClick={() => {
+                  setHasAcceptedTerms(true);
+                  setTimeout(() => {
+                    onClose();
+                    setHasAcceptedTerms(false);
+                  }, 600);
+                }}
+                className={`w-full sm:w-auto px-6 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer flex items-center justify-center gap-1.5 ${
+                  hasAcceptedTerms 
+                    ? "bg-emerald-500 text-black shadow-emerald-500/20 scale-95" 
+                    : "bg-gradient-to-r from-[#F8CCAA] to-[#F2C1A3] hover:opacity-90 text-[#12131e]"
+                }`}
               >
-                Accept Terms
+                {hasAcceptedTerms ? (
+                  <>
+                    <Check size={13} className="text-black" />
+                    <span>Terms Accepted</span>
+                  </>
+                ) : (
+                  <span>Accept & Continue</span>
+                )}
               </button>
             </div>
           </div>
         );
+      }
 
       default:
         return null;
@@ -779,7 +986,9 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ type: "spring", damping: 25, stiffness: 350 }}
-            className="relative w-full max-w-2xl my-auto glass-card rounded-3xl p-6 md:p-10 border border-white/10 bg-[#12131e]/90 shadow-[0_0_50px_rgba(242,193,163,0.06)] text-left"
+            className={`relative w-full my-auto glass-card rounded-3xl p-6 md:p-9 border border-white/10 bg-[#0e1017]/95 shadow-[0_0_60px_rgba(242,193,163,0.08)] backdrop-blur-2xl text-left ${
+              activeModal === "privacy" || activeModal === "terms" ? "max-w-3xl" : "max-w-2xl"
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
