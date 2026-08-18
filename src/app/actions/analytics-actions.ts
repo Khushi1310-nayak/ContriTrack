@@ -268,11 +268,11 @@ export async function fetchWorkspaceAnalyticsData(
 
     // 6. Jain's Fairness Contribution Index
     // fairness = (sum(x_i))^2 / (n * sum(x_i^2))
-    const nonZeroScores = contributorStats.map(c => c.contributionScore || 1);
+    const nonZeroScores = contributorStats.length > 0 ? contributorStats.map(c => c.contributionScore || 1) : [1];
     const sumScores = nonZeroScores.reduce((a, b) => a + b, 0);
     const sumSqScores = nonZeroScores.reduce((a, b) => a + b * b, 0);
-    const n = nonZeroScores.length || 1;
-    const fairnessScore = Math.round(((sumScores * sumScores) / (n * sumSqScores)) * 100);
+    const n = nonZeroScores.length;
+    const fairnessScore = sumSqScores > 0 ? Math.min(100, Math.max(0, Math.round(((sumScores * sumScores) / (n * sumSqScores)) * 100))) : 100;
 
     // 7. Commit frequency timeline (Past 7 days)
     const commitTimeline = [];

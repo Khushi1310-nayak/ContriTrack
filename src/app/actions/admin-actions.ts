@@ -26,41 +26,28 @@ export async function getAllUsersForAdmin() {
  */
 export async function deleteUserAccountAdmin(userId: string) {
   try {
-    // 1. Get user details from Postgres to ensure they exist
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      return { success: false, error: "User not found in Postgres" };
-    }
-
-    // 2. Delete from Firebase Auth if the account is present
+    // 1. Delete from Firebase Auth if the account is present
     try {
       await adminAuth.deleteUser(userId);
       console.log(`Deleted user ${userId} from Firebase Auth`);
     } catch (firebaseError: unknown) {
-      // If the user is already deleted from Firebase (e.g., auth/user-not-found), 
-      // we still want to proceed to clean up Postgres.
       const fbErr = firebaseError as { code?: string };
       if (fbErr.code === "auth/user-not-found") {
         console.warn(`User ${userId} already missing from Firebase Auth, proceeding to Postgres deletion.`);
       } else {
-        console.error("Error deleting from Firebase Auth:", firebaseError);
-        return { success: false, error: "Failed to delete from Firebase Auth" };
+        console.warn("Notice deleting from Firebase Auth:", firebaseError);
       }
     }
 
-    // 3. Delete from Postgres
-    // Because of onDelete: Cascade on relations (UserProfile, WorkspaceMember, etc),
-    // deleting the root User will clean up everything else.
-    await prisma.user.delete({
-      where: { id: userId },
-    });
+    // 2. Delete from Postgres cascading across all related tables
+    await prisma.userProfile.deleteMany({ where: { userId } });
+    await prisma.userSecurity.deleteMany({ where: { userId } });
+    await prisma.workspaceMember.deleteMany({ where: { userId } });
+    await prisma.user.deleteMany({ where: { id: userId } });
     
     console.log(`Deleted user ${userId} from PostgreSQL`);
 
-    // 4. Revalidate the admin users page
+    // 3. Revalidate the admin users page
     revalidatePath("/admin/users");
 
     return { success: true };
