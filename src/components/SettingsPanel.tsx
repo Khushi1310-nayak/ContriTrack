@@ -15,7 +15,8 @@ import {
   Upload, 
   X,
   Sliders,
-  Laptop
+  Laptop,
+  Download
 } from "lucide-react";
 import { 
   fetchUserProfileAndSecurity,
@@ -616,6 +617,23 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
       fetchAllSettings();
     } else {
       setErrorMessage(res.error || "Restoration denied.");
+    }
+  };
+
+  const handleDownloadBackup = (snap: BackupSnapshot) => {
+    try {
+      const blob = new Blob([snap.backupDataUrl], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `contritrack-backup-${new Date(snap.createdAt).toISOString().split("T")[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to download backup JSON:", err);
+      setErrorMessage("Failed to export backup file.");
     }
   };
   // 6. Notification Settings Autosave
@@ -1510,12 +1528,23 @@ export default function SettingsPanel({ user, onProfileUpdate }: SettingsPanelPr
                             </div>
                           </div>
 
-                          <button 
-                            onClick={() => setShowRestoreModal(snap.id)}
-                            className="px-4 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[10px] font-mono uppercase transition cursor-pointer"
-                          >
-                            Restore snapshot
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => handleDownloadBackup(snap)}
+                              className="px-3.5 py-1.5 rounded-xl bg-[#F2C1A3]/10 hover:bg-[#F2C1A3]/20 border border-[#F2C1A3]/20 text-[#F2C1A3] text-[10px] font-mono uppercase transition cursor-pointer flex items-center gap-1.5"
+                              title="Export backup as JSON"
+                            >
+                              <Download size={10} />
+                              <span>Download JSON</span>
+                            </button>
+
+                            <button 
+                              onClick={() => setShowRestoreModal(snap.id)}
+                              className="px-4 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[10px] font-mono uppercase transition cursor-pointer"
+                            >
+                              Restore snapshot
+                            </button>
+                          </div>
                         </div>
                       ))
                     )}

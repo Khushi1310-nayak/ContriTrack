@@ -484,14 +484,22 @@ export async function updateUserProfile(userId: string, data: ProfileInput) {
  */
 export async function updateUserSecurity(userId: string, data: SecurityInput) {
   try {
-    const updated = await prisma.userSecurity.update({
+    const updated = await prisma.userSecurity.upsert({
       where: { userId },
-      data: {
+      update: {
         twoFactorEnabled: data.twoFactorEnabled,
         recoveryEmail: data.recoveryEmail,
         verifiedPhone: data.verifiedPhone,
         passwordChangedAt: data.passwordChangedAt ? new Date(data.passwordChangedAt) : undefined,
         failedAttempts: data.failedAttempts
+      },
+      create: {
+        userId,
+        twoFactorEnabled: data.twoFactorEnabled ?? false,
+        recoveryEmail: data.recoveryEmail || null,
+        verifiedPhone: data.verifiedPhone || null,
+        passwordChangedAt: data.passwordChangedAt ? new Date(data.passwordChangedAt) : null,
+        failedAttempts: data.failedAttempts || 0
       }
     });
 
@@ -1359,9 +1367,15 @@ export async function finalizeSecuritySettings(userId: string, verifiedPhone: st
        numericPhone = "+" + numericPhone; 
     }
 
-    await prisma.userSecurity.update({
+    await prisma.userSecurity.upsert({
       where: { userId },
-      data: {
+      update: {
+        verifiedPhone: numericPhone,
+        passwordChangedAt: new Date()
+      },
+      create: {
+        userId,
+        twoFactorEnabled: false,
         verifiedPhone: numericPhone,
         passwordChangedAt: new Date()
       }
