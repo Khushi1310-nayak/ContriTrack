@@ -4,13 +4,15 @@
 
 ## AI-Powered Academic Collaboration & Telemetry Platform
 
-*A platform designed for students, developers, engineering teams, and hackathon communities to manage workspaces, track contributions, monitor fairness, and receive AI-powered insights.*
+*A modern, end-to-end platform engineered for students, developers, engineering teams, and university capstones to manage workspaces, track deliverables, analyze contribution fairness, and harness AI-powered collaboration insights.*
 
 ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=for-the-badge&logo=typescript)
-![OpenRouter](https://img.shields.io/badge/OpenRouter-API-blue?style=for-the-badge)
-![Supabase](https://img.shields.io/badge/Supabase-green?style=for-the-badge&logo=supabase)
-![Status](https://img.shields.io/badge/Project-Active-success?style=for-the-badge)
+![OpenRouter](https://img.shields.io/badge/OpenRouter-AI_API-blue?style=for-the-badge)
+![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?style=for-the-badge&logo=supabase)
+![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?style=for-the-badge&logo=prisma)
+![Firebase](https://img.shields.io/badge/Firebase-Auth-orange?style=for-the-badge&logo=firebase)
+![Status](https://img.shields.io/badge/Project-Active_&_Verified-success?style=for-the-badge)
 
 </div>
 
@@ -18,65 +20,66 @@
 
 # 📖 Overview
 
-Collaboration in student teams and developer communities often suffers from uneven contribution visibility, poor sprint transparency, and a lack of accountability. Tracking workflows manually leads to collaboration imbalance and disconnected productivity monitoring.
+Collaboration in student project teams and engineering communities frequently faces uneven workload distribution, lack of visibility into individual contributions, and subjective grading. Traditional task managers track what is planned, but rarely quantify who actually built it.
 
-**ContriTrack** is an AI-powered **Collaboration and Telemetry Platform** that solves these challenges.
+**ContriTrack** is a full-stack **Academic Collaboration and Telemetry Platform** that solves these challenges.
 
-It centralizes collaboration intelligence into a single structured environment. By combining dynamic workspace management, real-time analytics, and AI-powered insights, ContriTrack transforms collaborative workflows into a structured, intelligent productivity ecosystem.
+It combines dynamic multi-tenant workspace management, live GitHub commit telemetry, automated task sprints, real-time presence, and **OpenRouter-powered AI insights** with mathematical collaboration scoring (**Jain's Fairness Index**). ContriTrack transforms project coordination into an accountable, transparent, and intelligent productivity ecosystem.
 
 ---
 
 # ✨ Core Features
 
-- 🏢 **Workspace Management:** Dynamic multi-user collaborative workspaces.
-- 📊 **Analytics & Telemetry:** Contribution tracking, sprint analytics, and real-time dashboards.
-- 🤖 **AI Insights:** Gemini-powered collaboration analysis and burnout-awareness indicators.
-- 👥 **Teams Management:** Contributor roles, member classifications, and identity synchronization.
-- 📅 **Meetings System:** Meeting scheduling, team discussions, and collaboration coordination.
-- 🎯 **Recruitment Center:** Candidate application tracking and resume upload management.
-- 🧠 **GitHub Integration:** Contribution monitoring and repository activity tracking.
-- 📄 **Reports System:** Workspace performance reports and AI-generated insights.
-- 🔒 **Settings & Security:** Profile management, alert controls, and secure authentication workflows.
+- 🏢 **Multi-Tenant Workspaces:** Dynamic workspace creation, teammate role assignments, and 5-minute rolling cryptographic invite codes.
+- 📊 **Telemetry & Jain's Fairness Index:** Real-time analytics calculating commit shares, lines changed, deliverable velocity, and mathematical workload fairness.
+- 🤖 **AI Collaboration Intelligence:** OpenRouter-powered sprint analysis, burnout signals, team stress level monitoring, and automated sprint wrap-up summaries.
+- 🎓 **Academic Hubs Observatory (`/hubs`):** Dedicated university hubs (*Senior Capstone, Open-Source Innovation, AI Research Labs, Hackathon Sprints, and Faculty Oversight*) with milestone progress and cross-project leaderboards.
+- 🔑 **Developer REST API & Interactive Sandbox (`/docs`):** Complete REST API with `ct_live_...` Bearer token authentication (SHA-256 hashed), scoped permissions, rate limiting, and an in-browser live testing playground.
+- 📋 **Kanban Sprint Board:** Full deliverable lifecycle tracking (`backlog`, `todo`, `in_progress`, `completed`), assignee management, activity timelines, and `@mentions`.
+- 📬 **Live Notification Center & SMTP Alerts:** In-app inbox with 10-second silent polling, unread badges, audio chimes, threaded replies, and automated Nodemailer email notifications.
+- 📅 **Meetings Tracker:** Video meeting scheduling, attendance auditing, and action-item coordination.
+- 🎯 **Recruitment & Applicant Tracking (ATS):** Public career application portal (`/careers`) and private admin candidate management (`/admin/careers`).
+- 🛡️ **Admin Governance & Forensic Data Erasure:** Full administrator portal (`/admin/users`) with 20-table forensic cascade deletion and Firebase Auth synchronization.
+- 💾 **Settings Vault & GDPR Backups:** Encrypted full-workspace JSON snapshot archives with one-click direct download and account recovery grace periods.
 
 ---
 
-# 🏗 Architecture
+# 🏗 System Architecture
 
 ```mermaid
 graph TD
-    Client["Client Browser (Next.js UI)"]
+    Client["Client Browser (Next.js 15 App Router)"]
 
-    subgraph Vercel ["Vercel Hosting Network"]
-        NextApp["Next.js 15 Application"]
-        ServerActions["Server Actions API (/actions)"]
-        Cron["Background/Cron Endpoints (/api/cron)"]
+    subgraph AppServer ["Next.js 15 Full-Stack Application"]
+        ServerActions["Server Actions (/app/actions)"]
+        RestAPI["Developer REST API (/api/developer/...)"]
+        CronWorkers["Background Sync & Crons (/api/cron/...)"]
     end
 
-    subgraph Supabase ["Supabase Cloud"]
+    subgraph DatabaseLayer ["Database & Storage"]
         Prisma["Prisma ORM Layer"]
-        DB["PostgreSQL Database"]
+        Postgres["PostgreSQL Database (Supabase)"]
     end
     
-    subgraph External ["External Services"]
+    subgraph ExternalServices ["Integrated Cloud Ecosystem"]
+        OpenRouter["OpenRouter AI Engine"]
         GitHub["GitHub REST API (Octokit)"]
-        FirebaseAuth["Firebase Auth (Identity)"]
-        Sentry["Sentry (Telemetry & Monitoring)"]
+        FirebaseAuth["Firebase Auth & Admin SDK"]
+        SMTP["Nodemailer SMTP Mailer"]
+        Sentry["Sentry Error Monitoring"]
     end
 
-    Client -- "HTTP/React State" --> NextApp
-    Client -- "Auth Tokens" --> FirebaseAuth
+    Client -- "React Server Components / State" --> AppServer
+    Client -- "Bearer Auth (ct_live_...)" --> RestAPI
+    Client -- "Auth State" --> FirebaseAuth
     
-    NextApp -- "RPC / Forms" --> ServerActions
-    NextApp -- "Verify JWT" --> FirebaseAuth
-    NextApp -- "Client / Server Errors" --> Sentry
+    AppServer -- "Data Mutations & Queries" --> Prisma
+    Prisma <-->|"Connection Pool"| Postgres
     
-    ServerActions -- "Prisma Client" --> Prisma
-    Cron -- "Prisma Client" --> Prisma
-    
-    Cron -- "Fetch Repo/Commits" --> GitHub
-    Cron -- "Rate-Limited Polling" --> GitHub
-    
-    Prisma <-->|"Postgres TCP"| DB
+    ServerActions -- "AI Prompts & Telemetry" --> OpenRouter
+    CronWorkers -- "Commit Sync" --> GitHub
+    ServerActions -- "Alerts & Invites" --> SMTP
+    AppServer -- "Exception Telemetry" --> Sentry
 ```
 
 ---
@@ -84,58 +87,36 @@ graph TD
 # 💻 System Modules
 
 ## 🏢 Workspace Management
+Create and orchestrate multi-user workspaces with dynamic permission tiers (Owner, Lead Maintainer, Contributor, Guest) and 5-minute rolling invite codes.
 
-Create and manage collaborative workspaces with dynamic initialization, workspace-specific analytics, telemetry, and comprehensive multi-user support.
+## 📊 Telemetry & Fairness Dashboard
+Monitor team performance through real-time commit distribution, lines of code added/deleted, deliverable resolution rates, and mathematical fairness scoring via **Jain's Fairness Index**.
 
-## 📊 Overview Dashboard
+## 🤖 AI Insights & Burnout Telemetry
+Powered by the **OpenRouter API** to detect collaboration imbalances, late-night overtime patterns, missed milestone risks, and deliver actionable recommendations to maintain high team morale.
 
-Gain immediate visibility with workspace activity summaries, productivity snapshots, recent team activity, and AI-generated workspace observations.
+## 🎓 Academic Hubs Observatory (`/hubs`)
+Connect student workspaces to university faculty hubs:
+- **Senior Capstone & Thesis Observatory** (`/hubs/capstone`)
+- **Open-Source University Innovation Hub** (`/hubs/open-source`)
+- **AI & Data Science Research Lab Hub** (`/hubs/ai-research`)
+- **Competitive Hackathon & Build Sprint Hub** (`/hubs/hackathon`)
+- **Departmental Faculty & Grading Oversight Hub** (`/hubs/faculty-oversight`)
 
-## 🤖 AI Insights
+## 🔑 Developer REST API & Sandbox (`/docs`)
+Expose ContriTrack workspaces to scripts, CI/CD pipelines, Discord bots, and external LMS integrations via secure `ct_live_...` Bearer tokens. Includes an in-browser interactive API playground to execute live queries.
 
-Leverage the OpenRouter API for AI-powered collaboration analysis, productivity recommendations, contribution pattern evaluation, and burnout-awareness indicators.
+## 📋 Kanban Sprint Deliverables
+Organize sprint deliverables across Backlog, Todo, In-Progress, and Completed states. Features assignee workload balancing, due-date flags, and activity audit trails.
 
-## 📈 Analytics & Telemetry
+## 📬 Notification Center & Interactive Threaded Replies
+Real-time 10-second polling notification panel with unread counters, audio chimes, priority filtering, and direct threaded replies saved into the database.
 
-Monitor engagement through contribution tracking systems, sprint analytics, productivity graphs, workspace engagement metrics, and real-time telemetry dashboards.
+## 🎯 Recruitment Center & ATS (`/careers` & `/admin/careers`)
+Public applicant submission portal with resume uploads, skills evaluation, and an admin ATS dashboard for candidate lifecycle tracking.
 
-## 👥 Teams Management
-
-Manage your contributors efficiently with role assignment systems, member classifications, workspace identity synchronization, and team collaboration monitoring.
-
-## 📅 Meetings System
-
-Coordinate effortlessly with a dedicated meeting scheduling interface, team discussion workflows, and robust workspace communication support.
-
-## 🎯 Recruitment Center
-
-Streamline team expansion with candidate application tracking, resume upload management, recruitment analytics, role-based candidate filtering, and recruitment dashboard systems.
-
-## 🧠 GitHub Purging & Repository Utilities
-
-Integrate seamlessly with GitHub for contribution monitoring, repository activity tracking, and visual GitHub telemetry.
-
-## 📄 Reports System
-
-Export and analyze workspace performance reports, contribution summaries, analytics exports, and AI-generated reporting insights.
-
-## 🔒 Authentication System
-
-Secure user access via Google Authentication, GitHub Authentication, and Email/Password with account restoration and secure account deletion workflows.
-
----
-
-# 🧠 Engineering Concepts & Architecture Highlights
-
-This project demonstrates several production-grade engineering concepts:
-
-✅ Full-stack scalable architecture
-✅ Modular component-based frontend system
-✅ Real-time telemetry workflows
-✅ AI-integrated analytics systems
-✅ Production-grade monitoring (Sentry) and testing (Playwright) infrastructure
-✅ Enterprise-inspired UI/UX patterns
-✅ Responsive workspace ecosystem
+## 🔒 Forensic Security & GDPR Data Vault
+Full Row-Level Security (RLS) enforcement, one-click encrypted JSON backup export, and hardened 20-table forensic cascade deletion.
 
 ---
 
@@ -143,13 +124,39 @@ This project demonstrates several production-grade engineering concepts:
 
 | Category | Technology |
 | --- | --- |
-| **Frontend** | Next.js 15, TypeScript, Tailwind CSS, Framer Motion, shadcn/ui |
-| **Backend** | Node.js, Express.js |
-| **Database & ORM** | Supabase PostgreSQL, Prisma ORM |
-| **Authentication** | Firebase Authentication |
+| **Framework** | Next.js 15 (App Router, Server Components & Server Actions) |
+| **Language** | TypeScript (Strict Mode) |
+| **Styling & UI** | Tailwind CSS, Framer Motion, Lucide Icons |
+| **Database & ORM** | PostgreSQL (Supabase), Prisma ORM |
+| **Authentication** | Firebase Authentication & Firebase Admin SDK |
 | **AI Systems** | OpenRouter API |
-| **Monitoring & Testing** | Sentry, Playwright, GitHub Actions CI/CD |
+| **Email & Alerts** | Nodemailer (SMTP) |
+| **Developer API** | Next.js REST Route Handlers, SHA-256 Key Hashing, In-Memory Rate Limiting |
+| **Monitoring & Telemetry** | Sentry, Playwright |
 | **Deployment** | Vercel |
+
+---
+
+# 🔌 Developer REST API Reference
+
+All REST endpoints require the `Authorization: Bearer ct_live_...` header.
+
+| Endpoint | Method | Description |
+| :--- | :---: | :--- |
+| `/api/developer/workspaces` | `GET` | Retrieve workspace details, member roles, and fairness index. |
+| `/api/developer/tasks` | `GET` / `POST` | Query active Kanban tasks or create new deliverables. |
+| `/api/developer/analytics` | `GET` | Fetch raw commit velocity, lines changed, and collaboration scores. |
+| `/api/developer/meetings` | `GET` / `POST` | Fetch scheduled syncs or register retro meetings. |
+| `/api/developer/ai/insights` | `GET` | Retrieve AI workload analysis and burnout signals. |
+| `/api/developer/ai/sprint-summary` | `POST` | Generate on-demand AI sprint wrap-up reports. |
+| `/api/developer/reports/export-csv` | `GET` | Download formatted CSV grading export for Canvas LMS / Blackboard / Excel. |
+| `/api/developer/reports/generate-pdf` | `POST` | Generate a certified contribution PDF certificate. |
+| `/api/developer/hubs` | `GET` | List all 5 academic hubs and cross-project statistics. |
+| `/api/developer/hubs/:slug` | `GET` | Retrieve specific academic hub details and linked projects. |
+| `/api/developer/members/presence` | `GET` | Fetch real-time active tasks and member presence. |
+| `/api/developer/standups` | `GET` / `POST` | Query standup activity feeds or submit daily updates from Slack/Discord bots. |
+| `/api/developer/ci/build-event` | `POST` | Ingest build statuses and test coverage from GitLab CI / Jenkins / CircleCI. |
+| `/api/developer/webhooks` | `GET` / `POST` | List supported event streams or register webhook subscriptions. |
 
 ---
 
@@ -157,31 +164,31 @@ This project demonstrates several production-grade engineering concepts:
 
 ## 🏠 Overview Dashboard Screenshot
 
-<img width="1920" height="928" alt="Screenshot (3505)" src="https://github.com/user-attachments/assets/a379be3d-13cf-4934-8983-5eceb066a2ea" />
+<img width="1920" height="928" alt="Overview Dashboard" src="https://github.com/user-attachments/assets/a379be3d-13cf-4934-8983-5eceb066a2ea" />
 
 ## 📊 Analytics Dashboard Screenshot
 
-<img width="1920" height="934" alt="Screenshot (3508)" src="https://github.com/user-attachments/assets/36eb3b2d-91a9-423b-b688-fa74ef92ef95" />
+<img width="1920" height="934" alt="Analytics Dashboard" src="https://github.com/user-attachments/assets/36eb3b2d-91a9-423b-b688-fa74ef92ef95" />
 
 ## 🤖 AI Insights Screenshot
 
-<img width="1920" height="939" alt="Screenshot (3511)" src="https://github.com/user-attachments/assets/1d1b8eba-49e1-4297-a3a7-40e9457ddbfe" />
+<img width="1920" height="939" alt="AI Insights" src="https://github.com/user-attachments/assets/1d1b8eba-49e1-4297-a3a7-40e9457ddbfe" />
 
 ## 👥 Teams Management Screenshot
 
-<img width="1920" height="922" alt="Screenshot (3510)" src="https://github.com/user-attachments/assets/bd76693a-a9e7-438b-8caa-fc77a839a205" />
+<img width="1920" height="922" alt="Teams Management" src="https://github.com/user-attachments/assets/bd76693a-a9e7-438b-8caa-fc77a839a205" />
 
 ## 📅 Meetings Workspace Screenshot
 
-<img width="1920" height="933" alt="Screenshot (3509)" src="https://github.com/user-attachments/assets/15a7e3ae-e8bf-4cbb-99b9-66c8c1827ba1" />
+<img width="1920" height="933" alt="Meetings Workspace" src="https://github.com/user-attachments/assets/15a7e3ae-e8bf-4cbb-99b9-66c8c1827ba1" />
 
 ## ⚙️ Settings & Security Screenshot
 
-<img width="1920" height="937" alt="Screenshot (3512)" src="https://github.com/user-attachments/assets/128c1408-f397-42d8-9068-2809f5bfc30f" />
+<img width="1920" height="937" alt="Settings and Security" src="https://github.com/user-attachments/assets/128c1408-f397-42d8-9068-2809f5bfc30f" />
 
 ## 🧠 GitHub Purging & Telemetry Screenshot
 
-<img width="1920" height="936" alt="Screenshot (3507)" src="https://github.com/user-attachments/assets/058d5b50-2da8-43da-8439-cc888471568e" />
+<img width="1920" height="936" alt="GitHub Telemetry" src="https://github.com/user-attachments/assets/058d5b50-2da8-43da-8439-cc888471568e" />
 
 ---
 
@@ -202,14 +209,14 @@ npm install
 
 ## 3. Configure Environment Variables
 
-Create a `.env.local` file and add the required variables:
+Create a `.env.local` or `.env` file in the root directory:
 
 ```env
-# SUPABASE DATABASE & STORAGE
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
+# DATABASE (SUPABASE POSTGRESQL & PRISMA)
 DATABASE_URL=
 DIRECT_URL=
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 
 # FIREBASE AUTHENTICATION & ADMIN SDK
@@ -223,22 +230,23 @@ FIREBASE_PROJECT_ID=
 FIREBASE_CLIENT_EMAIL=
 FIREBASE_PRIVATE_KEY=
 
-# GITHUB OAUTH
+# GITHUB OAUTH INTEGRATION
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
 
-# AI SYSTEMS
+# AI SYSTEMS (OPENROUTER)
 OPENROUTER_API_KEY=
 
-# SITE CONFIGURATION
-NEXT_PUBLIC_SITE_URL=
+# SITE & APP CONFIGURATION
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
-# SMTP / EMAIL SYSTEM
-SMTP_HOST=
-SMTP_PORT=
-SMTP_USER=
-SMTP_PASS=
-SMTP_FROM=
+# SMTP / EMAIL SYSTEM (NODEMAILER)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-16-char-app-password
+SMTP_FROM=ContriTrack <your-email@gmail.com>
 
 # SENTRY MONITORING
 NEXT_PUBLIC_SENTRY_DSN=
@@ -246,31 +254,21 @@ SENTRY_AUTH_TOKEN=
 SENTRY_ORG=
 SENTRY_PROJECT=
 
-# WEB PUSH NOTIFICATIONS (VAPID KEYS)
-# How to generate: run 'npx web-push generate-vapid-keys' in terminal
+# WEB PUSH NOTIFICATIONS (VAPID)
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=
 VAPID_PRIVATE_KEY=
 VAPID_SUBJECT=mailto:your-email@example.com
 
 # SECURITY & CRON SECRET
-# How to generate ENCRYPTION_KEY: run 'node -e "console.log(require(\"crypto\").randomBytes(32).toString(\"hex\"))"'
 ENCRYPTION_KEY=
 CRON_SECRET=
 ```
 
-### 💡 Environment Key Explanations & Generators
+### 💡 Key Generation Helpers
 
-* **VAPID Keys (`NEXT_PUBLIC_VAPID_PUBLIC_KEY` & `VAPID_PRIVATE_KEY`):** Used for browser Push Notifications. Generate them by running:
-  ```bash
-  npx web-push generate-vapid-keys
-  ```
-* **Encryption Key (`ENCRYPTION_KEY`):** Encrypts sensitive database tokens. Generate a cryptographically secure 256-bit key by running:
-  ```bash
-  node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-  ```
-* **Cron Secret (`CRON_SECRET`):** Secures background cron tasks (e.g. workspace synchronizations) from unauthorized triggers.
-  * **Local Dev:** Set this to any random strong string of your choice.
-  * **Production (Vercel):** Automatically created and configured by Vercel when you link Vercel Cron Jobs. No manual environment key addition is required in Vercel for production.
+* **VAPID Keys:** Run `npx web-push generate-vapid-keys` in the terminal.
+* **Encryption Key (`ENCRYPTION_KEY`):** Run `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
+* **Prisma Schema Sync:** Run `npx prisma db push` to synchronize all tables to your PostgreSQL instance.
 
 ## 4. Run Development Server
 
@@ -278,18 +276,16 @@ CRON_SECRET=
 npm run dev
 ```
 
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
 ---
 
 # 🔮 Future Roadmap
 
-- Real-time collaboration systems
-- AI-powered sprint optimization
-- Advanced GitHub analytics
-- Workspace role permissions
-- Desktop application support
-- Offline-first workspace architecture
-- Team performance forecasting
-- Cross-workspace analytics
+- 📱 **Mobile Application Companion:** Native iOS and Android apps with offline task syncing.
+- 🎓 **Canvas & Blackboard LMS LTI 1.3:** Direct gradebook synchronization for university capstone courses.
+- 📹 **Integrated WebRTC Video Channels:** In-app real-time screen sharing and video breakout rooms.
+- 🌐 **Multi-Language Internationalization (i18n):** Global localization for developer teams worldwide.
 
 ---
 
@@ -311,16 +307,17 @@ This project is licensed under the MIT License.
 
 🎓 Student | Full-Stack Developer | AI Product Builder
 
-Passionate about:
-- Full-Stack Architecture
-- User Experience (UI/UX)
-- AI Automation & Product Building
+Passionately building scalable full-stack applications, intelligent telemetry systems, and delightful developer experiences.
 
 ### Connect with Me
 
-**GitHub:** [Khushi1310-nayak](https://github.com/Khushi1310-nayak)  
-**LinkedIn:** [Manisa Nayak](https://www.linkedin.com/in/manisa-nayak-185bb5378/)
+- **GitHub:** [@Khushi1310-nayak](https://github.com/Khushi1310-nayak)
+- **LinkedIn:** [Manisa Nayak](https://www.linkedin.com/in/manisa-nayak-185bb5378/)
 
 ---
 
-## ⭐ If you found this project interesting, consider giving it a Star
+<div align="center">
+
+⭐ If you found ContriTrack interesting or useful, please consider giving it a **Star** on GitHub!
+
+</div>
