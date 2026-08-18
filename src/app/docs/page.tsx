@@ -54,23 +54,30 @@ const docStructure = [
       { id: "Workspaces API", label: "4. Workspaces" },
       { id: "Tasks API", label: "5. Tasks Deliverables" },
       { id: "Analytics API", label: "6. Contribution Telemetry" },
-      { id: "Meetings API", label: "7. Meetings Tracker" }
+      { id: "Meetings API", label: "7. Meetings Tracker" },
+      { id: "AI Insights API", label: "8. AI Intelligence & Burnout" },
+      { id: "Sprint Summary API", label: "9. AI Sprint Summaries" },
+      { id: "Reports Export API", label: "10. Grading & Reports Export (CSV / PDF)" },
+      { id: "Academic Hubs API", label: "11. Academic Hubs Observatory" },
+      { id: "Members & Presence API", label: "12. Teammate Live Presence" },
+      { id: "Standups API", label: "13. Daily Standups (Discord / Slack)" },
+      { id: "CI/CD Build Ingestion API", label: "14. CI/CD Build Ingestion (GitLab, Jenkins)" }
     ]
   },
   {
     category: "Ecosystem & Toolkits",
     items: [
-      { id: "Webhooks", label: "8. Webhook Ingestion" },
-      { id: "SDK", label: "9. Node / TS SDK" },
-      { id: "CLI", label: "10. Command Line Interface" },
-      { id: "Database Schema", label: "11. Database Model" }
+      { id: "Webhooks", label: "15. Webhook Ingestion & Subscriptions" },
+      { id: "SDK", label: "16. Node / TS SDK" },
+      { id: "CLI", label: "17. Command Line Interface" },
+      { id: "Database Schema", label: "18. Database Model" }
     ]
   },
   {
     category: "Security & Trust",
     items: [
-      { id: "RLS", label: "12. Postgres RLS & JWT" },
-      { id: "Security Scopes", label: "13. API Authorization Scopes" }
+      { id: "RLS", label: "19. Postgres RLS & JWT" },
+      { id: "Security Scopes", label: "20. API Authorization Scopes" }
     ]
   }
 ];
@@ -210,6 +217,26 @@ export default function DocsPage() {
     }
   };
 
+  // Handle endpoint selection with intelligent default payloads
+  const handleEndpointSelect = (endpoint: string) => {
+    setPlaygroundEndpoint(endpoint);
+    if (endpoint === "POST /api/developer/tasks") {
+      setPlaygroundPayload(`{\n  "title": "API Test Deliverable",\n  "description": "Created from live explorer docs",\n  "priority": "high"\n}`);
+    } else if (endpoint === "POST /api/developer/ai/sprint-summary") {
+      setPlaygroundPayload(`{}`);
+    } else if (endpoint === "POST /api/developer/reports/generate-pdf") {
+      setPlaygroundPayload(`{\n  "type": "contribution"\n}`);
+    } else if (endpoint === "POST /api/developer/standups") {
+      setPlaygroundPayload(`{\n  "authorName": "Khushi Nayak",\n  "accomplished": "Implemented Developer REST APIs",\n  "workingOn": "Testing live telemetry endpoints",\n  "blockers": "None"\n}`);
+    } else if (endpoint === "POST /api/developer/ci/build-event") {
+      setPlaygroundPayload(`{\n  "pipelineName": "GitLab CI Build",\n  "branch": "main",\n  "status": "success",\n  "testsPassed": 42,\n  "testsFailed": 0,\n  "codeCoveragePct": 94.5\n}`);
+    } else if (endpoint === "POST /api/developer/webhooks") {
+      setPlaygroundPayload(`{\n  "targetUrl": "https://discord.com/api/webhooks/example",\n  "eventType": "task.completed"\n}`);
+    } else if (endpoint === "POST /api/developer/meetings") {
+      setPlaygroundPayload(`{\n  "title": "Sprint Planning & Retrospective",\n  "scheduledAt": "${new Date(Date.now() + 86400000).toISOString()}",\n  "durationMinutes": 45\n}`);
+    }
+  };
+
   // Execute actual API calls through playground sandbox
   const handlePlaygroundSend = async () => {
     setIsPlayinggroundLoading(true);
@@ -243,9 +270,15 @@ export default function DocsPage() {
 
       const res = await fetch(path, options);
       setResponseStatus(res.status);
-      const data = await res.json();
-      
-      setPlaygroundResponse(JSON.stringify(data, null, 2));
+
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("text/csv") || contentType.includes("text/plain")) {
+        const textData = await res.text();
+        setPlaygroundResponse(textData);
+      } else {
+        const data = await res.json();
+        setPlaygroundResponse(JSON.stringify(data, null, 2));
+      }
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : "Failed to establish telemetry tunnel.";
       setPlaygroundResponse(JSON.stringify({
@@ -541,6 +574,86 @@ export default function DocsPage() {
               </div>
             </section>
 
+            {/* AI INSIGHTS & BURNOUT API */}
+            <section id="AI Insights API" className="scroll-mt-28 flex flex-col gap-4">
+              <h3 className="text-lg font-serif text-white font-light">8. AI Intelligence & Burnout Telemetry</h3>
+              <p className="text-xs font-light leading-relaxed text-[#8e94a0]">
+                Retrieve real-time Gemini AI workload analysis, burnout signals, team stress levels, and collaboration parity metrics for your authorized workspace.
+              </p>
+              <div className="p-3 bg-black/40 border border-white/5 rounded-xl text-[10px] font-mono">
+                <span className="text-emerald-400">GET</span> /api/developer/ai/insights
+              </div>
+            </section>
+
+            {/* AI SPRINT SUMMARY API */}
+            <section id="Sprint Summary API" className="scroll-mt-28 flex flex-col gap-4">
+              <h3 className="text-lg font-serif text-white font-light">9. AI Sprint Summaries</h3>
+              <p className="text-xs font-light leading-relaxed text-[#8e94a0]">
+                Generate an on-demand AI sprint wrap-up report summarizing completed deliverables, work-in-progress concurrency, overdue bottlenecks, and top contributors.
+              </p>
+              <div className="p-3 bg-black/40 border border-white/5 rounded-xl text-[10px] font-mono">
+                <span className="text-[#F8CCAA]">POST</span> /api/developer/ai/sprint-summary
+              </div>
+            </section>
+
+            {/* REPORTS EXPORT (CSV / PDF) API */}
+            <section id="Reports Export API" className="scroll-mt-28 flex flex-col gap-4">
+              <h3 className="text-lg font-serif text-white font-light">10. Grading & Reports Export (CSV / PDF)</h3>
+              <p className="text-xs font-light leading-relaxed text-[#8e94a0]">
+                Export raw student telemetry for LMS grading systems (Canvas, Blackboard, Excel) or generate certified contribution PDF certificates.
+              </p>
+              <div className="p-3 bg-black/40 border border-white/5 rounded-xl text-[10px] font-mono flex flex-col gap-1.5">
+                <div><span className="text-emerald-400">GET</span> /api/developer/reports/export-csv <span className="text-white/40 text-[9px]">(Downloads formatted CSV)</span></div>
+                <div><span className="text-[#F8CCAA]">POST</span> /api/developer/reports/generate-pdf <span className="text-white/40 text-[9px]">(Creates signed PDF)</span></div>
+              </div>
+            </section>
+
+            {/* ACADEMIC HUBS OBSERVATORY API */}
+            <section id="Academic Hubs API" className="scroll-mt-28 flex flex-col gap-4">
+              <h3 className="text-lg font-serif text-white font-light">11. Academic Hubs Observatory</h3>
+              <p className="text-xs font-light leading-relaxed text-[#8e94a0]">
+                Query institutional hubs across Capstones, Open Source labs, AI Research clusters, Hackathons, and Faculty Oversight.
+              </p>
+              <div className="p-3 bg-black/40 border border-white/5 rounded-xl text-[10px] font-mono flex flex-col gap-1.5">
+                <div><span className="text-emerald-400">GET</span> /api/developer/hubs <span className="text-white/40 text-[9px]">(Lists all certified hubs)</span></div>
+                <div><span className="text-emerald-400">GET</span> /api/developer/hubs/:slug <span className="text-white/40 text-[9px]">(Hub details & linked projects)</span></div>
+              </div>
+            </section>
+
+            {/* MEMBERS & PRESENCE API */}
+            <section id="Members & Presence API" className="scroll-mt-28 flex flex-col gap-4">
+              <h3 className="text-lg font-serif text-white font-light">12. Teammate Live Presence</h3>
+              <p className="text-xs font-light leading-relaxed text-[#8e94a0]">
+                Retrieve real-time presence heartbeats, teammate roles, and active task focus across workspace members.
+              </p>
+              <div className="p-3 bg-black/40 border border-white/5 rounded-xl text-[10px] font-mono">
+                <span className="text-emerald-400">GET</span> /api/developer/members/presence
+              </div>
+            </section>
+
+            {/* DAILY STANDUPS API */}
+            <section id="Standups API" className="scroll-mt-28 flex flex-col gap-4">
+              <h3 className="text-lg font-serif text-white font-light">13. Daily Standups (Discord / Slack Integration)</h3>
+              <p className="text-xs font-light leading-relaxed text-[#8e94a0]">
+                Query recent team standup logs or submit automated standup updates directly from Slack or Discord bot webhooks.
+              </p>
+              <div className="p-3 bg-black/40 border border-white/5 rounded-xl text-[10px] font-mono flex flex-col gap-1.5">
+                <div><span className="text-emerald-400">GET</span> /api/developer/standups</div>
+                <div><span className="text-[#F8CCAA]">POST</span> /api/developer/standups</div>
+              </div>
+            </section>
+
+            {/* CI/CD BUILD INGESTION API */}
+            <section id="CI/CD Build Ingestion API" className="scroll-mt-28 flex flex-col gap-4">
+              <h3 className="text-lg font-serif text-white font-light">14. CI/CD Build Ingestion</h3>
+              <p className="text-xs font-light leading-relaxed text-[#8e94a0]">
+                Ingest automated build results, test pass/fail counts, and code coverage percentages from GitLab CI, CircleCI, Jenkins, or GitHub Actions.
+              </p>
+              <div className="p-3 bg-black/40 border border-white/5 rounded-xl text-[10px] font-mono">
+                <span className="text-[#F8CCAA]">POST</span> /api/developer/ci/build-event
+              </div>
+            </section>
+
             {/* WEBHOOK INGESTION */}
             <section id="Webhooks" className="scroll-mt-28 flex flex-col gap-4">
               <h2 className="text-xl md:text-2xl font-serif text-white font-light">Webhook Ingestion</h2>
@@ -690,15 +803,39 @@ export default function DocsPage() {
                   <select
                     id="play-endpoint"
                     value={playgroundEndpoint}
-                    onChange={(e) => setPlaygroundEndpoint(e.target.value)}
+                    onChange={(e) => handleEndpointSelect(e.target.value)}
                     className="w-full p-2.5 rounded-xl bg-black/40 border border-white/5 font-mono text-[10px] text-white focus:outline-none cursor-pointer"
                   >
-                    <option value="GET /api/developer/workspaces">GET /workspaces</option>
-                    <option value="GET /api/developer/tasks">GET /tasks</option>
-                    <option value="POST /api/developer/tasks">POST /tasks (Create Task)</option>
-                    <option value="GET /api/developer/analytics">GET /analytics</option>
-                    <option value="GET /api/developer/meetings">GET /meetings</option>
-                    <option value="POST /api/developer/meetings">POST /meetings (Register Sync)</option>
+                    <optgroup label="Core Workspace & Deliverables">
+                      <option value="GET /api/developer/workspaces">GET /workspaces</option>
+                      <option value="GET /api/developer/tasks">GET /tasks</option>
+                      <option value="POST /api/developer/tasks">POST /tasks (Create Task)</option>
+                      <option value="GET /api/developer/analytics">GET /analytics (Fairness & Telemetry)</option>
+                      <option value="GET /api/developer/meetings">GET /meetings</option>
+                      <option value="POST /api/developer/meetings">POST /meetings (Register Sync)</option>
+                    </optgroup>
+                    <optgroup label="AI Intelligence & Burnout">
+                      <option value="GET /api/developer/ai/insights">GET /ai/insights (Parity & Burnout)</option>
+                      <option value="POST /api/developer/ai/sprint-summary">POST /ai/sprint-summary (Wrap-up)</option>
+                    </optgroup>
+                    <optgroup label="Reports & LMS Grading">
+                      <option value="GET /api/developer/reports/export-csv">GET /reports/export-csv (Download CSV)</option>
+                      <option value="POST /api/developer/reports/generate-pdf">POST /reports/generate-pdf (Signed PDF)</option>
+                    </optgroup>
+                    <optgroup label="Academic Hubs Observatory">
+                      <option value="GET /api/developer/hubs">GET /hubs (All 5 Hubs)</option>
+                      <option value="GET /api/developer/hubs/capstone">GET /hubs/capstone (Hub Detail)</option>
+                    </optgroup>
+                    <optgroup label="Team Presence & Standups">
+                      <option value="GET /api/developer/members/presence">GET /members/presence (Live Status)</option>
+                      <option value="GET /api/developer/standups">GET /standups (Activity Log)</option>
+                      <option value="POST /api/developer/standups">POST /standups (Slack/Discord Log)</option>
+                    </optgroup>
+                    <optgroup label="DevOps & Webhooks">
+                      <option value="POST /api/developer/ci/build-event">POST /ci/build-event (Ingest Build)</option>
+                      <option value="GET /api/developer/webhooks">GET /webhooks (Event Streams)</option>
+                      <option value="POST /api/developer/webhooks">POST /webhooks (Subscribe)</option>
+                    </optgroup>
                   </select>
                 </div>
 
