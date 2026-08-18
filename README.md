@@ -1,16 +1,22 @@
+<div align="center">
+
 # 📊 ContriTrack
 
-## AI-Powered Academic Collaboration & Telemetry Platform
+### AI-Powered Academic Collaboration & Telemetry Platform
 
 *A modern, end-to-end platform engineered for students, developers, engineering teams, and university capstones to manage workspaces, track deliverables, analyze contribution fairness, and harness AI-powered collaboration insights.*
 
-![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=for-the-badge&logo=typescript)
-![OpenRouter](https://img.shields.io/badge/OpenRouter-AI_API-blue?style=for-the-badge)
-![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?style=for-the-badge&logo=supabase)
-![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?style=for-the-badge&logo=prisma)
-![Firebase](https://img.shields.io/badge/Firebase-Auth-orange?style=for-the-badge&logo=firebase)
-![Status](https://img.shields.io/badge/Project-Active_&_Verified-success?style=for-the-badge)
+<br/>
+
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![OpenRouter](https://img.shields.io/badge/OpenRouter-AI_API-blue?style=for-the-badge)](https://openrouter.ai/)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?style=for-the-badge&logo=supabase)](https://supabase.com/)
+[![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
+[![Firebase](https://img.shields.io/badge/Firebase-Auth-orange?style=for-the-badge&logo=firebase)](https://firebase.google.com/)
+[![Status](https://img.shields.io/badge/Project-Active_&_Verified-success?style=for-the-badge)](https://github.com/Khushi1310-nayak/ContriTrack)
+
+</div>
 
 ---
 
@@ -322,4 +328,9 @@ Passionately building scalable full-stack applications, intelligent telemetry sy
 
 ---
 
+<div align="center">
+<br/>
+
 ⭐ If you found ContriTrack interesting or useful, please consider giving it a **Star** on GitHub!
+
+</div>
