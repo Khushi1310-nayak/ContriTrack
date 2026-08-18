@@ -19,6 +19,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || 
+    process.env.NEXT_PUBLIC_SITE_URL || 
+    "https://contri-track.vercel.app"
+  ),
   title: "ContriTrack | Academic Collaboration & Contribution Analytics",
   description: "Because group projects deserve accountability. Track real contributions, GitHub activity, team collaboration, and project performance with beautiful proof-based reports and analytics.",
   keywords: ["academic collaboration", "contribution tracking", "git dashboard", "group projects", "student accountability", "peer reviews", "professor dashboard"],
