@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Send,
   ChevronRight,
+  ChevronDown,
   Sparkles,
   Plus,
   Trash2,
@@ -82,6 +83,70 @@ const docStructure = [
   }
 ];
 
+// Endpoint metadata structures for custom themed dropdown
+interface EndpointOption {
+  value: string;
+  method: "GET" | "POST";
+  path: string;
+  label: string;
+}
+
+interface EndpointGroup {
+  group: string;
+  options: EndpointOption[];
+}
+
+const ENDPOINT_GROUPS: EndpointGroup[] = [
+  {
+    group: "Core Workspace & Deliverables",
+    options: [
+      { value: "GET /api/developer/workspaces", method: "GET", path: "/workspaces", label: "List workspaces & member parity" },
+      { value: "GET /api/developer/tasks", method: "GET", path: "/tasks", label: "Retrieve active deliverable backlog" },
+      { value: "POST /api/developer/tasks", method: "POST", path: "/tasks", label: "Create a new workspace task" },
+      { value: "GET /api/developer/analytics", method: "GET", path: "/analytics", label: "Jain's Fairness & telemetry scores" },
+      { value: "GET /api/developer/meetings", method: "GET", path: "/meetings", label: "Scheduled meetings & attendance" },
+      { value: "POST /api/developer/meetings", method: "POST", path: "/meetings", label: "Register new retrospective sync" }
+    ]
+  },
+  {
+    group: "AI Intelligence & Burnout",
+    options: [
+      { value: "GET /api/developer/ai/insights", method: "GET", path: "/ai/insights", label: "Workload stress & burnout flags" },
+      { value: "POST /api/developer/ai/sprint-summary", method: "POST", path: "/ai/sprint-summary", label: "Generate AI sprint wrap-up" }
+    ]
+  },
+  {
+    group: "Reports & LMS Grading",
+    options: [
+      { value: "GET /api/developer/reports/export-csv", method: "GET", path: "/reports/export-csv", label: "Download CSV grading ledger" },
+      { value: "POST /api/developer/reports/generate-pdf", method: "POST", path: "/reports/generate-pdf", label: "Generate certified signed PDF" }
+    ]
+  },
+  {
+    group: "Academic Hubs Observatory",
+    options: [
+      { value: "GET /api/developer/hubs", method: "GET", path: "/hubs", label: "All 5 university research hubs" },
+      { value: "GET /api/developer/hubs/capstone", method: "GET", path: "/hubs/capstone", label: "Senior Capstone hub telemetry" }
+    ]
+  },
+  {
+    group: "Team Presence & Standups",
+    options: [
+      { value: "GET /api/developer/members/presence", method: "GET", path: "/members/presence", label: "Live teammate active status" },
+      { value: "GET /api/developer/standups", method: "GET", path: "/standups", label: "Recent standup activity feed" },
+      { value: "POST /api/developer/standups", method: "POST", path: "/standups", label: "Submit Slack / Discord standup" }
+    ]
+  },
+  {
+    group: "DevOps & Webhooks",
+    options: [
+      { value: "POST /api/developer/ci/build-event", method: "POST", path: "/ci/build-event", label: "Ingest CI/CD build & test metrics" },
+      { value: "GET /api/developer/webhooks", method: "GET", path: "/webhooks", label: "List supported event streams" },
+      { value: "POST /api/developer/webhooks", method: "POST", path: "/webhooks", label: "Subscribe webhook destination URL" }
+    ]
+  }
+];
+
 export default function DocsPage() {
   const { user } = useAuth();
   
@@ -111,6 +176,35 @@ export default function DocsPage() {
   const [isPlayinggroundLoading, setIsPlayinggroundLoading] = useState<boolean>(false);
   const [playgroundPayload, setPlaygroundPayload] = useState<string>(`{\n  "title": "API Test Deliverable",\n  "description": "Created from live explorer docs",\n  "priority": "high"\n}`);
   const [responseStatus, setResponseStatus] = useState<number | null>(null);
+  
+  // Custom Endpoint Dropdown State
+  const [isEndpointDropdownOpen, setIsEndpointDropdownOpen] = useState<boolean>(false);
+  const endpointDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (endpointDropdownRef.current && !endpointDropdownRef.current.contains(event.target as Node)) {
+        setIsEndpointDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Compute currently selected endpoint metadata
+  const selectedEndpointDetails = useMemo(() => {
+    for (const group of ENDPOINT_GROUPS) {
+      const found = group.options.find(o => o.value === playgroundEndpoint);
+      if (found) return found;
+    }
+    return {
+      value: playgroundEndpoint,
+      method: (playgroundEndpoint.startsWith("POST") ? "POST" : "GET") as "GET" | "POST",
+      path: playgroundEndpoint.startsWith("POST") ? playgroundEndpoint.substring(5) : playgroundEndpoint.substring(4),
+      label: "Custom Target Endpoint"
+    };
+  }, [playgroundEndpoint]);
   
   // Support and env details
   const supportPhone = process.env.NEXT_PUBLIC_SUPPORT_PHONE || "+91 7077780027";
@@ -233,7 +327,7 @@ export default function DocsPage() {
     } else if (endpoint === "POST /api/developer/webhooks") {
       setPlaygroundPayload(`{\n  "targetUrl": "https://discord.com/api/webhooks/example",\n  "eventType": "task.completed"\n}`);
     } else if (endpoint === "POST /api/developer/meetings") {
-      setPlaygroundPayload(`{\n  "title": "Sprint Planning & Retrospective",\n  "scheduledAt": "${new Date(Date.now() + 86400000).toISOString()}",\n  "durationMinutes": 45\n}`);
+      setPlaygroundPayload(`{\n  "title": "Sprint Planning & Retrospective",\n  "scheduledAt": "2026-08-20T10:00:00.000Z",\n  "durationMinutes": 45\n}`);
     }
   };
 
@@ -797,46 +891,98 @@ export default function DocsPage() {
                   </div>
                 </div>
 
-                {/* 2. Endpoint selector */}
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="play-endpoint" className="text-[9px] font-mono uppercase text-[#8e94a0]">Select Action Target</label>
-                  <select
-                    id="play-endpoint"
-                    value={playgroundEndpoint}
-                    onChange={(e) => handleEndpointSelect(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-black/40 border border-white/5 font-mono text-[10px] text-white focus:outline-none cursor-pointer"
+                {/* 2. Custom Themed Endpoint Selector Opening Downwards */}
+                <div ref={endpointDropdownRef} className="relative flex flex-col gap-1.5 z-30">
+                  <label className="text-[9px] font-mono uppercase text-[#8e94a0]">Select Action Target</label>
+                  
+                  {/* Custom Trigger Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsEndpointDropdownOpen(prev => !prev)}
+                    className="w-full px-3 py-2.5 rounded-xl bg-black/60 hover:bg-black/80 border border-white/10 hover:border-[#F8CCAA]/40 text-left font-mono text-[10px] text-white flex items-center justify-between transition cursor-pointer shadow-inner group"
                   >
-                    <optgroup label="Core Workspace & Deliverables">
-                      <option value="GET /api/developer/workspaces">GET /workspaces</option>
-                      <option value="GET /api/developer/tasks">GET /tasks</option>
-                      <option value="POST /api/developer/tasks">POST /tasks (Create Task)</option>
-                      <option value="GET /api/developer/analytics">GET /analytics (Fairness & Telemetry)</option>
-                      <option value="GET /api/developer/meetings">GET /meetings</option>
-                      <option value="POST /api/developer/meetings">POST /meetings (Register Sync)</option>
-                    </optgroup>
-                    <optgroup label="AI Intelligence & Burnout">
-                      <option value="GET /api/developer/ai/insights">GET /ai/insights (Parity & Burnout)</option>
-                      <option value="POST /api/developer/ai/sprint-summary">POST /ai/sprint-summary (Wrap-up)</option>
-                    </optgroup>
-                    <optgroup label="Reports & LMS Grading">
-                      <option value="GET /api/developer/reports/export-csv">GET /reports/export-csv (Download CSV)</option>
-                      <option value="POST /api/developer/reports/generate-pdf">POST /reports/generate-pdf (Signed PDF)</option>
-                    </optgroup>
-                    <optgroup label="Academic Hubs Observatory">
-                      <option value="GET /api/developer/hubs">GET /hubs (All 5 Hubs)</option>
-                      <option value="GET /api/developer/hubs/capstone">GET /hubs/capstone (Hub Detail)</option>
-                    </optgroup>
-                    <optgroup label="Team Presence & Standups">
-                      <option value="GET /api/developer/members/presence">GET /members/presence (Live Status)</option>
-                      <option value="GET /api/developer/standups">GET /standups (Activity Log)</option>
-                      <option value="POST /api/developer/standups">POST /standups (Slack/Discord Log)</option>
-                    </optgroup>
-                    <optgroup label="DevOps & Webhooks">
-                      <option value="POST /api/developer/ci/build-event">POST /ci/build-event (Ingest Build)</option>
-                      <option value="GET /api/developer/webhooks">GET /webhooks (Event Streams)</option>
-                      <option value="POST /api/developer/webhooks">POST /webhooks (Subscribe)</option>
-                    </optgroup>
-                  </select>
+                    <div className="flex items-center gap-2 truncate">
+                      <span className={`px-2 py-0.5 rounded text-[8px] font-mono font-bold tracking-wider ${
+                        selectedEndpointDetails.method === 'GET' 
+                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25' 
+                          : 'bg-[#F8CCAA]/15 text-[#F8CCAA] border border-[#F8CCAA]/25'
+                      }`}>
+                        {selectedEndpointDetails.method}
+                      </span>
+                      <span className="text-white font-medium text-xs font-mono">{selectedEndpointDetails.path}</span>
+                      <span className="text-[9.5px] text-[#8e94a0] font-sans truncate hidden sm:inline">
+                        — {selectedEndpointDetails.label}
+                      </span>
+                    </div>
+                    <ChevronDown 
+                      size={13} 
+                      className={`text-[#F8CCAA] shrink-0 transition-transform duration-200 ${isEndpointDropdownOpen ? 'rotate-180' : ''}`} 
+                    />
+                  </button>
+
+                  {/* Dropdown Popup Opening UNDER / DOWNWARDS */}
+                  <AnimatePresence>
+                    {isEndpointDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                        transition={{ duration: 0.15, ease: "easeOut" }}
+                        className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl bg-[#0e1017] border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.9)] backdrop-blur-2xl p-2 max-h-72 overflow-y-auto scrollbar-thin scrollbar-thumb-white/15 scrollbar-track-transparent hover:scrollbar-thumb-[#F8CCAA]/30 flex flex-col gap-2.5"
+                      >
+                        {ENDPOINT_GROUPS.map((group) => (
+                          <div key={group.group} className="flex flex-col gap-1">
+                            <div className="text-[8.5px] font-mono uppercase tracking-widest text-[#F2C1A3] font-bold px-2.5 py-1 flex items-center gap-1.5 border-b border-white/5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#F2C1A3]" />
+                              <span>{group.group}</span>
+                            </div>
+                            
+                            <div className="flex flex-col gap-0.5 pt-0.5">
+                              {group.options.map((opt) => {
+                                const isSelected = playgroundEndpoint === opt.value;
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => {
+                                      handleEndpointSelect(opt.value);
+                                      setIsEndpointDropdownOpen(false);
+                                    }}
+                                    className={`w-full px-2.5 py-2 rounded-xl text-left transition flex items-center justify-between group cursor-pointer ${
+                                      isSelected 
+                                        ? 'bg-[#F8CCAA]/15 border border-[#F8CCAA]/35 text-white' 
+                                        : 'hover:bg-white/[0.06] text-[#8e94a0] hover:text-white border border-transparent'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2.5 truncate">
+                                      <span className={`px-1.5 py-0.5 rounded text-[8px] font-mono font-bold shrink-0 ${
+                                        opt.method === 'GET' 
+                                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25' 
+                                          : 'bg-[#F8CCAA]/15 text-[#F8CCAA] border border-[#F8CCAA]/25'
+                                      }`}>
+                                        {opt.method}
+                                      </span>
+                                      <div className="flex flex-col truncate">
+                                        <span className="text-[10px] font-mono text-white/95 font-medium group-hover:text-white truncate">
+                                          {opt.path}
+                                        </span>
+                                        <span className="text-[9px] text-[#8e94a0] group-hover:text-[#F8CCAA]/80 truncate font-sans">
+                                          {opt.label}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    {isSelected && (
+                                      <Check size={12} className="text-[#F8CCAA] shrink-0 ml-2" />
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* 3. Conditional POST payload payload view */}
