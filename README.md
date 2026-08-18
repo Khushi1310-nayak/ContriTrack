@@ -1,5 +1,3 @@
-<div align="center">
-
 # 📊 ContriTrack
 
 ## AI-Powered Academic Collaboration & Telemetry Platform
@@ -13,8 +11,6 @@
 ![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?style=for-the-badge&logo=prisma)
 ![Firebase](https://img.shields.io/badge/Firebase-Auth-orange?style=for-the-badge&logo=firebase)
 ![Status](https://img.shields.io/badge/Project-Active_&_Verified-success?style=for-the-badge)
-
-</div>
 
 ---
 
@@ -87,16 +83,21 @@ graph TD
 # 💻 System Modules
 
 ## 🏢 Workspace Management
+
 Create and orchestrate multi-user workspaces with dynamic permission tiers (Owner, Lead Maintainer, Contributor, Guest) and 5-minute rolling invite codes.
 
 ## 📊 Telemetry & Fairness Dashboard
+
 Monitor team performance through real-time commit distribution, lines of code added/deleted, deliverable resolution rates, and mathematical fairness scoring via **Jain's Fairness Index**.
 
 ## 🤖 AI Insights & Burnout Telemetry
+
 Powered by the **OpenRouter API** to detect collaboration imbalances, late-night overtime patterns, missed milestone risks, and deliver actionable recommendations to maintain high team morale.
 
 ## 🎓 Academic Hubs Observatory (`/hubs`)
+
 Connect student workspaces to university faculty hubs:
+
 - **Senior Capstone & Thesis Observatory** (`/hubs/capstone`)
 - **Open-Source University Innovation Hub** (`/hubs/open-source`)
 - **AI & Data Science Research Lab Hub** (`/hubs/ai-research`)
@@ -104,18 +105,23 @@ Connect student workspaces to university faculty hubs:
 - **Departmental Faculty & Grading Oversight Hub** (`/hubs/faculty-oversight`)
 
 ## 🔑 Developer REST API & Sandbox (`/docs`)
+
 Expose ContriTrack workspaces to scripts, CI/CD pipelines, Discord bots, and external LMS integrations via secure `ct_live_...` Bearer tokens. Includes an in-browser interactive API playground to execute live queries.
 
 ## 📋 Kanban Sprint Deliverables
+
 Organize sprint deliverables across Backlog, Todo, In-Progress, and Completed states. Features assignee workload balancing, due-date flags, and activity audit trails.
 
 ## 📬 Notification Center & Interactive Threaded Replies
+
 Real-time 10-second polling notification panel with unread counters, audio chimes, priority filtering, and direct threaded replies saved into the database.
 
 ## 🎯 Recruitment Center & ATS (`/careers` & `/admin/careers`)
+
 Public applicant submission portal with resume uploads, skills evaluation, and an admin ATS dashboard for candidate lifecycle tracking.
 
 ## 🔒 Forensic Security & GDPR Data Vault
+
 Full Row-Level Security (RLS) enforcement, one-click encrypted JSON backup export, and hardened 20-table forensic cascade deletion.
 
 ---
@@ -164,31 +170,31 @@ All REST endpoints require the `Authorization: Bearer ct_live_...` header.
 
 ## 🏠 Overview Dashboard Screenshot
 
-<img width="1920" height="928" alt="Overview Dashboard" src="https://github.com/user-attachments/assets/a379be3d-13cf-4934-8983-5eceb066a2ea" />
+![Overview Dashboard](https://github.com/user-attachments/assets/a379be3d-13cf-4934-8983-5eceb066a2ea)
 
 ## 📊 Analytics Dashboard Screenshot
 
-<img width="1920" height="934" alt="Analytics Dashboard" src="https://github.com/user-attachments/assets/36eb3b2d-91a9-423b-b688-fa74ef92ef95" />
+![Analytics Dashboard](https://github.com/user-attachments/assets/36eb3b2d-91a9-423b-b688-fa74ef92ef95)
 
 ## 🤖 AI Insights Screenshot
 
-<img width="1920" height="939" alt="AI Insights" src="https://github.com/user-attachments/assets/1d1b8eba-49e1-4297-a3a7-40e9457ddbfe" />
+![AI Insights](https://github.com/user-attachments/assets/1d1b8eba-49e1-4297-a3a7-40e9457ddbfe)
 
 ## 👥 Teams Management Screenshot
 
-<img width="1920" height="922" alt="Teams Management" src="https://github.com/user-attachments/assets/bd76693a-a9e7-438b-8caa-fc77a839a205" />
+![Teams Management](https://github.com/user-attachments/assets/bd76693a-a9e7-438b-8caa-fc77a839a205)
 
 ## 📅 Meetings Workspace Screenshot
 
-<img width="1920" height="933" alt="Meetings Workspace" src="https://github.com/user-attachments/assets/15a7e3ae-e8bf-4cbb-99b9-66c8c1827ba1" />
+![Meetings Workspace](https://github.com/user-attachments/assets/15a7e3ae-e8bf-4cbb-99b9-66c8c1827ba1)
 
 ## ⚙️ Settings & Security Screenshot
 
-<img width="1920" height="937" alt="Settings and Security" src="https://github.com/user-attachments/assets/128c1408-f397-42d8-9068-2809f5bfc30f" />
+![Settings and Security](https://github.com/user-attachments/assets/128c1408-f397-42d8-9068-2809f5bfc30f)
 
 ## 🧠 GitHub Purging & Telemetry Screenshot
 
-<img width="1920" height="936" alt="GitHub Telemetry" src="https://github.com/user-attachments/assets/058d5b50-2da8-43da-8439-cc888471568e" />
+![GitHub Telemetry](https://github.com/user-attachments/assets/058d5b50-2da8-43da-8439-cc888471568e)
 
 ---
 
@@ -266,9 +272,9 @@ CRON_SECRET=
 
 ### 💡 Key Generation Helpers
 
-* **VAPID Keys:** Run `npx web-push generate-vapid-keys` in the terminal.
-* **Encryption Key (`ENCRYPTION_KEY`):** Run `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
-* **Prisma Schema Sync:** Run `npx prisma db push` to synchronize all tables to your PostgreSQL instance.
+- **VAPID Keys:** Run `npx web-push generate-vapid-keys` in the terminal.
+- **Encryption Key (`ENCRYPTION_KEY`):** Run `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
+- **Prisma Schema Sync:** Run `npx prisma db push` to synchronize all tables to your PostgreSQL instance.
 
 ## 4. Run Development Server
 
@@ -316,8 +322,4 @@ Passionately building scalable full-stack applications, intelligent telemetry sy
 
 ---
 
-<div align="center">
-
 ⭐ If you found ContriTrack interesting or useful, please consider giving it a **Star** on GitHub!
-
-</div>
