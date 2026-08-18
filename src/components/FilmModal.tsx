@@ -121,6 +121,9 @@ export default function FilmModal({ isOpen, onClose }: FilmModalProps) {
   const activeSceneIdx = scenes.findIndex(s => s.id === activeSceneId);
   const activeScene = activeSceneIdx !== -1 ? scenes[activeSceneIdx] : scenes[0];
 
+  // Ref for recursive cue triggers
+  const triggerActiveCueRef = React.useRef<(cueIdx: number) => void>(() => {});
+
   // Dynamic cue trigger manager
   const triggerActiveCue = React.useCallback((cueIdx: number) => {
     // 1. Clear any active intervals/timeouts and remove utterance listeners
@@ -166,7 +169,7 @@ export default function FilmModal({ isOpen, onClose }: FilmModalProps) {
         // Move to next cue if available
         if (cueIdx < narrationCues.length - 1) {
           setActiveCueIdx(cueIdx + 1);
-          triggerActiveCue(cueIdx + 1);
+          triggerActiveCueRef.current(cueIdx + 1);
         } else {
           setIsPlaying(false);
         }
@@ -242,6 +245,10 @@ export default function FilmModal({ isOpen, onClose }: FilmModalProps) {
       }, estimatedSpeechDuration);
     }
   }, [isMuted, narratorGender, volume]);
+
+  React.useEffect(() => {
+    triggerActiveCueRef.current = triggerActiveCue;
+  }, [triggerActiveCue]);
 
   // Timeline Scrubber scrubbing logic snapping to start of nearest cue
   const handleScrub = React.useCallback((timeVal: number) => {
@@ -423,8 +430,11 @@ export default function FilmModal({ isOpen, onClose }: FilmModalProps) {
 
   // Playback timeline controller driver
   useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
     if (isOpen && isPlaying) {
-      triggerActiveCue(activeCueIdx);
+      timer = setTimeout(() => {
+        triggerActiveCue(activeCueIdx);
+      }, 0);
       startAmbientSynth();
     } else {
       if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
@@ -440,6 +450,7 @@ export default function FilmModal({ isOpen, onClose }: FilmModalProps) {
     }
 
     return () => {
+      if (timer) clearTimeout(timer);
       if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
       if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
       if (speechUtteranceRef.current) {
@@ -456,9 +467,15 @@ export default function FilmModal({ isOpen, onClose }: FilmModalProps) {
 
   // Restart active cue speech when narrator settings or mute state changes dynamically
   useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
     if (isOpen && isPlaying) {
-      triggerActiveCue(activeCueIdx);
+      timer = setTimeout(() => {
+        triggerActiveCue(activeCueIdx);
+      }, 0);
     }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [narratorGender, isMuted]);
 

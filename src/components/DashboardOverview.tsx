@@ -4,14 +4,14 @@ import React from "react";
 import { motion } from "framer-motion";
 import { 
   TrendingUp, Check, Users, ShieldCheck, Github, Layers, Sparkles, 
-  ArrowRight, Plus, Calendar, Settings, Play 
+  ArrowRight, Plus, Calendar 
 } from "lucide-react";
 
 interface StatsCard {
   title: string;
   val: string;
   sub: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
   accent: string;
 }
 
@@ -24,7 +24,7 @@ interface ContributorStat {
 interface AIInsight {
   title: string;
   desc: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
   color: string;
   bg: string;
 }
@@ -60,7 +60,7 @@ interface DashboardOverviewProps {
   realInsights: AIInsight[];
   notifications: ActivityNote[];
   setActiveTab: (tab: string) => void;
-  githubConnected: boolean;
+  githubConnected?: boolean;
 }
 
 const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -80,8 +80,7 @@ export default function DashboardOverview({
   strokeDashoffset,
   realInsights,
   notifications,
-  setActiveTab,
-  githubConnected
+  setActiveTab
 }: DashboardOverviewProps) {
   
   // A workspace is newly initialized if it has no tasks AND no linked git commits

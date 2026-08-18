@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Globe, Lock, Star, GitFork, RefreshCw, X, FolderGit2, Check } from "lucide-react";
+import { Search, Star, GitFork, RefreshCw, X, FolderGit2, Check } from "lucide-react";
 import { fetchAvailableRepositories, linkRepository } from "@/app/actions/github-actions";
 
 interface Repo {
@@ -37,13 +37,7 @@ export function RepositoryImportModal({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [linking, setLinking] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      loadRepositories();
-    }
-  }, [isOpen]);
-
-  const loadRepositories = async () => {
+  const loadRepositories = useCallback(async () => {
     setLoading(true);
     setError("");
     setSelectedIds(new Set());
@@ -54,7 +48,24 @@ export function RepositoryImportModal({
       setError(res.error || "Failed to retrieve repositories from your GitHub account.");
     }
     setLoading(false);
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let isMounted = true;
+    void fetchAvailableRepositories(userId).then((res) => {
+      if (!isMounted) return;
+      if (res.success && res.repositories) {
+        setRepos(res.repositories as Repo[]);
+      } else {
+        setError(res.error || "Failed to retrieve repositories from your GitHub account.");
+      }
+      setLoading(false);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, userId]);
 
   const handleToggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -91,8 +102,9 @@ export function RepositoryImportModal({
       }
       onLinkedSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Failed to link select repositories.");
+    } catch (err: unknown) {
+      const errorObj = err as Error;
+      setError(errorObj.message || "Failed to link select repositories.");
     } finally {
       setLinking(false);
     }
@@ -126,14 +138,24 @@ export function RepositoryImportModal({
             transition={{ type: "spring", duration: 0.5 }}
             className="relative w-full max-w-2xl rounded-3xl border border-white/10 bg-[#0e0f17]/90 p-6 shadow-2xl flex flex-col gap-5 max-h-[85vh] overflow-hidden"
           >
-            {/* Close button */}
-            <button 
-              onClick={onClose}
-              className="absolute top-4 right-4 p-2 rounded-full border border-white/5 bg-white/[0.02] text-[#857C91] hover:text-white hover:bg-white/5 transition"
-              title="Close modal"
-            >
-              <X size={16} />
-            </button>
+            {/* Action buttons */}
+            <div className="absolute top-4 right-4 flex items-center gap-2">
+              <button 
+                onClick={() => void loadRepositories()}
+                disabled={loading}
+                className="p-2 rounded-full border border-white/5 bg-white/[0.02] text-[#857C91] hover:text-white hover:bg-white/5 transition disabled:opacity-50"
+                title="Refresh repositories"
+              >
+                <RefreshCw size={16} className={loading ? "animate-spin text-[#F2C1A3]" : ""} />
+              </button>
+              <button 
+                onClick={onClose}
+                className="p-2 rounded-full border border-white/5 bg-white/[0.02] text-[#857C91] hover:text-white hover:bg-white/5 transition"
+                title="Close modal"
+              >
+                <X size={16} />
+              </button>
+            </div>
 
             {/* Header */}
             <div className="flex items-center gap-3">

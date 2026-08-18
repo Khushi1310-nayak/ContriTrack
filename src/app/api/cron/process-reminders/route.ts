@@ -3,15 +3,16 @@ import { processUpcomingReminders } from "@/lib/reminder-worker";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     await processUpcomingReminders();
     return NextResponse.json({ success: true, processedAt: new Date().toISOString() });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message || String(error) }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    return NextResponse.json({ success: false, error: err.message || String(error) }, { status: 500 });
   }
 }
 
-export async function POST(request: Request) {
-  return GET(request);
+export async function POST() {
+  return GET();
 }

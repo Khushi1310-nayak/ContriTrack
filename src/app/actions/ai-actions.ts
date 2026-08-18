@@ -385,7 +385,7 @@ export async function generateOrGetWorkspaceAIInsights(
             const parsed = JSON.parse(content);
             if (Array.isArray(parsed.recommendations) && Array.isArray(parsed.insights)) {
               dynamicRecs = parsed.recommendations;
-              insightsData = parsed.insights.map((ins: any) => ({
+              insightsData = parsed.insights.map((ins: { insightType: string; severity: string; title: string; description: string; confidenceScore: number }) => ({
                 workspaceId,
                 userId,
                 insightType: ins.insightType,

@@ -175,7 +175,7 @@ export default function ReportsPanel({ workspaceId, workspaceName, user, collabo
     }
 
     setGeneratingType(null);
-  }, [user?.uid, selectedMember, selectedSprint, workspaceId]);
+  }, [user, selectedMember, selectedSprint, workspaceId]);
 
   // Archive / Delete reports
   const handleDeleteReport = React.useCallback(async (id: string) => {

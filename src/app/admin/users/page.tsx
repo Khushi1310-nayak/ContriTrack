@@ -1,19 +1,23 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { ShieldAlert, Trash2, Loader2, Search } from "lucide-react";
+import React, { useEffect, useState, useCallback } from "react";
+import { ShieldAlert, Trash2, Loader2 } from "lucide-react";
 import { getAllUsersForAdmin, deleteUserAccountAdmin } from "@/app/actions/admin-actions";
 
+interface AdminUser {
+  id: string;
+  fullName: string;
+  email: string;
+  githubUsername?: string | null;
+  createdAt: Date | string;
+}
+
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     const res = await getAllUsersForAdmin();
     if (res.success && res.users) {
@@ -22,7 +26,21 @@ export default function AdminUsersPage() {
       console.error(res.error);
     }
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    void getAllUsersForAdmin().then((res) => {
+      if (!isMounted) return;
+      if (res.success && res.users) {
+        setUsers(res.users);
+      }
+      setLoading(false);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleDelete = async (userId: string) => {
     if (!window.confirm("Are you sure you want to permanently delete this user? This cannot be undone.")) {

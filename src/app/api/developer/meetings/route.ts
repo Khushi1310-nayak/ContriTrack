@@ -73,10 +73,11 @@ export async function GET(request: NextRequest) {
         participants: m.participants
       }))
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("API Meetings query error:", error);
+    const err = error as Error;
     return NextResponse.json(
-      { success: false, error: "Internal Server Error", message: error.message },
+      { success: false, error: "Internal Server Error", message: err.message || String(error) },
       { status: 500 }
     );
   }
@@ -145,10 +146,11 @@ export async function POST(request: NextRequest) {
         workspaceId: meeting.workspaceId
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("API Meeting creation error:", error);
+    const err = error as Error;
     return NextResponse.json(
-      { success: false, error: "Internal Server Error", message: error.message },
+      { success: false, error: "Internal Server Error", message: err.message || String(error) },
       { status: 500 }
     );
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Play, Star } from "lucide-react";
 import FilmModal from "./FilmModal";
@@ -73,10 +74,12 @@ export default function Testimonials() {
             className="relative aspect-video w-full max-w-sm rounded-2xl overflow-hidden border border-white/10 group cursor-pointer shadow-xl flex items-center justify-center bg-gradient-to-br from-[#CD9FA0]/30 to-[#12131e]"
           >
             {/* Cinematic generated preview image backdrop */}
-            <img 
+            <Image 
               src="/contritrack_film_preview.png" 
               alt="ContriTrack Film Cinematic Preview" 
-              className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-85 group-hover:scale-105 transition-all duration-700 pointer-events-none"
+              fill
+              sizes="(max-width: 768px) 100vw, 384px"
+              className="object-cover opacity-70 group-hover:opacity-85 group-hover:scale-105 transition-all duration-700 pointer-events-none"
             />
 
             {/* Orange/Peach Radial Glow behind Play Button */}

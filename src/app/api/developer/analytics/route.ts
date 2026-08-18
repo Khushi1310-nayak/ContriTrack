@@ -77,10 +77,11 @@ export async function GET(request: NextRequest) {
         lastCalculated: s.updatedAt
       }))
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("API Analytics query error:", error);
+    const err = error as Error;
     return NextResponse.json(
-      { success: false, error: "Internal Server Error", message: error.message },
+      { success: false, error: "Internal Server Error", message: err.message || String(error) },
       { status: 500 }
     );
   }

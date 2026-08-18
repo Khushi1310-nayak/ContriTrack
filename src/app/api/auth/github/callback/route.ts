@@ -75,7 +75,7 @@ export async function GET(request: Request) {
       const mockToken = "gho_mockTokenStableAndSecureWorkspaceIntegrator321";
       await saveGitHubConnection(userId, email, name, "mock_developer_user", "https://avatars.githubusercontent.com/u/583231?v=4", mockToken);
       return NextResponse.redirect(`${new URL(request.url).origin}/dashboard?github_connected=true`);
-    } catch (_dbErr) {
+    } catch {
       const errorMsg = error instanceof Error ? error.message : "Database synchronization failed";
       return NextResponse.json({ error: errorMsg }, { status: 500 });
     }

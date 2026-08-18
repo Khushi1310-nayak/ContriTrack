@@ -5,7 +5,7 @@ import { WifiOff, RefreshCw, CheckCircle2 } from "lucide-react";
 import { OfflineSyncEngine } from "@/lib/offline-sync";
 
 export default function OfflineBanner() {
-  const [isOffline, setIsOffline] = useState(false);
+  const [isOffline, setIsOffline] = useState(() => (typeof navigator !== "undefined" ? !navigator.onLine : false));
   const [syncing, setSyncing] = useState(false);
   const [synced, setSynced] = useState(false);
 
@@ -27,11 +27,6 @@ export default function OfflineBanner() {
     window.addEventListener("offline", handleOffline);
     window.addEventListener("online", handleOnline);
     window.addEventListener("contritrack:sync:complete", handleSyncComplete);
-
-    // Initial check
-    if (!navigator.onLine) {
-      setIsOffline(true);
-    }
 
     return () => {
       window.removeEventListener("offline", handleOffline);

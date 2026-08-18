@@ -68,10 +68,11 @@ export async function GET(request: NextRequest) {
         assignee: t.assignee
       }))
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("API Tasks query error:", error);
+    const err = error as Error;
     return NextResponse.json(
-      { success: false, error: "Internal Server Error", message: error.message },
+      { success: false, error: "Internal Server Error", message: err.message || String(error) },
       { status: 500 }
     );
   }
@@ -137,10 +138,11 @@ export async function POST(request: NextRequest) {
         createdAt: task.createdAt
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("API Task creation error:", error);
+    const err = error as Error;
     return NextResponse.json(
-      { success: false, error: "Internal Server Error", message: error.message },
+      { success: false, error: "Internal Server Error", message: err.message || String(error) },
       { status: 500 }
     );
   }

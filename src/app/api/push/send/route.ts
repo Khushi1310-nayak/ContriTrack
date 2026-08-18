@@ -44,10 +44,11 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, notification: res.notification });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error in api/push/send route:", err);
+    const error = err as Error;
     return NextResponse.json(
-      { success: false, error: err.message },
+      { success: false, error: error.message || String(err) },
       { status: 500 }
     );
   }

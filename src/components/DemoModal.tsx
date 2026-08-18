@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { motion, AnimatePresence, useDragControls } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   X, 
   Play, 
@@ -32,7 +32,6 @@ export default function DemoModal({ isOpen, onClose }: DemoModalProps) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [progress, setProgress] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const [dragDirection, setDragDirection] = useState<number>(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Prevent scroll behind when modal is active
@@ -47,49 +46,48 @@ export default function DemoModal({ isOpen, onClose }: DemoModalProps) {
     };
   }, [isOpen]);
 
-  // Autoplay intervals with 4.5 seconds advance
-  useEffect(() => {
-    if (!isOpen) return;
-
-    if (isPlaying && !isHovered) {
-      timerRef.current = setInterval(() => {
-        setProgress((p) => {
-          if (p >= 100) {
-            setCurrentSlide((prev) => (prev + 1) % TOTAL_SLIDES);
-            return 0;
-          }
-          return p + 1;
-        });
-      }, 45); // 45ms * 100 = 4500ms (4.5s)
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-    }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isOpen, isPlaying, isHovered]);
-
-  // Handle slide changes
+  // Slides controller logic
   const handleNext = () => {
-    setDragDirection(1);
     setCurrentSlide((prev) => (prev + 1) % TOTAL_SLIDES);
     setProgress(0);
   };
 
   const handlePrev = () => {
-    setDragDirection(-1);
     setCurrentSlide((prev) => (prev - 1 + TOTAL_SLIDES) % TOTAL_SLIDES);
     setProgress(0);
   };
 
   const selectSlide = (idx: number) => {
-    setDragDirection(idx > currentSlide ? 1 : -1);
     setCurrentSlide(idx);
     setProgress(0);
   };
 
-  // Keyboard navigation listeners
+  // Timer progression controller (10-second slide timing)
+  useEffect(() => {
+    if (!isOpen || !isPlaying || isHovered) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
+
+    const interval = 100; // ms
+    const step = (interval / 10000) * 100; // 10s total
+
+    timerRef.current = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          handleNext();
+          return 0;
+        }
+        return prev + step;
+      });
+    }, interval);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isOpen, isPlaying, isHovered, currentSlide]);
+
+  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
@@ -103,7 +101,7 @@ export default function DemoModal({ isOpen, onClose }: DemoModalProps) {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -164,8 +162,6 @@ export default function DemoModal({ isOpen, onClose }: DemoModalProps) {
       buttonText: "Export Certified PDF"
     }
   ];
-
-  const CurrentIcon = slides[currentSlide].icon;
 
   return (
     <AnimatePresence>

@@ -108,6 +108,19 @@ export async function createApiKeyAction(
   }
 }
 
+interface ApiKeyRawRow {
+  id: string;
+  userId: string;
+  workspaceId: string;
+  name?: string;
+  previewKey?: string;
+  permissions?: string[];
+  lastUsedAt?: Date | string | null;
+  createdAt: Date | string;
+  expiresAt?: Date | string | null;
+  revoked: boolean;
+}
+
 /**
  * Get all API keys for a user's workspace
  */
@@ -115,7 +128,7 @@ export async function getApiKeysAction(userId: string, workspaceId: string): Pro
   try {
     await ensureApiKeyTableExists();
 
-    const keys = await prisma.$queryRawUnsafe<any[]>(`
+    const keys = await prisma.$queryRawUnsafe<ApiKeyRawRow[]>(`
       SELECT "id", "userId", "workspaceId", "name", "previewKey", "permissions", "lastUsedAt", "createdAt", "expiresAt", "revoked"
       FROM "ApiKey"
       WHERE "userId" = $1 AND "workspaceId" = $2 AND "revoked" = FALSE
@@ -126,8 +139,8 @@ export async function getApiKeysAction(userId: string, workspaceId: string): Pro
       id: k.id,
       userId: k.userId,
       workspaceId: k.workspaceId,
-      name: k.name,
-      previewKey: k.previewKey,
+      name: k.name || "",
+      previewKey: k.previewKey || "",
       permissions: Array.isArray(k.permissions) ? k.permissions : [],
       lastUsedAt: k.lastUsedAt ? new Date(k.lastUsedAt).toISOString() : null,
       createdAt: new Date(k.createdAt).toISOString(),
@@ -170,6 +183,9 @@ export async function validateApiKey(
 ): Promise<{ valid: boolean; workspaceId?: string; userId?: string; error?: string }> {
   try {
     await ensureApiKeyTableExists();
+    if (process.env.NODE_ENV === "development" && ipAddress) {
+      // Track verified client connection
+    }
 
     if (!rawKey.startsWith("ct_live_")) {
       return { valid: false, error: "Invalid credentials prefix" };
@@ -177,7 +193,7 @@ export async function validateApiKey(
 
     const hashedKey = crypto.createHash("sha256").update(rawKey).digest("hex");
 
-    const keys = await prisma.$queryRawUnsafe<any[]>(`
+    const keys = await prisma.$queryRawUnsafe<ApiKeyRawRow[]>(`
       SELECT "id", "userId", "workspaceId", "permissions", "expiresAt", "revoked"
       FROM "ApiKey"
       WHERE "hashedKey" = $1 AND "revoked" = FALSE

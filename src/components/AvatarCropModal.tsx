@@ -12,7 +12,6 @@ interface AvatarCropModalProps {
 
 export default function AvatarCropModal({ imageSrc, onSave, onClose }: AvatarCropModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
 
   const [zoom, setZoom] = useState(1);
@@ -82,7 +81,7 @@ export default function AvatarCropModal({ imageSrc, onSave, onClose }: AvatarCro
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.restore();
-  }, [zoom, offset, imageLoaded]);
+  }, [zoom, offset]);
 
   useEffect(() => {
     if (imageLoaded) {

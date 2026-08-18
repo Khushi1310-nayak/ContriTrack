@@ -39,10 +39,11 @@ export async function deleteUserAccountAdmin(userId: string) {
     try {
       await adminAuth.deleteUser(userId);
       console.log(`Deleted user ${userId} from Firebase Auth`);
-    } catch (firebaseError: any) {
+    } catch (firebaseError: unknown) {
       // If the user is already deleted from Firebase (e.g., auth/user-not-found), 
       // we still want to proceed to clean up Postgres.
-      if (firebaseError.code === "auth/user-not-found") {
+      const fbErr = firebaseError as { code?: string };
+      if (fbErr.code === "auth/user-not-found") {
         console.warn(`User ${userId} already missing from Firebase Auth, proceeding to Postgres deletion.`);
       } else {
         console.error("Error deleting from Firebase Auth:", firebaseError);
@@ -63,8 +64,9 @@ export async function deleteUserAccountAdmin(userId: string) {
     revalidatePath("/admin/users");
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error completely deleting user:", error);
-    return { success: false, error: error.message || "Failed to delete user account" };
+    const err = error as Error;
+    return { success: false, error: err.message || "Failed to delete user account" };
   }
 }

@@ -29,9 +29,9 @@ export async function generateReport(data: {
     });
 
     return { success: true, report: updatedReport };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in generateReport server action:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message || "Failed to generate report" };
   }
 }
 
@@ -46,9 +46,9 @@ export async function fetchWorkspaceReports(workspaceId: string) {
     });
 
     return { success: true, reports };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in fetchWorkspaceReports server action:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message || "Failed to fetch reports" };
   }
 }
 
@@ -61,9 +61,9 @@ export async function deleteReport(reportId: string) {
       where: { id: reportId }
     });
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in deleteReport server action:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message || "Failed to delete report" };
   }
 }
 
@@ -150,9 +150,9 @@ export async function generateContributionReport(workspaceId: string, userId: st
     });
 
     return { success: true, report };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in generateContributionReport server action:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message || "Failed to generate contribution report" };
   }
 }
 
@@ -187,9 +187,9 @@ export async function generateSprintReport(workspaceId: string, sprintName: stri
     });
 
     return { success: true, report };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in generateSprintReport server action:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message || "Failed to generate sprint report" };
   }
 }
 
@@ -208,11 +208,9 @@ export async function generateMeetingReport(workspaceId: string) {
 
     let totalInvited = 0;
     let totalAttended = 0;
-    let completedMeetingCount = 0;
 
     meetings.forEach(m => {
       if (m.status === "completed") {
-        completedMeetingCount++;
         m.participants.forEach(p => {
           totalInvited++;
           if (p.attendanceStatus === "attended") {
@@ -239,8 +237,8 @@ export async function generateMeetingReport(workspaceId: string) {
     });
 
     return { success: true, report };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in generateMeetingReport server action:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message || "Failed to generate meeting report" };
   }
 }

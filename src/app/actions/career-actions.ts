@@ -46,7 +46,7 @@ async function ensureRecruitingTablesExist() {
     `);
 
     // 3. Auto-seed missing career positions individually by slug
-    const existingJobs = await prisma.$queryRawUnsafe<any[]>(`SELECT "slug" FROM "JobRole"`);
+    const existingJobs = await prisma.$queryRawUnsafe<{ slug: string }[]>(`SELECT "slug" FROM "JobRole"`);
     const existingSlugs = new Set((existingJobs || []).map(j => j.slug));
 
     const seedJobs = [
@@ -566,6 +566,24 @@ export interface JobRoleMetadata {
   createdAt: string;
 }
 
+interface JobRoleRawRow {
+  id: string;
+  slug: string;
+  title: string;
+  department: string;
+  level: string;
+  location: string;
+  remoteType: string;
+  salaryMin: number;
+  salaryMax: number;
+  description: string;
+  fresherRequirements: string;
+  experiencedRequirements: string;
+  technologies?: string[];
+  status: string;
+  createdAt: Date | string;
+}
+
 /**
  * Retrieve all open jobs in the platform
  */
@@ -573,7 +591,7 @@ export async function getJobRolesAction(): Promise<JobRoleMetadata[]> {
   try {
     await ensureRecruitingTablesExist();
 
-    const jobs = await prisma.$queryRawUnsafe<any[]>(`
+    const jobs = await prisma.$queryRawUnsafe<JobRoleRawRow[]>(`
       SELECT * FROM "JobRole"
       WHERE "status" = 'open'
       ORDER BY "createdAt" DESC
@@ -609,7 +627,7 @@ export async function getJobRoleBySlugAction(slug: string): Promise<JobRoleMetad
   try {
     await ensureRecruitingTablesExist();
 
-    const jobs = await prisma.$queryRawUnsafe<any[]>(`
+    const jobs = await prisma.$queryRawUnsafe<JobRoleRawRow[]>(`
       SELECT * FROM "JobRole"
       WHERE "slug" = $1 AND "status" = 'open'
       LIMIT 1

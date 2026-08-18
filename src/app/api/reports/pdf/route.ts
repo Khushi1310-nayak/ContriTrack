@@ -359,7 +359,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse(html, {
       headers: { "Content-Type": "text/html" }
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error in api/reports/pdf route:", err);
     return new NextResponse("Server Error", { status: 500 });
   }

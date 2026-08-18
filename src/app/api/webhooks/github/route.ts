@@ -51,8 +51,9 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true, message: "Real-time sync sequence finalized successfully." });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Webhook receiver processing error:", error);
-    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
+    const err = error as Error;
+    return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500 });
   }
 }
