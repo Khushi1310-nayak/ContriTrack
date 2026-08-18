@@ -427,11 +427,27 @@ export async function createNotification(data: {
     // 5. Query user preferences to check if email alerts are authorized
     const emailEnabled = prefs ? prefs.emailEnabled : true;
     if (emailEnabled) {
-      const receiver = await prisma.user.findUnique({
+      let receiverEmail: string | null = null;
+      let receiverName = "Teammate";
+
+      const receiverUser = await prisma.user.findUnique({
         where: { id: data.receiverId }
       });
-      if (receiver && receiver.email) {
-        sendWorkspaceEmailAlert(receiver.email, receiver.fullName, data.title, data.message, data.type)
+      if (receiverUser && receiverUser.email) {
+        receiverEmail = receiverUser.email;
+        receiverName = receiverUser.fullName || receiverName;
+      } else {
+        const receiverProfile = await prisma.userProfile.findFirst({
+          where: { OR: [{ userId: data.receiverId }, { email: data.receiverId }] }
+        });
+        if (receiverProfile && receiverProfile.email) {
+          receiverEmail = receiverProfile.email;
+          receiverName = receiverProfile.fullName || receiverName;
+        }
+      }
+
+      if (receiverEmail) {
+        sendWorkspaceEmailAlert(receiverEmail, receiverName, data.title, data.message, data.type)
           .catch((err) => console.error("Async email alert send failed:", err));
       }
     }
@@ -450,16 +466,24 @@ export async function addNotificationReply(data: {
   notificationId: string;
   senderId: string;
   senderName: string;
-  receiverId: string;
+  receiverId?: string;
   message: string;
 }) {
   try {
+    let targetReceiverId = data.receiverId;
+    if (!targetReceiverId) {
+      const parentNotif = await prisma.notification.findUnique({
+        where: { id: data.notificationId }
+      });
+      targetReceiverId = parentNotif?.senderId || parentNotif?.receiverId || data.senderId;
+    }
+
     const reply = await prisma.notificationReply.create({
       data: {
         notificationId: data.notificationId,
         senderId: data.senderId,
         senderName: data.senderName,
-        receiverId: data.receiverId,
+        receiverId: targetReceiverId,
         message: data.message
       }
     });
