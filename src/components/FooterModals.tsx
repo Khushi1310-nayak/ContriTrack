@@ -877,13 +877,13 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
             </div>
 
             {/* Interactive Accordion List */}
-            <div className="flex flex-col gap-3 max-h-[52vh] overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-white/15 scrollbar-track-transparent hover:scrollbar-thumb-[#F8CCAA]/30">
+            <div className="flex flex-col gap-3 max-h-[55vh] overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-white/15 scrollbar-track-transparent hover:scrollbar-thumb-[#F8CCAA]/30">
               {filteredTerms.map((item) => {
                 const isOpen = activeAccordion === item.id;
                 return (
                   <div 
                     key={item.id}
-                    className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
+                    className={`rounded-2xl border transition-all duration-300 ${
                       isOpen 
                         ? "bg-[#0e1017] border-[#F8CCAA]/40 shadow-[0_4px_25px_rgba(0,0,0,0.6)]" 
                         : "bg-white/[0.02] border-white/10 hover:border-white/20"
@@ -892,13 +892,13 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
                     <button
                       type="button"
                       onClick={() => toggleAccordion(item.id)}
-                      className="w-full px-4.5 py-3.5 flex items-center justify-between text-left transition duration-300 cursor-pointer group"
+                      className="w-full px-5 py-4 flex items-center justify-between text-left transition duration-300 cursor-pointer group"
                     >
                       <div className="flex items-center gap-2.5 truncate pr-2">
                         <span className="text-white text-xs md:text-[13px] font-semibold group-hover:text-[#F8CCAA] transition">
                           {item.title}
                         </span>
-                        <span className="text-[9px] font-mono font-semibold px-2 py-0.5 rounded-md bg-[#F8CCAA]/10 border border-[#F8CCAA]/25 text-[#F8CCAA] shrink-0 hidden sm:inline">
+                        <span className="text-[9px] font-mono font-semibold px-2.5 py-0.5 rounded-md bg-[#F8CCAA]/10 border border-[#F8CCAA]/25 text-[#F8CCAA] shrink-0 hidden sm:inline">
                           {item.badge}
                         </span>
                       </div>
@@ -918,8 +918,9 @@ export default function FooterModals({ activeModal, onClose }: FooterModalsProps
                           animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
                           transition={{ duration: 0.25, ease: "easeInOut" }}
+                          className="overflow-hidden"
                         >
-                          <div className="px-4.5 pb-4.5 pt-2 text-xs md:text-[13px] text-slate-200 leading-relaxed font-normal border-t border-white/[0.06]">
+                          <div className="px-5 pb-6 pt-3 text-xs md:text-sm text-slate-200 leading-relaxed font-normal border-t border-white/[0.06]">
                             {item.content}
                           </div>
                         </motion.div>
