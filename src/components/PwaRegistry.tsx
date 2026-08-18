@@ -9,12 +9,20 @@ export function PwaRegistry() {
         navigator.serviceWorker
           .register("/sw.js")
           .then((registration) => {
-            console.log("PWA Service Worker registered with scope:", registration.scope);
-            
-            // Periodically check for updates (every hour)
-            setInterval(() => {
-              registration.update();
-            }, 1000 * 60 * 60);
+            // Proactively check for newer versions on every page load
+            registration.update();
+
+            // When a new service worker update is ready, claim control immediately
+            registration.addEventListener("updatefound", () => {
+              const newWorker = registration.installing;
+              if (newWorker) {
+                newWorker.addEventListener("statechange", () => {
+                  if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                    console.log("[ContriTrack] New deployment detected. Updated to latest version.");
+                  }
+                });
+              }
+            });
           })
           .catch((error) => {
             console.error("PWA Service Worker registration failed:", error);
