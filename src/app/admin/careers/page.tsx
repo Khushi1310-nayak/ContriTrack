@@ -8,7 +8,8 @@ import {
   Video, 
   CheckCircle, 
   XCircle, 
-  ChevronRight, 
+  ChevronRight,
+  ChevronLeft,
   ExternalLink,
   Loader2,
   Lock,
@@ -853,26 +854,71 @@ Report generated: ${new Date().toLocaleString()}
         )}
       </section>
 
-      {/* DOSSIER DETAILED WORKSPACE SIDEBAR */}
+      {/* DOSSIER DETAILED WORKSPACE MODAL */}
       <AnimatePresence>
         {selectedApp && (
           <>
-            {/* Backdrop Blur Lockout */}
+            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.4 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => handleSelectApp(null)}
-              className="fixed inset-0 bg-[#000] z-40 backdrop-blur-xs cursor-pointer"
+              className="fixed inset-0 bg-black/70 z-40 backdrop-blur-sm cursor-pointer"
             />
 
-            {/* Sliding Drawer */}
+            {/* Prev / Next floating nav arrows */}
+            {(() => {
+              const currentIdx = filteredApps.findIndex(a => a.id === selectedApp.id);
+              const hasPrev = currentIdx > 0;
+              const hasNext = currentIdx < filteredApps.length - 1;
+              return (
+                <>
+                  <motion.button
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: hasPrev ? 1 : 0.2, x: 0 }}
+                    exit={{ opacity: 0 }}
+                    disabled={!hasPrev}
+                    onClick={() => hasPrev && handleSelectApp(filteredApps[currentIdx - 1])}
+                    className="fixed left-4 top-1/2 -translate-y-1/2 z-[60] w-11 h-11 rounded-full bg-[#1b1c2b]/90 border border-white/10 hover:border-[#CD9FA0]/50 text-white/70 hover:text-[#F2C1A3] flex items-center justify-center shadow-xl transition-all duration-200 disabled:cursor-not-allowed cursor-pointer backdrop-blur-md"
+                    title="Previous candidate"
+                  >
+                    <ChevronLeft size={20} />
+                  </motion.button>
+
+                  <motion.button
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: hasNext ? 1 : 0.2, x: 0 }}
+                    exit={{ opacity: 0 }}
+                    disabled={!hasNext}
+                    onClick={() => hasNext && handleSelectApp(filteredApps[currentIdx + 1])}
+                    className="fixed right-4 top-1/2 -translate-y-1/2 z-[60] w-11 h-11 rounded-full bg-[#1b1c2b]/90 border border-white/10 hover:border-[#CD9FA0]/50 text-white/70 hover:text-[#F2C1A3] flex items-center justify-center shadow-xl transition-all duration-200 disabled:cursor-not-allowed cursor-pointer backdrop-blur-md"
+                    title="Next candidate"
+                  >
+                    <ChevronRight size={20} />
+                  </motion.button>
+
+                  {/* Counter badge */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-4 py-1.5 rounded-full bg-[#1b1c2b]/90 border border-white/10 text-[10px] font-mono text-white/50 backdrop-blur-md shadow-lg"
+                  >
+                    {currentIdx + 1} / {filteredApps.length}
+                  </motion.div>
+                </>
+              );
+            })()}
+
+            {/* Centered Modal */}
             <motion.aside
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 z-50 h-screen w-full max-w-xl md:max-w-2xl bg-[#0e1017] border-l border-white/10 p-6 shadow-[0_0_60px_rgba(0,0,0,0.85)] flex flex-col gap-6 text-left relative overflow-hidden"
+              initial={{ opacity: 0, scale: 0.96, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 20 }}
+              transition={{ type: "spring", damping: 28, stiffness: 260 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl max-h-[90vh] bg-[#0e1017] border border-white/10 rounded-3xl p-6 shadow-[0_0_80px_rgba(0,0,0,0.9)] flex flex-col gap-5 text-left relative overflow-hidden mx-4"
+              onClick={(e) => e.stopPropagation()}
             >
               {/* Background gradient orb */}
               <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-[#CD9FA0]/[0.03] blur-3xl pointer-events-none" />
