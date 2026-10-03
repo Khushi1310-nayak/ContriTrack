@@ -858,7 +858,7 @@ Report generated: ${new Date().toLocaleString()}
       <AnimatePresence>
         {selectedApp && (
           <>
-            {/* Backdrop */}
+            {/* Backdrop + flex-center wrapper */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -866,6 +866,9 @@ Report generated: ${new Date().toLocaleString()}
               onClick={() => handleSelectApp(null)}
               className="fixed inset-0 bg-black/70 z-40 backdrop-blur-sm cursor-pointer"
             />
+
+            {/* True viewport-center container */}
+            <div className="fixed inset-0 z-50 flex items-center justify-center px-16 py-6 pointer-events-none">
 
             {/* Prev / Next floating nav arrows */}
             {(() => {
@@ -917,14 +920,14 @@ Report generated: ${new Date().toLocaleString()}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 20 }}
               transition={{ type: "spring", damping: 28, stiffness: 260 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl max-h-[90vh] bg-[#0e1017] border border-white/10 rounded-3xl p-6 shadow-[0_0_80px_rgba(0,0,0,0.9)] flex flex-col gap-5 text-left relative overflow-hidden mx-4"
+              className="relative pointer-events-auto w-full max-w-2xl max-h-[88vh] bg-[#0e1017] border border-white/10 rounded-3xl shadow-[0_0_80px_rgba(0,0,0,0.9)] flex flex-col text-left overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Background gradient orb */}
               <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-[#CD9FA0]/[0.03] blur-3xl pointer-events-none" />
 
               {/* Drawer Header */}
-              <div className="flex items-start justify-between border-b border-white/5 pb-4 relative z-10">
+              <div className="flex items-start justify-between border-b border-white/5 pb-4 relative z-10 px-6 pt-6">
                 <div className="flex flex-col gap-1.5 max-w-[80%]">
                   <span className="text-[9px] font-mono text-[#CD9FA0] uppercase tracking-wider">
                     Candidate dossier telemetry
@@ -961,7 +964,7 @@ Report generated: ${new Date().toLocaleString()}
               </div>
 
               {/* Tab Navigation Menu */}
-              <div className="flex border-b border-white/5 text-xs font-mono select-none overflow-x-auto relative z-10 scrollbar-none">
+              <div className="flex border-b border-white/5 text-xs font-mono select-none overflow-x-auto relative z-10 scrollbar-none px-3 shrink-0">
                 {[
                   { id: "overview", label: "Overview" },
                   { id: "scorecard", label: "Scorecard" },
@@ -988,7 +991,7 @@ Report generated: ${new Date().toLocaleString()}
               </div>
 
               {/* Tab Content Display Area */}
-              <div className="flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/5 relative z-10">
+              <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/5 relative z-10 px-6 pb-6 pt-4">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab}
@@ -1423,6 +1426,7 @@ Report generated: ${new Date().toLocaleString()}
               </div>
 
             </motion.aside>
+            </div>{/* end flex-center wrapper */}
           </>
         )}
       </AnimatePresence>
